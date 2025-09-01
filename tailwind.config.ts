@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -50,8 +51,16 @@ export default {
 				},
 				card: {
 					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+					foreground: 'hsl(var(--card-foreground))',
+					sacred: 'hsl(var(--card-sacred))'
 				},
+				// Spiritual Color Extensions
+				lotus: 'hsl(var(--lotus))',
+				peace: 'hsl(var(--peace))',
+				wisdom: 'hsl(var(--wisdom))',
+				'gold-light': 'hsl(var(--gold-light))',
+				success: 'hsl(var(--success))',
+				warning: 'hsl(var(--warning))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -84,11 +93,52 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				// Sacred Spiritual Animations
+				'om-pulse': {
+					'0%, 100%': {
+						transform: 'scale(1)',
+						opacity: '0.8'
+					},
+					'50%': {
+						transform: 'scale(1.05)',
+						opacity: '1'
+					}
+				},
+				'lotus-bloom': {
+					'0%': {
+						transform: 'scale(0.8) rotate(-5deg)',
+						opacity: '0.6'
+					},
+					'100%': {
+						transform: 'scale(1) rotate(0deg)',
+						opacity: '1'
+					}
+				},
+				'divine-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 20px hsl(25 100% 50% / 0.3)'
+					},
+					'50%': {
+						boxShadow: '0 0 40px hsl(25 100% 50% / 0.6), 0 0 60px hsl(25 100% 50% / 0.3)'
+					}
+				},
+				'sacred-float': {
+					'0%, 100%': {
+						transform: 'translateY(0px)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'om-pulse': 'om-pulse 3s ease-in-out infinite',
+				'lotus-bloom': 'lotus-bloom 2s ease-out forwards',
+				'divine-glow': 'divine-glow 4s ease-in-out infinite',
+				'sacred-float': 'sacred-float 6s ease-in-out infinite'
 			}
 		}
 	},

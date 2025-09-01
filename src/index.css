@@ -2,41 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* BhaktVerse Spiritual Design System - All colors, gradients, fonts, animations defined here */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Spiritual Color Palette */
+    --background: 35 20% 98%;
+    --foreground: 25 15% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    /* Sacred Saffron Theme */
+    --primary: 25 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 28 100% 60%;
+    
+    /* Golden Accents */
+    --secondary: 45 100% 55%;
+    --secondary-foreground: 25 20% 15%;
+    --gold-light: 48 100% 80%;
+    
+    /* Spiritual Cards & Surfaces */
+    --card: 40 50% 97%;
+    --card-foreground: 25 15% 15%;
+    --card-sacred: 35 40% 95%;
+    
+    /* Lotus & Peace Colors */
+    --accent: 320 30% 85%;
+    --accent-foreground: 25 15% 15%;
+    --lotus: 340 40% 90%;
+    --peace: 200 40% 85%;
+    
+    /* Spiritual Wisdom */
+    --muted: 30 25% 92%;
+    --muted-foreground: 25 12% 45%;
+    --wisdom: 280 25% 75%;
+    
+    /* Interactive Elements */
+    --popover: 40 50% 97%;
+    --popover-foreground: 25 15% 15%;
+    --border: 35 20% 88%;
+    --input: 35 25% 92%;
+    --ring: 25 100% 50%;
+    
+    /* Status Colors */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 120 40% 50%;
+    --warning: 35 90% 55%;
+    
+    /* Sacred Gradients */
+    --gradient-saffron: linear-gradient(135deg, hsl(25 100% 50%), hsl(35 90% 60%));
+    --gradient-divine: linear-gradient(135deg, hsl(280 50% 60%), hsl(320 40% 70%));
+    --gradient-peace: linear-gradient(180deg, hsl(200 30% 90%), hsl(220 25% 95%));
+    --gradient-sunrise: linear-gradient(90deg, hsl(15 90% 65%), hsl(45 100% 65%));
+    --gradient-temple: linear-gradient(135deg, hsl(25 100% 50%) 0%, hsl(45 100% 55%) 50%, hsl(35 80% 60%) 100%);
+    
+    /* Sacred Shadows */
+    --shadow-divine: 0 10px 40px -10px hsl(25 100% 50% / 0.3);
+    --shadow-lotus: 0 5px 20px -5px hsl(320 30% 85% / 0.4);
+    --shadow-peace: 0 8px 25px -8px hsl(200 40% 85% / 0.3);
+    --shadow-glow: 0 0 30px hsl(25 100% 50% / 0.2);
+    
+    /* Sacred Animations */
+    --transition-divine: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-lotus: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-peace: all 0.3s ease-out;
+    
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +87,56 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark Mode Spiritual Theme */
+    --background: 25 15% 8%;
+    --foreground: 35 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Dark Sacred Colors */
+    --primary: 25 90% 55%;
+    --primary-foreground: 25 15% 8%;
+    --primary-glow: 28 85% 65%;
+    
+    --secondary: 45 85% 60%;
+    --secondary-foreground: 25 15% 8%;
+    --gold-light: 48 80% 70%;
+    
+    --card: 25 20% 12%;
+    --card-foreground: 35 20% 90%;
+    --card-sacred: 25 25% 10%;
+    
+    --accent: 320 25% 25%;
+    --accent-foreground: 320 30% 85%;
+    --lotus: 340 30% 20%;
+    --peace: 200 30% 25%;
+    
+    --muted: 25 15% 18%;
+    --muted-foreground: 25 10% 60%;
+    --wisdom: 280 20% 35%;
+    
+    --popover: 25 20% 12%;
+    --popover-foreground: 35 20% 90%;
+    --border: 25 15% 20%;
+    --input: 25 15% 18%;
+    --ring: 25 90% 55%;
+    
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 120 35% 45%;
+    --warning: 35 85% 60%;
+    
+    /* Dark Mode Sacred Gradients */
+    --gradient-saffron: linear-gradient(135deg, hsl(25 90% 55%), hsl(35 80% 50%));
+    --gradient-divine: linear-gradient(135deg, hsl(280 40% 30%), hsl(320 35% 25%));
+    --gradient-peace: linear-gradient(180deg, hsl(200 25% 15%), hsl(220 20% 18%));
+    --gradient-sunrise: linear-gradient(90deg, hsl(15 80% 45%), hsl(45 85% 50%));
+    --gradient-temple: linear-gradient(135deg, hsl(25 90% 55%) 0%, hsl(45 85% 50%) 50%, hsl(35 70% 45%) 100%);
+    
+    /* Dark Mode Sacred Shadows */
+    --shadow-divine: 0 10px 40px -10px hsl(25 90% 55% / 0.4);
+    --shadow-lotus: 0 5px 20px -5px hsl(320 25% 25% / 0.5);
+    --shadow-peace: 0 8px 25px -8px hsl(200 30% 25% / 0.4);
+    --shadow-glow: 0 0 30px hsl(25 90% 55% / 0.3);
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -94,6 +148,7 @@ All colors MUST be HSL.
   }
 }
 
+/* Sacred Animations & Custom Classes */
 @layer base {
   * {
     @apply border-border;
@@ -101,5 +156,107 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+  /* Sacred Animation Classes */
+  .animate-om-pulse {
+    animation: omPulse 3s ease-in-out infinite;
+  }
+  
+  .animate-lotus-bloom {
+    animation: lotusBloom 2s ease-out forwards;
+  }
+  
+  .animate-divine-glow {
+    animation: divineGlow 4s ease-in-out infinite;
+  }
+  
+  .animate-sacred-float {
+    animation: sacredFloat 6s ease-in-out infinite;
+  }
+  
+  /* Gradient Background Classes */
+  .bg-gradient-saffron {
+    background: var(--gradient-saffron);
+  }
+  
+  .bg-gradient-divine {
+    background: var(--gradient-divine);
+  }
+  
+  .bg-gradient-temple {
+    background: var(--gradient-temple);
+  }
+  
+  .bg-gradient-peace {
+    background: var(--gradient-peace);
+  }
+  
+  /* Sacred Shadow Classes */
+  .shadow-divine {
+    box-shadow: var(--shadow-divine);
+  }
+  
+  .shadow-lotus {
+    box-shadow: var(--shadow-lotus);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Spiritual Card Styles */
+  .card-sacred {
+    @apply bg-card-sacred border border-border/50 shadow-lotus transition-all duration-300;
+  }
+  
+  .card-sacred:hover {
+    @apply shadow-divine transform -translate-y-1;
+  }
+}
+
+@layer utilities {
+  /* Sacred Keyframe Animations */
+  @keyframes omPulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes lotusBloom {
+    0% {
+      transform: scale(0.8) rotate(-5deg);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes divineGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(25 100% 50% / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(25 100% 50% / 0.6), 0 0 60px hsl(25 100% 50% / 0.3);
+    }
+  }
+  
+  @keyframes sacredFloat {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
 }
