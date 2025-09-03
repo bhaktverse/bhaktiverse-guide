@@ -20,10 +20,10 @@ const Navigation = () => {
 
   const navItems = [
     { name: 'Saints', href: '/saints', icon: Users },
-    { name: 'Scriptures', href: '#scriptures', icon: BookOpen },
-    { name: 'Audio Library', href: '#audio', icon: Headphones },
-    { name: 'Calendar', href: '#calendar', icon: Calendar },
-    { name: 'Community', href: '#community', icon: MessageSquare },
+    { name: 'Scriptures', href: '/scriptures', icon: BookOpen },
+    { name: 'Audio Library', href: '/audio', icon: Headphones },
+    { name: 'Calendar', href: '/calendar', icon: Calendar },
+    { name: 'Community', href: '/community', icon: MessageSquare },
   ];
 
   const handleSignOut = async () => {
