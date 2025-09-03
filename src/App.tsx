@@ -4,11 +4,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+
+// Pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Saints from "./pages/Saints";
 import SaintChat from "./pages/SaintChat";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import Temples from "./pages/Temples";
+import Scriptures from "./pages/Scriptures";
+import ScriptureReader from "./pages/ScriptureReader";
+import SpiritualCalendar from "./pages/SpiritualCalendar";
+import AudioLibrary from "./pages/AudioLibrary";
 
 const queryClient = new QueryClient();
 
@@ -22,9 +30,16 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/saints" element={<Saints />} />
             <Route path="/saints/:saintId/chat" element={<SaintChat />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/temples" element={<Temples />} />
+            <Route path="/scriptures" element={<Scriptures />} />
+            <Route path="/scripture-reader" element={<ScriptureReader />} />
+            <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
+            <Route path="/audio-library" element={<AudioLibrary />} />
+
+            {/* CATCH-ALL */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
