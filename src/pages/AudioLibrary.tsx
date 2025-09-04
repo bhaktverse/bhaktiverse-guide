@@ -191,10 +191,10 @@ const AudioLibrary = () => {
     switch (category) {
       case 'mantra': return 'bg-primary text-primary-foreground';
       case 'bhajan': return 'bg-secondary text-secondary-foreground';
-      case 'aarti': return 'bg-gold-light text-foreground';
-      case 'meditation': return 'bg-peace text-foreground';
-      case 'story': return 'bg-lotus text-foreground';
-      case 'discourse': return 'bg-wisdom text-foreground';
+      case 'aarti': return 'bg-accent text-accent-foreground';
+      case 'meditation': return 'bg-muted text-muted-foreground';
+      case 'story': return 'bg-card text-card-foreground';
+      case 'discourse': return 'bg-secondary text-secondary-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
   };

@@ -85,21 +85,21 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-20 md:pb-8">
         {/* Welcome Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Avatar className="h-16 w-16 shadow-divine">
+            <Avatar className="h-12 w-12 md:h-16 md:w-16 shadow-divine">
               <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback className="bg-gradient-saffron text-primary-foreground text-xl">
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg md:text-xl">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
                 Namaste, Seeker! 🙏
               </h1>
-              <p className="text-muted-foreground">Continue your spiritual journey with devotion</p>
+              <p className="text-muted-foreground text-sm md:text-base">Continue your spiritual journey with devotion</p>
             </div>
           </div>
           
@@ -117,13 +117,13 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 mb-20 md:mb-8">
           {/* Left Column - Progress & Activities */}
           <div className="lg:col-span-2 space-y-6">
             {/* Daily Progress */}
             <Card className="card-sacred">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-lg">
                   <Target className="h-5 w-5 text-primary" />
                   <span>Today's Spiritual Goals</span>
                 </CardTitle>
@@ -181,41 +181,41 @@ const Dashboard = () => {
                 <CardDescription>Quick access to your spiritual activities</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2 hover:shadow-divine transition-all"
+                    className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
                     onClick={() => navigate('/saints')}
                   >
-                    <div className="text-2xl">🧘‍♀️</div>
-                    <span className="text-xs">Chat with Saints</span>
+                    <div className="text-lg md:text-2xl">🧘‍♀️</div>
+                    <span>Chat with Saints</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2 hover:shadow-divine transition-all"
+                    className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
                     onClick={() => navigate('/scriptures')}
                   >
-                    <div className="text-2xl">📖</div>
-                    <span className="text-xs">Read Scriptures</span>
+                    <div className="text-lg md:text-2xl">📖</div>
+                    <span>Read Scriptures</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2 hover:shadow-divine transition-all"
-                    onClick={() => navigate('/audio')}
+                    className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
+                    onClick={() => navigate('/audio-library')}
                   >
-                    <div className="text-2xl">🎵</div>
-                    <span className="text-xs">Listen to Mantras</span>
+                    <div className="text-lg md:text-2xl">🎵</div>
+                    <span>Listen to Mantras</span>
                   </Button>
                   
                   <Button
                     variant="outline"
-                    className="h-20 flex-col space-y-2 hover:shadow-divine transition-all"
+                    className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
                     onClick={() => navigate('/temples')}
                   >
-                    <div className="text-2xl">🏛️</div>
-                    <span className="text-xs">Find Temples</span>
+                    <div className="text-lg md:text-2xl">🏛️</div>
+                    <span>Find Temples</span>
                   </Button>
                 </div>
               </CardContent>
@@ -249,7 +249,7 @@ const Dashboard = () => {
                   </div>
                   
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-gold-light">
+                    <div className="text-2xl font-semibold text-accent">
                       {Math.floor(stats.totalMantras / 108)}
                     </div>
                     <p className="text-xs text-muted-foreground">Mala Rounds</p>
@@ -282,7 +282,7 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="flex items-center space-x-3">
-                  <Badge variant="outline" className="border-wisdom text-wisdom">
+                  <Badge variant="outline" className="border-secondary text-secondary">
                     📚 Knowledge Seeker
                   </Badge>
                   <span className="text-sm text-muted-foreground">18 days ago</span>

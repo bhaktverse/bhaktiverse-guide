@@ -176,11 +176,11 @@ const SpiritualCalendar = () => {
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case 'festival': return 'bg-primary text-primary-foreground';
-      case 'aarti': return 'bg-gold-light text-foreground';
+      case 'aarti': return 'bg-accent text-accent-foreground';
       case 'puja': return 'bg-secondary text-secondary-foreground';
-      case 'meditation': return 'bg-peace text-foreground';
-      case 'pilgrimage': return 'bg-wisdom text-foreground';
-      case 'fast': return 'bg-lotus text-foreground';
+      case 'meditation': return 'bg-muted text-muted-foreground';
+      case 'pilgrimage': return 'bg-card text-card-foreground';
+      case 'fast': return 'bg-secondary text-secondary-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
   };

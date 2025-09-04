@@ -35,7 +35,7 @@ const App = () => (
             <Route path="/saints/:saintId/chat" element={<SaintChat />} />
             <Route path="/temples" element={<Temples />} />
             <Route path="/scriptures" element={<Scriptures />} />
-            <Route path="/scripture-reader" element={<ScriptureReader />} />
+            <Route path="/scriptures/:scriptureId" element={<ScriptureReader />} />
             <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
             <Route path="/audio-library" element={<AudioLibrary />} />
 

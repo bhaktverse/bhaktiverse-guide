@@ -152,7 +152,7 @@ const Saints = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-text bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
                 Spiritual Saints & Guides
               </h1>
               <p className="text-muted-foreground mt-1">
@@ -211,7 +211,7 @@ const Saints = () => {
                   <div className="flex items-start gap-4">
                     <Avatar className="h-16 w-16 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
                       <AvatarImage src={saint.image_url} alt={saint.name} />
-                      <AvatarFallback className="bg-gradient-primary text-white text-lg">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg">
                         {saint.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
@@ -250,7 +250,7 @@ const Saints = () => {
                   <div className="flex gap-2">
                     <Button 
                       onClick={() => navigate(`/saints/${saint.id}/chat`)}
-                      className="flex-1 bg-gradient-primary hover:opacity-90 transition-all duration-300"
+                      className="flex-1 bg-primary text-primary-foreground hover:opacity-90 transition-all duration-300"
                       size="sm"
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />
