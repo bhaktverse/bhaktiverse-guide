@@ -14,6 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          badge_icon: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          points_required: number | null
+          rarity: Database["public"]["Enums"]["rarity_type"] | null
+        }
+        Insert: {
+          badge_icon?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          points_required?: number | null
+          rarity?: Database["public"]["Enums"]["rarity_type"] | null
+        }
+        Update: {
+          badge_icon?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          points_required?: number | null
+          rarity?: Database["public"]["Enums"]["rarity_type"] | null
+        }
+        Relationships: []
+      }
+      ai_chat_sessions: {
+        Row: {
+          context_data: Json | null
+          created_at: string | null
+          id: string
+          last_activity: string | null
+          messages: Json | null
+          session_type: Database["public"]["Enums"]["session_type"] | null
+          user_id: string
+        }
+        Insert: {
+          context_data?: Json | null
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          messages?: Json | null
+          session_type?: Database["public"]["Enums"]["session_type"] | null
+          user_id: string
+        }
+        Update: {
+          context_data?: Json | null
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          messages?: Json | null
+          session_type?: Database["public"]["Enums"]["session_type"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bhakti_shorts: {
+        Row: {
+          approved: boolean | null
+          category: string | null
+          created_at: string | null
+          creator_id: string | null
+          description: string | null
+          duration_seconds: number | null
+          featured: boolean | null
+          id: string
+          likes_count: number | null
+          tags: Json | null
+          thumbnail_url: string | null
+          title: string
+          video_url: string
+          views_count: number | null
+        }
+        Insert: {
+          approved?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          creator_id?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          featured?: boolean | null
+          id?: string
+          likes_count?: number | null
+          tags?: Json | null
+          thumbnail_url?: string | null
+          title: string
+          video_url: string
+          views_count?: number | null
+        }
+        Update: {
+          approved?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          creator_id?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          featured?: boolean | null
+          id?: string
+          likes_count?: number | null
+          tags?: Json | null
+          thumbnail_url?: string | null
+          title?: string
+          video_url?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string | null
+          duration_hours: number | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          is_recurring: boolean | null
+          recurrence_pattern: string | null
+          regional_significance: Json | null
+          reminder_enabled: boolean | null
+          rituals: Json | null
+          significance: string | null
+          time: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          description?: string | null
+          duration_hours?: number | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id?: string
+          is_recurring?: boolean | null
+          recurrence_pattern?: string | null
+          regional_significance?: Json | null
+          reminder_enabled?: boolean | null
+          rituals?: Json | null
+          significance?: string | null
+          time?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          duration_hours?: number | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          is_recurring?: boolean | null
+          recurrence_pattern?: string | null
+          regional_significance?: Json | null
+          reminder_enabled?: boolean | null
+          rituals?: Json | null
+          significance?: string | null
+          time?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      community_posts: {
+        Row: {
+          comments_count: number | null
+          content: string
+          created_at: string | null
+          featured: boolean | null
+          id: string
+          likes_count: number | null
+          media_urls: Json | null
+          post_type: Database["public"]["Enums"]["post_type"] | null
+          shares_count: number | null
+          tags: Json | null
+          updated_at: string | null
+          user_id: string
+          visibility: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Insert: {
+          comments_count?: number | null
+          content: string
+          created_at?: string | null
+          featured?: boolean | null
+          id?: string
+          likes_count?: number | null
+          media_urls?: Json | null
+          post_type?: Database["public"]["Enums"]["post_type"] | null
+          shares_count?: number | null
+          tags?: Json | null
+          updated_at?: string | null
+          user_id: string
+          visibility?: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Update: {
+          comments_count?: number | null
+          content?: string
+          created_at?: string | null
+          featured?: boolean | null
+          id?: string
+          likes_count?: number | null
+          media_urls?: Json | null
+          post_type?: Database["public"]["Enums"]["post_type"] | null
+          shares_count?: number | null
+          tags?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"] | null
+        }
+        Relationships: []
+      }
+      mantra_sessions: {
+        Row: {
+          completed: boolean | null
+          count: number
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          mantra_name: string
+          session_date: string | null
+          streak_day: number | null
+          target_count: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          count?: number
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          mantra_name: string
+          session_date?: string | null
+          streak_day?: number | null
+          target_count?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          count?: number
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          mantra_name?: string
+          session_date?: string | null
+          streak_day?: number | null
+          target_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -300,6 +552,126 @@ export type Database = {
         }
         Relationships: []
       }
+      temples: {
+        Row: {
+          booking_enabled: boolean | null
+          contact_info: Json | null
+          created_at: string | null
+          darshan_schedule: Json | null
+          description: string | null
+          entrance_fee: Json | null
+          facilities: Json | null
+          history: string | null
+          id: string
+          image_urls: Json | null
+          live_darshan_url: string | null
+          location: Json
+          name: string
+          primary_deity: string | null
+          rating: number | null
+          tradition: string | null
+          updated_at: string | null
+          verified: boolean | null
+          visiting_hours: Json | null
+          youtube_channel_id: string | null
+        }
+        Insert: {
+          booking_enabled?: boolean | null
+          contact_info?: Json | null
+          created_at?: string | null
+          darshan_schedule?: Json | null
+          description?: string | null
+          entrance_fee?: Json | null
+          facilities?: Json | null
+          history?: string | null
+          id?: string
+          image_urls?: Json | null
+          live_darshan_url?: string | null
+          location: Json
+          name: string
+          primary_deity?: string | null
+          rating?: number | null
+          tradition?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+          visiting_hours?: Json | null
+          youtube_channel_id?: string | null
+        }
+        Update: {
+          booking_enabled?: boolean | null
+          contact_info?: Json | null
+          created_at?: string | null
+          darshan_schedule?: Json | null
+          description?: string | null
+          entrance_fee?: Json | null
+          facilities?: Json | null
+          history?: string | null
+          id?: string
+          image_urls?: Json | null
+          live_darshan_url?: string | null
+          location?: Json
+          name?: string
+          primary_deity?: string | null
+          rating?: number | null
+          tradition?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+          visiting_hours?: Json | null
+          youtube_channel_id?: string | null
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_activities: {
+        Row: {
+          activity_data: Json | null
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string | null
+          id: string
+          points_earned: number | null
+          streak_contribution: boolean | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          streak_contribution?: boolean | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          streak_contribution?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -340,6 +712,13 @@ export type Database = {
       content_type: "text" | "audio" | "video" | "mantra" | "prayer"
       date_type: "fixed" | "lunar" | "solar"
       difficulty_level: "beginner" | "intermediate" | "advanced"
+      event_type:
+        | "festival"
+        | "vrat"
+        | "ekadashi"
+        | "amavasya"
+        | "purnima"
+        | "personal"
       faq_category:
         | "rituals"
         | "philosophy"
@@ -356,12 +735,18 @@ export type Database = {
         | "audio"
         | "experience"
         | "question"
+      rarity_type: "common" | "rare" | "epic" | "legendary"
       scripture_type:
         | "scripture"
         | "commentary"
         | "devotional"
         | "philosophical"
         | "mantra"
+      session_type:
+        | "pooja_assistant"
+        | "meditation_guide"
+        | "astrology"
+        | "general_spiritual"
       spiritual_category:
         | "devotion"
         | "experience"
@@ -534,6 +919,14 @@ export const Constants = {
       content_type: ["text", "audio", "video", "mantra", "prayer"],
       date_type: ["fixed", "lunar", "solar"],
       difficulty_level: ["beginner", "intermediate", "advanced"],
+      event_type: [
+        "festival",
+        "vrat",
+        "ekadashi",
+        "amavasya",
+        "purnima",
+        "personal",
+      ],
       faq_category: [
         "rituals",
         "philosophy",
@@ -545,12 +938,19 @@ export const Constants = {
       festival_category: ["major", "regional", "community", "personal"],
       moderation_status: ["pending", "approved", "rejected"],
       post_type: ["text", "image", "video", "audio", "experience", "question"],
+      rarity_type: ["common", "rare", "epic", "legendary"],
       scripture_type: [
         "scripture",
         "commentary",
         "devotional",
         "philosophical",
         "mantra",
+      ],
+      session_type: [
+        "pooja_assistant",
+        "meditation_guide",
+        "astrology",
+        "general_spiritual",
       ],
       spiritual_category: [
         "devotion",
