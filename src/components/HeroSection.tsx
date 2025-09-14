@@ -35,17 +35,20 @@ const HeroSection = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button 
-                size="lg" 
-                className="bg-gradient-temple text-primary-foreground shadow-divine hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1"
+                size="xl" 
+                variant="premium"
+                onClick={() => window.location.href = '/auth'}
+                className="shadow-divine hover:shadow-glow transition-all duration-500 transform hover:-translate-y-2"
               >
-                <Sparkles className="h-5 w-5 mr-2" />
+                <Sparkles className="h-5 w-5 mr-2 animate-sacred-float" />
                 Begin Sacred Journey
               </Button>
               
               <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-primary/30 text-primary hover:bg-primary/10 shadow-lotus transition-all duration-300"
+                size="xl" 
+                variant="sacred"
+                onClick={() => window.location.href = '/saints'}
+                className="shadow-lotus hover:shadow-divine transition-all duration-500 transform hover:-translate-y-1"
               >
                 <BookOpen className="h-5 w-5 mr-2" />
                 Explore Wisdom
