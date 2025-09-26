@@ -62,11 +62,12 @@ const Dashboard = () => {
         .eq('user_id', user?.id)
         .single();
 
-      if (profile?.streak_data) {
+      if (profile?.streak_data && typeof profile.streak_data === 'object') {
+        const streakData = profile.streak_data as any;
         setStats(prevStats => ({
           ...prevStats,
-          currentStreak: profile.streak_data.current_streak || 0,
-          longestStreak: profile.streak_data.longest_streak || 0
+          currentStreak: streakData.current_streak || 0,
+          longestStreak: streakData.longest_streak || 0
         }));
       }
 
@@ -81,15 +82,24 @@ const Dashboard = () => {
       if (activities) {
         const todayMantras = activities
           .filter(a => a.activity_type === 'mantra_chant')
-          .reduce((sum, a) => sum + (a.activity_data?.count || 0), 0);
+          .reduce((sum, a) => {
+            const activityData = a.activity_data as any;
+            return sum + (activityData?.count || 0);
+          }, 0);
 
         const todayReading = activities
           .filter(a => a.activity_type === 'scripture_read')
-          .reduce((sum, a) => sum + (a.activity_data?.minutes || 0), 0);
+          .reduce((sum, a) => {
+            const activityData = a.activity_data as any;
+            return sum + (activityData?.minutes || 0);
+          }, 0);
 
         const todayMeditation = activities
           .filter(a => a.activity_type === 'meditation')
-          .reduce((sum, a) => sum + (a.activity_data?.minutes || 0), 0);
+          .reduce((sum, a) => {
+            const activityData = a.activity_data as any;
+            return sum + (activityData?.minutes || 0);
+          }, 0);
 
         setStats(prevStats => ({
           ...prevStats,

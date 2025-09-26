@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import AudioPlayer from '@/components/AudioPlayer';
+import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Play, 
@@ -462,7 +462,7 @@ const AudioLibrary = () => {
 
           {/* Audio Player */}
           <div className="lg:col-span-1">
-            <AudioPlayer
+            <EnhancedAudioPlayer
               track={currentTrack}
               playlist={playlist}
               onTrackChange={handleTrackChange}

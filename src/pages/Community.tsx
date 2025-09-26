@@ -41,11 +41,6 @@ interface CommunityPost {
   featured: boolean;
   created_at: string;
   updated_at: string;
-  // User profile data (joined)
-  profiles?: {
-    name: string;
-    avatar_url?: string;
-  };
 }
 
 const Community = () => {
@@ -81,20 +76,19 @@ const Community = () => {
       
       const { data: communityPosts, error } = await supabase
         .from('community_posts')
-        .select(`
-          *,
-          profiles (
-            name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('visibility', 'public')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      setPosts(communityPosts || []);
+      const transformedPosts = communityPosts?.map(post => ({
+        ...post,
+        tags: Array.isArray(post.tags) ? post.tags.map(tag => String(tag)) : []
+      })) || [];
+
+      setPosts(transformedPosts);
       
     } catch (error) {
       console.error('Error loading community posts:', error);
@@ -123,18 +117,17 @@ const Community = () => {
             visibility: 'public'
           }
         ])
-        .select(`
-          *,
-          profiles (
-            name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
 
-      setPosts([newPostData, ...posts]);
+      const transformedPost = {
+        ...newPostData,
+        tags: Array.isArray(newPostData.tags) ? newPostData.tags.map(tag => String(tag)) : []
+      };
+
+      setPosts([transformedPost, ...posts]);
       setNewPost('');
       setSelectedTags([]);
       setShowCreatePost(false);
@@ -328,14 +321,14 @@ const Community = () => {
                     {/* User Info */}
                     <div className="flex items-center space-x-3 mb-4">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={post.profiles?.avatar_url} />
+                        <AvatarImage src="/placeholder.svg" />
                         <AvatarFallback className="bg-primary text-primary-foreground">
-                          {post.profiles?.name?.charAt(0) || 'U'}
+                          U
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <p className="font-semibold text-foreground">
-                          {post.profiles?.name || 'Anonymous Devotee'}
+                          Anonymous Devotee
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center space-x-2">
                           {getPostTypeIcon(post.post_type)}

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navigation from "@/components/Navigation";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   MapPin, 
   Search, 
@@ -100,37 +101,47 @@ const Temples = () => {
       if (error) throw error;
 
       // Transform database data to match interface
-      const transformedTemples: Temple[] = dbTemples?.map(temple => ({
-        id: temple.id,
-        name: temple.name,
-        primary_deity: temple.primary_deity || '',
-        tradition: temple.tradition || '',
-        location: typeof temple.location === 'object' ? temple.location : {
-          address: temple.name,
-          city: 'Unknown',
-          state: 'Unknown',
-          country: 'India',
-          coordinates: [0, 0]
-        },
-        description: temple.description || '',
-        history: temple.history || '',
-        visiting_hours: typeof temple.visiting_hours === 'object' ? temple.visiting_hours : {
-          morning: "6:00 AM - 9:00 PM",
-          evening: "6:00 AM - 9:00 PM"
-        },
-        contact_info: typeof temple.contact_info === 'object' ? temple.contact_info : {},
-        live_darshan_url: temple.live_darshan_url,
-        darshan_schedule: typeof temple.darshan_schedule === 'object' ? temple.darshan_schedule : {
-          morning_aarti: "6:00 AM",
-          evening_aarti: "7:00 PM"
-        },
-        facilities: Array.isArray(temple.facilities) ? temple.facilities : [],
-        entrance_fee: typeof temple.entrance_fee === 'object' ? temple.entrance_fee : { general: 0 },
-        image_urls: Array.isArray(temple.image_urls) ? temple.image_urls : ["/placeholder.svg"],
-        rating: Number(temple.rating) || 0,
-        verified: temple.verified || false,
-        distance: Math.random() * 50 // Random distance for demo
-      })) || [];
+      const transformedTemples: Temple[] = dbTemples?.map(temple => {
+        const locationData = temple.location as any;
+        const visitingHoursData = temple.visiting_hours as any;
+        const contactInfoData = temple.contact_info as any;
+        const darshanaData = temple.darshan_schedule as any;
+        const facilitiesData = temple.facilities as any;
+        const entranceFeeData = temple.entrance_fee as any;
+        const imageUrlsData = temple.image_urls as any;
+        
+        return {
+          id: temple.id,
+          name: temple.name,
+          primary_deity: temple.primary_deity || '',
+          tradition: temple.tradition || '',
+          location: locationData || {
+            address: temple.name,
+            city: 'Unknown',
+            state: 'Unknown',
+            country: 'India',
+            coordinates: [0, 0]
+          },
+          description: temple.description || '',
+          history: temple.history || '',
+          visiting_hours: visitingHoursData || {
+            morning: "6:00 AM - 9:00 PM",
+            evening: "6:00 AM - 9:00 PM"
+          },
+          contact_info: contactInfoData || {},
+          live_darshan_url: temple.live_darshan_url,
+          darshan_schedule: darshanaData || {
+            morning_aarti: "6:00 AM",
+            evening_aarti: "7:00 PM"
+          },
+          facilities: Array.isArray(facilitiesData) ? facilitiesData : [],
+          entrance_fee: entranceFeeData || { general: 0 },
+          image_urls: Array.isArray(imageUrlsData) ? imageUrlsData : ["/placeholder.svg"],
+          rating: Number(temple.rating) || 0,
+          verified: temple.verified || false,
+          distance: Math.random() * 50 // Random distance for demo
+        };
+      }) || [];
 
       setTemples(transformedTemples);
       
