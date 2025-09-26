@@ -134,39 +134,40 @@ const SaintChat = () => {
   };
 
   const generateSaintResponse = async (message: string, saint: Saint, context: Message[]): Promise<string> => {
-    // This is a mock implementation. In production, you would:
-    // 1. Call your Supabase Edge Function
-    // 2. Which would then call OpenAI with saint-specific personality
-    
-    const responses = {
-      'Swami Vivekananda': [
-        "Arise, awake, and stop not until the goal is reached! Your question touches the very essence of spiritual growth.",
-        "The greatest religion is to be true to your own nature. Have faith in yourselves!",
-        "You are the children of God, the sharers of immortal bliss. Let this truth guide your understanding.",
-        "Take up one idea. Make that one idea your life - think of it, dream of it, live on that idea."
-      ],
-      'Sant Kabir': [
-        "सुनो भाई साधो! The truth you seek is already within you, like the musk deer searching for fragrance.",
-        "काल करे सो आज कर, आज करे सो अब। If you truly seek, seek now, for time waits for no one.",
-        "The same divine light shines in all beings. See the One in all and all in the One.",
-        "Drop the ego, my friend. When 'I' is removed, only love remains."
-      ],
-      'Meera Bai': [
-        "मेरे तो गिरिधर गोपाल! My beloved Krishna, He is my everything. In devotion, find your liberation.",
-        "Love is the bridge between two hearts. Let your heart melt in divine love.",
-        "Dance in the joy of the Divine! Let your soul sing the songs of bhakti.",
-        "Surrender completely, dear soul. In surrender, you will find the greatest strength."
-      ]
-    };
+    try {
+      console.log('Calling saint-chat edge function for:', saint.name);
+      
+      const { data, error } = await supabase.functions.invoke('saint-chat', {
+        body: {
+          message,
+          saintId: saint.id,
+          conversationHistory: context,
+          userPreferences: {
+            language: 'English' // TODO: Get from user preferences
+          }
+        }
+      });
 
-    const saintResponses = responses[saint.name as keyof typeof responses] || [
-      "May the divine light guide you on your path. Your question reflects deep spiritual inquiry.",
-      "In the scriptures, we find that true wisdom comes from within. Contemplate deeply on this.",
-      "The path of dharma requires both knowledge and devotion. Balance both in your practice.",
-      "Remember, child, the goal of all spiritual practice is Self-realization. Keep this always in mind."
-    ];
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
-    return saintResponses[Math.floor(Math.random() * saintResponses.length)];
+      return data.response || "I'm experiencing some difficulty right now. Please try again in a moment.";
+      
+    } catch (error) {
+      console.error('Error calling saint-chat function:', error);
+      
+      // Fallback responses based on saint
+      const fallbackResponses = {
+        'Swami Vivekananda': "Arise, awake, and stop not until the goal is reached! Your spiritual journey requires persistence and faith in yourself.",
+        'Sant Kabir': "सुनो भाई साधो! The divine light you seek shines within you. Look inward with devotion.",
+        'Meera Bai': "मेरे तो गिरिधर गोपाल! In pure devotion to the divine, all questions find their answers."
+      };
+      
+      return fallbackResponses[saint.name as keyof typeof fallbackResponses] || 
+             "May the divine guide you on your spiritual path. Please try asking your question again.";
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

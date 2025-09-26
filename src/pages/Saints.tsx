@@ -49,10 +49,7 @@ const Saints = () => {
       if (error) throw error;
       setSaints(data || []);
       
-      // Add sample saints if none exist
-      if (!data || data.length === 0) {
-        await insertSampleSaints();
-      }
+      console.log('Loaded saints from database:', data?.length || 0);
     } catch (error) {
       console.error('Error loading saints:', error);
     } finally {
@@ -263,8 +260,7 @@ const Saints = () => {
                   
                   <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span>1.2k followers</span>
+                      <span className="text-primary">✨ {saint.tradition}</span>
                     </div>
                     {saint.ai_model_fine_tuned && (
                       <div className="flex items-center gap-1 text-accent">

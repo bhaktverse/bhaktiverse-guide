@@ -57,16 +57,11 @@ const Scriptures = () => {
 
       if (error) {
         console.error('Error loading scriptures:', error);
-        // Insert sample data if empty
-        await insertSampleScriptures();
         return;
       }
 
-      if (!data || data.length === 0) {
-        await insertSampleScriptures();
-      } else {
-        setScriptures(data);
-      }
+      setScriptures(data || []);
+      console.log('Loaded scriptures from database:', data?.length || 0);
     } catch (error) {
       console.error('Error loading scriptures:', error);
     } finally {
