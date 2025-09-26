@@ -88,198 +88,98 @@ const Temples = () => {
   }, [user]);
 
   const loadTemples = async () => {
-    // Generate sample temple data
-    const sampleTemples: Temple[] = [
-      {
-        id: "1",
-        name: "Somnath Temple",
-        primary_deity: "Shiva",
-        tradition: "Shaivism",
-        location: {
-          address: "Somnath, Veraval",
-          city: "Veraval",
-          state: "Gujarat",
-          country: "India",
-          coordinates: [20.8880, 70.4017]
-        },
-        description: "One of the twelve Jyotirlinga shrines of Lord Shiva, known for its magnificent architecture and spiritual significance.",
-        history: "The temple has been destroyed and rebuilt multiple times throughout history, symbolizing the eternal nature of faith.",
-        visiting_hours: {
-          morning: "6:00 AM - 9:00 PM",
-          evening: "5:00 PM - 9:00 PM"
-        },
-        contact_info: {
-          phone: "+91-2876-231349",
-          website: "https://somnath.org"
-        },
-        live_darshan_url: "https://live.somnath.org",
-        darshan_schedule: {
-          morning_aarti: "7:00 AM",
-          evening_aarti: "7:00 PM",
-          special_darshan: "12:00 PM"
-        },
-        facilities: ["Parking", "Prasadam", "Guest House", "Wheelchair Access", "WiFi"],
-        entrance_fee: {
-          general: 0,
-          special_darshan: 100
-        },
-        image_urls: ["/placeholder.svg"],
-        rating: 4.8,
-        verified: true,
-        distance: 2.5
-      },
-      {
-        id: "2",
-        name: "Meenakshi Amman Temple",
-        primary_deity: "Parvati",
-        tradition: "Shaivism",
-        location: {
-          address: "Madurai Main",
-          city: "Madurai",
-          state: "Tamil Nadu",
-          country: "India",
-          coordinates: [9.9195, 78.1193]
-        },
-        description: "Historic Hindu temple dedicated to Meenakshi, a form of Parvati, and her consort Sundareshwar, a form of Shiva.",
-        history: "The temple complex houses 14 gopurams (gateway towers) ranging from 45-50m in height, each a masterpiece of Dravidian architecture.",
-        visiting_hours: {
-          morning: "5:00 AM - 12:30 PM",
-          evening: "4:00 PM - 9:30 PM"
-        },
-        contact_info: {
-          phone: "+91-452-2345777"
-        },
-        live_darshan_url: "https://live.meenakshi.org",
-        darshan_schedule: {
-          morning_aarti: "6:30 AM",
-          evening_aarti: "8:00 PM",
-          special_darshan: "1:00 PM"
-        },
-        facilities: ["Parking", "Prasadam", "Audio Guide", "Photography", "Restaurant"],
-        entrance_fee: {
-          general: 50,
-          special_darshan: 200
-        },
-        image_urls: ["/placeholder.svg"],
-        rating: 4.9,
-        verified: true,
-        distance: 15.2
-      },
-      {
-        id: "3",
-        name: "Golden Temple",
-        primary_deity: "Guru Granth Sahib",
-        tradition: "Sikhism",
-        location: {
-          address: "Golden Temple Road",
-          city: "Amritsar",
-          state: "Punjab",
-          country: "India",
-          coordinates: [31.6200, 74.8765]
-        },
-        description: "The holiest Gurdwara and the most important pilgrimage site of Sikhism, known for its golden dome and sacred pool.",
-        history: "Built in the 16th century by Guru Arjan, the temple welcomes people of all backgrounds to worship and partake in free meals.",
-        visiting_hours: {
-          morning: "24 hours",
-          evening: "24 hours"
-        },
-        contact_info: {
-          phone: "+91-183-2553954",
-          website: "https://goldentemple.org"
-        },
-        live_darshan_url: "https://live.goldentemple.org",
-        darshan_schedule: {
-          morning_aarti: "3:00 AM",
-          evening_aarti: "10:00 PM"
-        },
-        facilities: ["Free Meals", "Accommodation", "Parking", "Medical Aid", "Lost & Found"],
-        entrance_fee: {
-          general: 0
-        },
-        image_urls: ["/placeholder.svg"],
-        rating: 4.9,
-        verified: true,
-        distance: 8.7
-      },
-      {
-        id: "4",
-        name: "Tirupati Balaji Temple",
-        primary_deity: "Venkateswara",
-        tradition: "Vaishnavism",
-        location: {
-          address: "Tirumala Hills",
-          city: "Tirupati",
-          state: "Andhra Pradesh",
-          country: "India",
-          coordinates: [13.6833, 79.3667]
-        },
-        description: "One of the most visited Hindu temples in the world, dedicated to Lord Venkateswara, an incarnation of Vishnu.",
-        history: "The temple is believed to be constructed over a period of time with the contributions of various dynasties.",
-        visiting_hours: {
-          morning: "2:30 AM - 1:00 AM",
-          evening: "Continuous"
-        },
-        contact_info: {
-          phone: "+91-877-2277777",
-          website: "https://tirumala.org"
-        },
-        live_darshan_url: "https://live.tirumala.org",
-        darshan_schedule: {
-          morning_aarti: "4:30 AM",
-          evening_aarti: "6:00 PM",
-          special_darshan: "Various times"
-        },
-        facilities: ["Online Booking", "Accommodation", "Prasadam", "Hair Tonsure", "TTD Services"],
-        entrance_fee: {
-          general: 0,
-          special_darshan: 300
-        },
-        image_urls: ["/placeholder.svg"],
-        rating: 4.7,
-        verified: true,
-        distance: 25.4
-      },
-      {
-        id: "5",
-        name: "Kashi Vishwanath Temple",
-        primary_deity: "Shiva",
-        tradition: "Shaivism",
-        location: {
-          address: "Vishwanath Gali, Lahori Tola",
-          city: "Varanasi",
-          state: "Uttar Pradesh",
-          country: "India",
-          coordinates: [25.3109, 83.0107]
-        },
-        description: "One of the most famous Hindu temples dedicated to Lord Shiva, located in the holy city of Varanasi.",
-        history: "The temple has been mentioned in the Puranas and has been a place of worship for thousands of years.",
-        visiting_hours: {
-          morning: "2:30 AM - 11:00 AM",
-          evening: "12:00 PM - 7:00 PM"
-        },
-        contact_info: {
-          phone: "+91-542-2392059"
-        },
-        live_darshan_url: "https://live.kashivishwanath.org",
-        darshan_schedule: {
-          morning_aarti: "3:00 AM",
-          evening_aarti: "7:00 PM",
-          special_darshan: "4:00 AM"
-        },
-        facilities: ["Security", "Prasadam", "VIP Darshan", "Photography", "Guide Services"],
-        entrance_fee: {
-          general: 0,
-          special_darshan: 250
-        },
-        image_urls: ["/placeholder.svg"],
-        rating: 4.6,
-        verified: true,
-        distance: 12.8
-      }
-    ];
+    try {
+      setLoading(true);
+      
+      // Fetch temples from database
+      const { data: dbTemples, error } = await supabase
+        .from('temples')
+        .select('*')
+        .order('rating', { ascending: false });
 
-    setTemples(sampleTemples);
-    setLoading(false);
+      if (error) throw error;
+
+      // Transform database data to match interface
+      const transformedTemples: Temple[] = dbTemples?.map(temple => ({
+        id: temple.id,
+        name: temple.name,
+        primary_deity: temple.primary_deity || '',
+        tradition: temple.tradition || '',
+        location: typeof temple.location === 'object' ? temple.location : {
+          address: temple.name,
+          city: 'Unknown',
+          state: 'Unknown',
+          country: 'India',
+          coordinates: [0, 0]
+        },
+        description: temple.description || '',
+        history: temple.history || '',
+        visiting_hours: typeof temple.visiting_hours === 'object' ? temple.visiting_hours : {
+          morning: "6:00 AM - 9:00 PM",
+          evening: "6:00 AM - 9:00 PM"
+        },
+        contact_info: typeof temple.contact_info === 'object' ? temple.contact_info : {},
+        live_darshan_url: temple.live_darshan_url,
+        darshan_schedule: typeof temple.darshan_schedule === 'object' ? temple.darshan_schedule : {
+          morning_aarti: "6:00 AM",
+          evening_aarti: "7:00 PM"
+        },
+        facilities: Array.isArray(temple.facilities) ? temple.facilities : [],
+        entrance_fee: typeof temple.entrance_fee === 'object' ? temple.entrance_fee : { general: 0 },
+        image_urls: Array.isArray(temple.image_urls) ? temple.image_urls : ["/placeholder.svg"],
+        rating: Number(temple.rating) || 0,
+        verified: temple.verified || false,
+        distance: Math.random() * 50 // Random distance for demo
+      })) || [];
+
+      setTemples(transformedTemples);
+      
+    } catch (error) {
+      console.error('Error loading temples:', error);
+      
+      // Fallback to sample data if database query fails
+      const fallbackTemples: Temple[] = [
+        {
+          id: "1",
+          name: "Kedarnath Temple",
+          primary_deity: "Shiva",
+          tradition: "Shaivism",
+          location: {
+            address: "Kedarnath, Rudraprayag",
+            city: "Kedarnath",
+            state: "Uttarakhand",
+            country: "India",
+            coordinates: [30.7346, 79.0669]
+          },
+          description: "One of the twelve Jyotirlingas, situated at an altitude of 3,583m in the Himalayas.",
+          history: "Ancient temple believed to be built by Pandavas and later renovated by Adi Shankaracharya.",
+          visiting_hours: {
+            morning: "4:00 AM - 7:00 PM",
+            evening: "4:00 AM - 7:00 PM"
+          },
+          contact_info: {
+            phone: "+91-1364-233727"
+          },
+          live_darshan_url: "https://live.kedarnath.org",
+          darshan_schedule: {
+            morning_aarti: "4:00 AM",
+            evening_aarti: "7:00 PM"
+          },
+          facilities: ["Helicopter Service", "Medical Aid", "Guest House", "Prasadam"],
+          entrance_fee: {
+            general: 0
+          },
+          image_urls: ["/placeholder.svg"],
+          rating: 4.9,
+          verified: true,
+          distance: 5.2
+        }
+      ];
+      
+      setTemples(fallbackTemples);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTraditionIcon = (tradition: string) => {

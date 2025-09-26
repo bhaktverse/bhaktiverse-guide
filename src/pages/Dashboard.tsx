@@ -27,11 +27,11 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
-    currentStreak: 7,
-    longestStreak: 15,
-    totalMantras: 2456,
-    readingMinutes: 120,
-    meditationMinutes: 85,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalMantras: 0,
+    readingMinutes: 0,
+    meditationMinutes: 0,
     dailyGoals: {
       mantras: 108,
       reading_minutes: 15,
@@ -39,11 +39,7 @@ const Dashboard = () => {
     }
   });
   const [todayQuote, setTodayQuote] = useState("");
-  const [upcomingEvents, setUpcomingEvents] = useState([
-    { name: "Maha Shivratri", date: "March 8, 2024", type: "festival" },
-    { name: "Hanuman Jayanti", date: "April 23, 2024", type: "celebration" },
-    { name: "Ram Navami", date: "April 17, 2024", type: "festival" }
-  ]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -52,19 +48,97 @@ const Dashboard = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    const fetchTodayQuote = async () => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    try {
+      // Load user profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (profile?.streak_data) {
+        setStats(prevStats => ({
+          ...prevStats,
+          currentStreak: profile.streak_data.current_streak || 0,
+          longestStreak: profile.streak_data.longest_streak || 0
+        }));
+      }
+
+      // Load user activities for today's stats
+      const today = new Date().toISOString().split('T')[0];
+      const { data: activities } = await supabase
+        .from('user_activities')
+        .select('*')
+        .eq('user_id', user?.id)
+        .gte('created_at', today);
+
+      if (activities) {
+        const todayMantras = activities
+          .filter(a => a.activity_type === 'mantra_chant')
+          .reduce((sum, a) => sum + (a.activity_data?.count || 0), 0);
+
+        const todayReading = activities
+          .filter(a => a.activity_type === 'scripture_read')
+          .reduce((sum, a) => sum + (a.activity_data?.minutes || 0), 0);
+
+        const todayMeditation = activities
+          .filter(a => a.activity_type === 'meditation')
+          .reduce((sum, a) => sum + (a.activity_data?.minutes || 0), 0);
+
+        setStats(prevStats => ({
+          ...prevStats,
+          totalMantras: todayMantras,
+          readingMinutes: todayReading,
+          meditationMinutes: todayMeditation
+        }));
+      }
+
+      // Load upcoming events
+      const { data: events } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .gte('date', new Date().toISOString().split('T')[0])
+        .order('date', { ascending: true })
+        .limit(3);
+
+      if (events) {
+        setUpcomingEvents(events.map(event => ({
+          name: event.title,
+          date: new Date(event.date).toLocaleDateString(),
+          type: event.event_type
+        })));
+      }
+
+      // Get today's spiritual quote
       const quotes = [
         "The mind is everything. What you think you become. - Buddha",
-        "The best way to find yourself is to lose yourself in the service of others. - Mahatma Gandhi",
+        "The best way to find yourself is to lose yourself in the service of others. - Mahatma Gandhi", 
         "You are not just the drop in the ocean, but the entire ocean in each drop. - Rumi",
         "The goal of life is to realize the Self. - Ramana Maharshi",
-        "Where there is love there is life. - Mahatma Gandhi"
+        "Where there is love there is life. - Mahatma Gandhi",
+        "Be yourself, everyone else is already taken. - Oscar Wilde",
+        "Truth is one, paths are many. - Hindu Proverb"
       ];
-      setTodayQuote(quotes[Math.floor(Math.random() * quotes.length)]);
-    };
-    
-    fetchTodayQuote();
-  }, []);
+      const dailyQuoteIndex = new Date().getDate() % quotes.length;
+      setTodayQuote(quotes[dailyQuoteIndex]);
+      
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      
+      // Fallback quotes if database fails
+      const fallbackQuotes = [
+        "The light of consciousness is the only reality. - Ramana Maharshi",
+        "Peace comes from within. Do not seek it without. - Buddha"
+      ];
+      setTodayQuote(fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)]);
+    }
+  };
 
   if (authLoading) {
     return (

@@ -20,7 +20,7 @@ const MobileBottomNav = () => {
     { icon: Users, label: 'Saints', path: '/saints' },
     { icon: BookOpen, label: 'Scriptures', path: '/scriptures' },
     { icon: Music, label: 'Audio', path: '/audio-library' },
-    { icon: Calendar, label: 'Calendar', path: '/spiritual-calendar' },
+    { icon: MoreHorizontal, label: 'Community', path: '/community' },
   ];
 
   return (

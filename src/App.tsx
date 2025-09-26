@@ -17,6 +17,7 @@ import Scriptures from "./pages/Scriptures";
 import ScriptureReader from "./pages/ScriptureReader";
 import SpiritualCalendar from "./pages/SpiritualCalendar";
 import AudioLibrary from "./pages/AudioLibrary";
+import Community from "./pages/Community";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/scriptures/:scriptureId" element={<ScriptureReader />} />
             <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
             <Route path="/audio-library" element={<AudioLibrary />} />
+            <Route path="/community" element={<Community />} />
 
             {/* CATCH-ALL */}
             <Route path="*" element={<NotFound />} />
