@@ -209,14 +209,61 @@ const SpiritualCalendar = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-4">
-            Spiritual Calendar 📅
-          </h1>
+        {/* Premium Header with Panchang Info */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-4 mb-6 p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-2xl backdrop-blur-sm border border-primary/20">
+            <div className="text-5xl">📅</div>
+            <div className="text-left">
+              <h1 className="text-4xl font-bold bg-gradient-temple bg-clip-text text-transparent">
+                Hindu Panchang & Calendar
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
+          </div>
+          
+          {/* Panchang Quick Info */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto mb-6">
+            <Card className="card-sacred p-3">
+              <div className="text-center">
+                <div className="text-2xl mb-1">{getTithiIcon(todayTithi.type)}</div>
+                <p className="text-xs text-muted-foreground mb-1">Tithi</p>
+                <p className="text-sm font-semibold">{todayTithi.name.split(' ').pop()}</p>
+              </div>
+            </Card>
+            <Card className="card-sacred p-3">
+              <div className="text-center">
+                <div className="text-2xl mb-1">⭐</div>
+                <p className="text-xs text-muted-foreground mb-1">Nakshatra</p>
+                <p className="text-sm font-semibold">Rohini</p>
+              </div>
+            </Card>
+            <Card className="card-sacred p-3">
+              <div className="text-center">
+                <div className="text-2xl mb-1">🪐</div>
+                <p className="text-xs text-muted-foreground mb-1">Yoga</p>
+                <p className="text-sm font-semibold">Shiva</p>
+              </div>
+            </Card>
+            <Card className="card-sacred p-3">
+              <div className="text-center">
+                <div className="text-2xl mb-1">⏰</div>
+                <p className="text-xs text-muted-foreground mb-1">Sunrise</p>
+                <p className="text-sm font-semibold">6:12 AM</p>
+              </div>
+            </Card>
+            <Card className="card-sacred p-3">
+              <div className="text-center">
+                <div className="text-2xl mb-1">🌅</div>
+                <p className="text-xs text-muted-foreground mb-1">Sunset</p>
+                <p className="text-sm font-semibold">6:45 PM</p>
+              </div>
+            </Card>
+          </div>
+          
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Stay connected with sacred dates, festivals, and daily spiritual practices. 
-            Never miss an auspicious moment in your spiritual journey.
+            Traditional Hindu calendar with Panchang details, festivals, and auspicious timings
           </p>
         </div>
 

@@ -206,18 +206,21 @@ const Scriptures = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-background dark:via-primary/5 dark:to-secondary/10">
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-4">
-            Sacred Scriptures 📖
+        {/* Premium Header */}
+        <div className="text-center mb-10">
+          <div className="inline-block mb-4 p-6 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 rounded-full">
+            <div className="text-6xl">📚</div>
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent mb-4 animate-gradient">
+            Sacred Scripture Library
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore timeless wisdom from ancient texts and modern spiritual teachings. 
-            Read, listen, and absorb the profound knowledge of the ages.
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Immerse yourself in timeless wisdom presented as beautiful, interactive books. 
+            <br />Experience ancient knowledge with modern technology.
           </p>
         </div>
 
@@ -276,21 +279,54 @@ const Scriptures = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredScriptures.map((scripture) => (
-              <Card key={scripture.id} className="card-sacred group cursor-pointer" onClick={() => navigate(`/scriptures/${scripture.id}`)}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="text-2xl">{getTypeIcon(scripture.type)}</div>
-                      <div>
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                          {scripture.title}
-                        </CardTitle>
-                        {scripture.author && (
-                          <CardDescription>by {scripture.author}</CardDescription>
-                        )}
-                      </div>
+              <Card 
+                key={scripture.id}
+                className="group relative overflow-hidden bg-gradient-to-br from-white via-orange-50 to-amber-50 dark:from-card dark:via-card-sacred dark:to-card border-2 border-orange-200 dark:border-primary/20 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105 hover:-translate-y-3 cursor-pointer"
+                onClick={() => navigate(`/scriptures/${scripture.id}`)}
+              >
+                {/* Book Spine & Pages Effect */}
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-orange-900/30 to-transparent" />
+                <div className="absolute right-0 top-4 bottom-4 w-1 bg-white/50 dark:bg-white/20 shadow-inner" />
+                <div className="absolute right-1 top-6 bottom-6 w-1 bg-white/30 dark:bg-white/10" />
+                
+                {/* Decorative Corner Bookmark */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-yellow-400/30 to-transparent rounded-bl-full" />
+                
+                <CardHeader className="relative pb-4 pl-10">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="text-5xl mb-2 group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">
+                      {getTypeIcon(scripture.type)}
+                    </div>
+                    <div className="flex flex-col gap-2 items-end">
+                      <Badge className={`text-xs ${getDifficultyColor(scripture.difficulty_level)}`}>
+                        {scripture.difficulty_level}
+                      </Badge>
+                      <Badge variant="outline" className="bg-white/70 dark:bg-white/10 border-orange-300">
+                        <Star className="h-3 w-3 mr-1 fill-yellow-500 text-yellow-500" />
+                        4.{Math.floor(Math.random() * 3) + 7}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <CardTitle className="text-2xl mb-3 text-foreground font-serif leading-tight line-clamp-2">
+                    {scripture.title}
+                  </CardTitle>
+                  
+                  <CardDescription className="text-sm font-medium">
+                    ✍️ {scripture.author || 'Ancient Sages'}
+                  </CardDescription>
+                  
+                  <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" />
+                      <span>{scripture.total_chapters} Chapters</span>
+                    </div>
+                    <span>•</span>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{scripture.estimated_reading_time ? `${Math.floor(scripture.estimated_reading_time / 60)}h ${scripture.estimated_reading_time % 60}m` : 'N/A'}</span>
                     </div>
                   </div>
                 </CardHeader>
