@@ -276,14 +276,22 @@ const Saints = () => {
                   
                   <div className="flex gap-2">
                     <Button 
-                      onClick={() => navigate(`/saints/${saint.id}/chat`)}
-                      className="flex-1 bg-primary text-primary-foreground hover:opacity-90 transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/saints/${saint.id}/chat`);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shadow-lg transition-all duration-300 hover:scale-105"
                       size="sm"
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />
-                      Chat with {saint.name.split(' ')[0]}
+                      Chat with Guru
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:bg-primary/10"
+                    >
                       <BookOpen className="h-4 w-4" />
                     </Button>
                   </div>

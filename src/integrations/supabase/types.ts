@@ -920,6 +920,7 @@ export type Database = {
         | "meditation_guide"
         | "astrology"
         | "general_spiritual"
+        | "saint_specific"
       spiritual_category:
         | "devotion"
         | "experience"
@@ -1124,6 +1125,7 @@ export const Constants = {
         "meditation_guide",
         "astrology",
         "general_spiritual",
+        "saint_specific",
       ],
       spiritual_category: [
         "devotion",

@@ -7,7 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import Navigation from "@/components/Navigation";
-import { BookOpen, Search, Clock, Star, Headphones, Download, Filter } from "lucide-react";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import { 
+  BookOpen, 
+  Search, 
+  Clock, 
+  Star, 
+  Headphones, 
+  Download, 
+  Filter,
+  Heart,
+  Sparkles,
+  ArrowLeft
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Scripture {
@@ -35,6 +47,7 @@ const Scriptures = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTradition, setSelectedTradition] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
+  const [selectedLanguage, setSelectedLanguage] = useState("all");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -179,8 +192,9 @@ const Scriptures = () => {
     
     const matchesTradition = selectedTradition === "all" || scripture.tradition === selectedTradition;
     const matchesDifficulty = selectedDifficulty === "all" || scripture.difficulty_level === selectedDifficulty;
+    const matchesLanguage = selectedLanguage === "all" || scripture.language === selectedLanguage;
     
-    return matchesSearch && matchesTradition && matchesDifficulty;
+    return matchesSearch && matchesTradition && matchesDifficulty && matchesLanguage;
   });
 
   const traditions = Array.from(new Set(scriptures.map(s => s.tradition).filter(Boolean)));
@@ -234,16 +248,16 @@ const Scriptures = () => {
                   placeholder="Search scriptures by title, author, or tradition..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-white/80 dark:bg-background/80 border-orange-200"
                 />
               </div>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <select
                 value={selectedTradition}
                 onChange={(e) => setSelectedTradition(e.target.value)}
-                className="px-3 py-2 border border-border rounded-md bg-background"
+                className="px-3 py-2 border border-orange-200 rounded-md bg-white/80 dark:bg-background"
               >
                 <option value="all">All Traditions</option>
                 {traditions.map(tradition => (
@@ -254,7 +268,7 @@ const Scriptures = () => {
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="px-3 py-2 border border-border rounded-md bg-background"
+                className="px-3 py-2 border border-orange-200 rounded-md bg-white/80 dark:bg-background"
               >
                 <option value="all">All Levels</option>
                 {difficulties.map(difficulty => (
@@ -262,6 +276,17 @@ const Scriptures = () => {
                     {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
                   </option>
                 ))}
+              </select>
+              
+              <select
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="px-3 py-2 border border-orange-200 rounded-md bg-white/80 dark:bg-background"
+              >
+                <option value="all">🌐 All Languages</option>
+                <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+                <option value="sanskrit">🕉️ संस्कृत (Sanskrit)</option>
+                <option value="english">🇬🇧 English</option>
               </select>
             </div>
           </div>
@@ -315,7 +340,11 @@ const Scriptures = () => {
                   </CardTitle>
                   
                   <CardDescription className="text-sm font-medium">
-                    ✍️ {scripture.author || 'Ancient Sages'}
+                    ✍️ {scripture.author || 'Ancient Sages'} • 
+                    {scripture.language === 'hi' ? ' 🇮🇳 हिन्दी' : 
+                     scripture.language === 'sanskrit' ? ' 🕉️ संस्कृत' :
+                     scripture.language === 'english' ? ' 🇬🇧 English' : 
+                     ` ${scripture.language}`}
                   </CardDescription>
                   
                   <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
@@ -328,85 +357,69 @@ const Scriptures = () => {
                       <Clock className="h-3 w-3" />
                       <span>{scripture.estimated_reading_time ? `${Math.floor(scripture.estimated_reading_time / 60)}h ${scripture.estimated_reading_time % 60}m` : 'N/A'}</span>
                     </div>
+                    <span>•</span>
+                    <Badge variant="outline" className="text-xs">
+                      {scripture.language === 'hi' ? '🇮🇳 हिन्दी' : 
+                       scripture.language === 'sanskrit' ? '🕉️ संस्कृत' :
+                       scripture.language === 'english' ? '🇬🇧 English' : 
+                       scripture.language}
+                    </Badge>
                   </div>
                 </CardHeader>
                 
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {scripture.description}
+                <CardContent className="relative pl-10">
+                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4 leading-relaxed">
+                    {scripture.description || scripture.summary}
                   </p>
                   
-                  <div className="flex flex-wrap gap-2">
-                    {scripture.tradition && (
-                      <Badge variant="outline" className="text-xs">
-                        {scripture.tradition}
-                      </Badge>
-                    )}
-                    <Badge className={`text-xs ${getDifficultyColor(scripture.difficulty_level)}`}>
-                      {scripture.difficulty_level.charAt(0).toUpperCase() + scripture.difficulty_level.slice(1)}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {scripture.type}
-                    </Badge>
+                  {/* Reading Progress */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Your Progress</span>
+                      <span>0%</span>
+                    </div>
+                    <Progress value={0} className="h-2" />
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center space-x-1">
-                        <BookOpen className="h-4 w-4" />
-                        <span>{scripture.total_chapters} chapters</span>
-                      </span>
-                      {scripture.estimated_reading_time && (
-                        <span className="flex items-center space-x-1 text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{Math.floor(scripture.estimated_reading_time / 60)}h {scripture.estimated_reading_time % 60}m</span>
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Reading Progress (Mock) */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span>Progress</span>
-                        <span>{Math.floor(Math.random() * 100)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 100)} className="h-1" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2 pt-2">
-                    <Button size="sm" className="flex-1" onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/scriptures/${scripture.id}`);
-                    }}>
-                      <BookOpen className="h-4 w-4 mr-1" />
-                      Read
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/scriptures/${scripture.id}`);
+                      }}
+                    >
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Start Reading
                     </Button>
-                    
-                    {scripture.audio_url && (
-                      <Button size="sm" variant="outline" onClick={(e) => {
-                        e.stopPropagation();
-                        // Handle audio playback
-                      }}>
-                        <Headphones className="h-4 w-4" />
-                      </Button>
-                    )}
-                    
-                    {scripture.pdf_url && (
-                      <Button size="sm" variant="outline" onClick={(e) => {
-                        e.stopPropagation();
-                        // Handle PDF download
-                      }}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button 
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:bg-red-100 dark:hover:bg-red-900/20"
+                    >
+                      <Heart className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Tradition Badge */}
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <Badge variant="outline" className="bg-white/50 dark:bg-white/10 text-xs">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      {scripture.tradition} Tradition
+                    </Badge>
                   </div>
                 </CardContent>
+                
+                {/* Hover Glow Effect */}
+                <div className="absolute inset-0 bg-gradient-to-t from-orange-500/0 via-transparent to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
               </Card>
             ))}
           </div>
         )}
       </div>
+      
+      <MobileBottomNav />
     </div>
   );
 };
