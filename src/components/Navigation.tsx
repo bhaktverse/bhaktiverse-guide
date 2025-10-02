@@ -13,7 +13,8 @@ import {
   Music,
   Settings,
   Compass,
-  Building
+  Building,
+  Crown
 } from 'lucide-react';
 
 const Navigation = () => {
@@ -81,6 +82,13 @@ const Navigation = () => {
                     <Link to="/temples" className="flex items-center space-x-1 hover:text-primary">
                       <Building className="h-4 w-4" />
                       <span>Temples</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/premium" className="flex items-center space-x-1 hover:text-secondary text-secondary">
+                      <Crown className="h-4 w-4" />
+                      <span>Premium</span>
                     </Link>
                   </Button>
                 </div>

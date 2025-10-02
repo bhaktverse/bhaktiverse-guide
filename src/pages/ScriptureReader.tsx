@@ -94,20 +94,42 @@ const ScriptureReader = () => {
   };
 
   const loadChapters = async () => {
-    // Generate sample chapters for demonstration
-    const sampleChapters: Chapter[] = [];
-    const totalChapters = 18; // Default for Bhagavad Gita-like structure
-    
-    for (let i = 1; i <= totalChapters; i++) {
-      sampleChapters.push({
-        id: i,
-        title: `Chapter ${i}`,
-        content: `This is the content of Chapter ${i}. Here you would find the actual verses and teachings from the sacred text. The wisdom contained within these ancient words has guided countless souls on their spiritual journey.\n\nEach verse contains profound meaning that reveals deeper truths about existence, dharma, and the path to liberation. The teachings here are meant to be contemplated deeply and applied in daily life.\n\nAs we study these sacred words, we connect with the eternal wisdom that transcends time and space, bringing us closer to understanding our true nature and purpose in this cosmic play.`,
-        verse_count: Math.floor(Math.random() * 50) + 10
-      });
+    try {
+      // Load chapters from database
+      const { data, error } = await supabase
+        .from('scripture_chapters')
+        .select('*')
+        .eq('scripture_id', scriptureId)
+        .order('chapter_number');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const dbChapters: Chapter[] = data.map(ch => ({
+          id: ch.chapter_number,
+          title: ch.title,
+          content: ch.content,
+          verse_count: ch.verse_count || 0
+        }));
+        setChapters(dbChapters);
+      } else {
+        // Generate sample chapters if no data in database
+        const sampleChapters: Chapter[] = [];
+        const totalChapters = scripture?.total_chapters || 18;
+        
+        for (let i = 1; i <= totalChapters; i++) {
+          sampleChapters.push({
+            id: i,
+            title: `Chapter ${i}`,
+            content: `This is the content of Chapter ${i}. Here you would find the actual verses and teachings from the sacred text. The wisdom contained within these ancient words has guided countless souls on their spiritual journey.\n\nEach verse contains profound meaning that reveals deeper truths about existence, dharma, and the path to liberation.`,
+            verse_count: Math.floor(Math.random() * 50) + 10
+          });
+        }
+        setChapters(sampleChapters);
+      }
+    } catch (error) {
+      console.error('Error loading chapters:', error);
     }
-    
-    setChapters(sampleChapters);
   };
 
   const handleChapterChange = (chapterNum: number) => {

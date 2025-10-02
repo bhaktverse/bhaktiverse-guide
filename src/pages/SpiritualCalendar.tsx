@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon } from "@/components/ui/calendar";
 import Navigation from "@/components/Navigation";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Calendar, 
   Clock, 
@@ -63,89 +64,65 @@ const SpiritualCalendar = () => {
   }, [user, currentDate]);
 
   const loadEvents = async () => {
-    // Generate sample spiritual events
-    const sampleEvents: SpiritualEvent[] = [
-      {
-        id: "1",
-        name: "Maha Shivratri",
-        date: new Date(2024, 2, 8), // March 8, 2024
-        type: "festival",
-        description: "The great night of Lord Shiva - a night of spiritual awakening",
-        significance: "Devotees fast and pray throughout the night to honor Lord Shiva",
-        duration: 24 * 60, // 24 hours in minutes
-        isRecurring: true,
-        reminderSet: true,
-        traditions: ["Hinduism", "Shaivism"],
-        rituals: ["Night-long vigil", "Shiva Lingam worship", "Rudra Abhishekam", "Fasting"]
-      },
-      {
-        id: "2",
-        name: "Morning Aarti",
-        date: new Date(),
-        type: "aarti",
-        description: "Daily morning prayer to welcome the divine light",
-        significance: "Start the day with gratitude and divine connection",
-        duration: 30,
-        isRecurring: true,
-        reminderSet: true,
-        traditions: ["Hinduism"],
-        rituals: ["Lamp lighting", "Bhajan singing", "Offering flowers"]
-      },
-      {
-        id: "3",
-        name: "Hanuman Jayanti",
-        date: new Date(2024, 3, 23), // April 23, 2024
-        type: "festival",
-        description: "Birth anniversary of Lord Hanuman",
-        significance: "Celebrate the devotion and strength of Hanuman",
-        duration: 12 * 60,
-        isRecurring: true,
-        reminderSet: false,
-        traditions: ["Hinduism", "Vaishnavism"],
-        rituals: ["Hanuman Chalisa recitation", "Offering Prasad", "Temple visits"]
-      },
-      {
-        id: "4",
-        name: "Ekadashi Fast",
-        date: new Date(2024, 2, 12), // March 12, 2024
-        type: "fast",
-        description: "Sacred fasting day occurring twice a month",
-        significance: "Spiritual purification and devotion to Lord Vishnu",
-        duration: 24 * 60,
-        isRecurring: true,
-        reminderSet: true,
-        traditions: ["Hinduism", "Vaishnavism"],
-        rituals: ["Complete/Partial fasting", "Vishnu prayers", "Scripture reading"]
-      },
-      {
-        id: "5",
-        name: "Evening Meditation",
-        date: new Date(),
-        type: "meditation",
-        description: "Daily group meditation session",
-        significance: "End the day with inner peace and reflection",
-        duration: 45,
-        isRecurring: true,
-        reminderSet: true,
-        traditions: ["Universal"],
-        rituals: ["Guided meditation", "Chanting", "Silent reflection"]
-      },
-      {
-        id: "6",
-        name: "Ram Navami",
-        date: new Date(2024, 3, 17), // April 17, 2024
-        type: "festival",
-        description: "Birth celebration of Lord Rama",
-        significance: "Honor the ideals of dharma and righteousness",
-        duration: 24 * 60,
-        isRecurring: true,
-        reminderSet: false,
-        traditions: ["Hinduism", "Vaishnavism"],
-        rituals: ["Ramayana recitation", "Bhajan singing", "Community feast"]
-      }
-    ];
+    try {
+      // Load events from calendar_events table
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .order('date');
 
-    setEvents(sampleEvents);
+      if (error) throw error;
+
+      const dbEvents: SpiritualEvent[] = data?.map(event => ({
+        id: event.id,
+        name: event.title,
+        date: new Date(event.date),
+        type: event.event_type as any,
+        description: event.description || '',
+        significance: event.significance || '',
+        duration: event.duration_hours ? event.duration_hours * 60 : 60,
+        isRecurring: event.is_recurring || false,
+        reminderSet: event.reminder_enabled || false,
+        traditions: [],
+        rituals: Array.isArray(event.rituals) ? event.rituals.map((r: any) => r.toString()) : []
+      })) || [];
+
+      // Add daily recurring events
+      const today = new Date();
+      const dailyEvents: SpiritualEvent[] = [
+        {
+          id: "morning-aarti",
+          name: "Morning Aarti",
+          date: today,
+          type: "aarti",
+          description: "Daily morning prayer to welcome the divine light",
+          significance: "Start the day with gratitude",
+          duration: 30,
+          isRecurring: true,
+          reminderSet: true,
+          traditions: ["Hinduism"],
+          rituals: ["Lamp lighting", "Bhajan singing"]
+        },
+        {
+          id: "evening-meditation",
+          name: "Evening Meditation",
+          date: today,
+          type: "meditation",
+          description: "Daily group meditation session",
+          significance: "End the day with inner peace",
+          duration: 45,
+          isRecurring: true,
+          reminderSet: true,
+          traditions: ["Universal"],
+          rituals: ["Guided meditation", "Chanting"]
+        }
+      ];
+
+      setEvents([...dbEvents, ...dailyEvents]);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEvents([]);
+    }
   };
 
   const loadTithiInfo = () => {

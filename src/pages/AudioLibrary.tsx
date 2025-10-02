@@ -62,171 +62,37 @@ const AudioLibrary = () => {
     try {
       setLoading(true);
       
-      // Load audio tracks from spiritual_content and create mock data
-      const { data: spiritualContent, error } = await supabase
-        .from('spiritual_content')
+      // Load audio tracks from audio_library table
+      const { data: audioTracks, error } = await supabase
+        .from('audio_library')
         .select('*')
-        .eq('content_type', 'audio')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Create comprehensive sample tracks
-      const sampleTracks: AudioTrack[] = [
-        {
-          id: '1',
-          title: 'Gayatri Mantra',
-          artist: 'Traditional Chanting',
-          category: 'mantra',
-          duration: 300,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्।',
-          meaning: 'The most sacred mantra in Hinduism, invoking the divine light to illuminate our understanding and guide us toward truth.',
-          language: 'sanskrit',
-          difficulty_level: 'beginner',
-          download_count: 1250,
-          rating: 4.8
-        },
-        {
-          id: '2',
-          title: 'Hare Krishna Maha Mantra',
-          artist: 'ISKCON Devotees',
-          category: 'mantra',
-          duration: 420,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'हरे कृष्ण हरे कृष्ण कृष्ण कृष्ण हरे हरे। हरे राम हरे राम राम राम हरे हरे।',
-          meaning: 'The great mantra for deliverance, chanted to invoke the divine names of Krishna and Rama for spiritual purification.',
-          language: 'sanskrit',
-          difficulty_level: 'beginner',
-          download_count: 980,
-          rating: 4.9
-        },
-        {
-          id: '3',
-          title: 'Hanuman Chalisa',
-          artist: 'Pandit Jasraj',
-          category: 'devotional',
-          duration: 600,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'श्रीगुरु चरन सरोज रज निज मनु मुकुरु सुधारि। बरनउं रघुवर बिमल जसु जो दायकु फल चारि।।',
-          meaning: '40 verses praising Lord Hanuman, seeking strength, courage, and protection from evil forces.',
-          language: 'hindi',
-          difficulty_level: 'intermediate',
-          download_count: 2150,
-          rating: 4.7
-        },
-        {
-          id: '4',
-          title: 'Om Namah Shivaya',
-          artist: 'Sadhguru',
-          category: 'mantra',
-          duration: 180,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'ॐ नमः शिवाय',
-          meaning: 'The five-syllable mantra dedicated to Lord Shiva, meaning "I bow to Shiva" - representing the consciousness within all beings.',
-          language: 'sanskrit',
-          difficulty_level: 'beginner',
-          download_count: 1800,
-          rating: 4.6
-        },
-        {
-          id: '5',
-          title: 'Ganga Aarti',
-          artist: 'Rishikesh Priests',
-          category: 'aarti',
-          duration: 480,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'ॐ जय गंगे माता, मैया जय गंगे माता।',
-          meaning: 'Evening prayer ceremony dedicated to River Ganga, seeking purification and blessings.',
-          language: 'hindi',
-          difficulty_level: 'intermediate',
-          download_count: 750,
-          rating: 4.5
-        },
-        {
-          id: '6',
-          title: 'Krishna Bhajan - Govinda',
-          artist: 'Anup Jalota',
-          category: 'bhajan',
-          duration: 360,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'गोविंद बोलो हरि गोपाल बोलो। राधा रमण हरि गोविंद बोलो।',
-          meaning: 'Devotional song praising Lord Krishna as Govinda, the protector of cows and the universe.',
-          language: 'hindi',
-          difficulty_level: 'beginner',
-          download_count: 1400,
-          rating: 4.8
-        },
-        {
-          id: '7',
-          title: 'Guided Meditation - Inner Peace',
-          artist: 'Sri Sri Ravi Shankar',
-          category: 'meditation',
-          duration: 900,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          meaning: 'Guided meditation for achieving inner peace, tranquility, and spiritual awareness.',
-          language: 'english',
-          difficulty_level: 'beginner',
-          download_count: 920,
-          rating: 4.7
-        },
-        {
-          id: '8',
-          title: 'Shiva Tandav Stotram',
-          artist: 'Traditional Chanting',
-          category: 'stotram',
-          duration: 540,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'जटा टवी गलज्जल प्रवाह पावितस्थले गलेऽवलम्ब्य लम्बितां भुजंग तुंग मालिकाम्।',
-          meaning: 'Powerful hymn describing the cosmic dance of Lord Shiva, representing creation and destruction.',
-          language: 'sanskrit',
-          difficulty_level: 'advanced',
-          download_count: 680,
-          rating: 4.9
-        }
-      ];
-
-      // Add tracks from database if any
-      const dbTracks = spiritualContent?.map(content => ({
-        id: content.id,
-        title: content.title || 'Untitled',
-        artist: 'Various Artists',
-        category: content.category,
-        duration: content.duration || 300,
-        audio_url: content.media_url || 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-        lyrics: content.content,
-        meaning: content.summary,
-        language: content.language,
-        difficulty_level: content.difficulty_level || 'beginner'
+      // Transform database data to AudioTrack format
+      const tracks: AudioTrack[] = audioTracks?.map(track => ({
+        id: track.id,
+        title: track.title,
+        artist: track.artist || 'Unknown Artist',
+        category: track.category,
+        duration: track.duration,
+        audio_url: track.audio_url,
+        lyrics: track.lyrics,
+        meaning: track.meaning,
+        language: track.language,
+        difficulty_level: track.difficulty_level || 'beginner',
+        download_count: track.download_count || 0,
+        rating: track.rating || 0
       })) || [];
 
-      const allTracks = [...sampleTracks, ...dbTracks];
-      setTracks(allTracks);
-      setPlaylist(allTracks);
+      setTracks(tracks);
+      setPlaylist(tracks);
       
     } catch (error) {
       console.error('Error loading tracks:', error);
-      
-      // Fallback to sample data if database query fails
-      const fallbackTracks: AudioTrack[] = [
-        {
-          id: '1',
-          title: 'Gayatri Mantra',
-          artist: 'Traditional Chanting',
-          category: 'mantra',
-          duration: 300,
-          audio_url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
-          lyrics: 'ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्।',
-          meaning: 'The most sacred mantra in Hinduism, invoking the divine light to illuminate our understanding.',
-          language: 'sanskrit',
-          difficulty_level: 'beginner',
-          download_count: 1250,
-          rating: 4.8
-        }
-      ];
-      
-      setTracks(fallbackTracks);
-      setPlaylist(fallbackTracks);
+      setTracks([]);
+      setPlaylist([]);
     } finally {
       setLoading(false);
     }

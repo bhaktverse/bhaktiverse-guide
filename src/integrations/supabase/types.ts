@@ -77,6 +77,66 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_library: {
+        Row: {
+          artist: string | null
+          associated_deity: string | null
+          audio_url: string
+          category: string
+          created_at: string | null
+          difficulty_level: string | null
+          download_count: number | null
+          duration: number
+          id: string
+          language: string
+          lyrics: string | null
+          meaning: string | null
+          occasion: Json | null
+          pronunciation_guide: string | null
+          rating: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          artist?: string | null
+          associated_deity?: string | null
+          audio_url: string
+          category: string
+          created_at?: string | null
+          difficulty_level?: string | null
+          download_count?: number | null
+          duration: number
+          id?: string
+          language: string
+          lyrics?: string | null
+          meaning?: string | null
+          occasion?: Json | null
+          pronunciation_guide?: string | null
+          rating?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          artist?: string | null
+          associated_deity?: string | null
+          audio_url?: string
+          category?: string
+          created_at?: string | null
+          difficulty_level?: string | null
+          download_count?: number | null
+          duration?: number
+          id?: string
+          language?: string
+          lyrics?: string | null
+          meaning?: string | null
+          occasion?: Json | null
+          pronunciation_guide?: string | null
+          rating?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bhakti_shorts: {
         Row: {
           approved: boolean | null
@@ -266,6 +326,39 @@ export type Database = {
         }
         Relationships: []
       }
+      playlists: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          tracks: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          tracks?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          tracks?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -377,6 +470,50 @@ export type Database = {
           verified?: boolean | null
         }
         Relationships: []
+      }
+      scripture_chapters: {
+        Row: {
+          audio_url: string | null
+          chapter_number: number
+          content: string
+          created_at: string | null
+          id: string
+          scripture_id: string | null
+          summary: string | null
+          title: string
+          verse_count: number | null
+        }
+        Insert: {
+          audio_url?: string | null
+          chapter_number: number
+          content: string
+          created_at?: string | null
+          id?: string
+          scripture_id?: string | null
+          summary?: string | null
+          title: string
+          verse_count?: number | null
+        }
+        Update: {
+          audio_url?: string | null
+          chapter_number?: number
+          content?: string
+          created_at?: string | null
+          id?: string
+          scripture_id?: string | null
+          summary?: string | null
+          title?: string
+          verse_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scripture_chapters_scripture_id_fkey"
+            columns: ["scripture_id"]
+            isOneToOne: false
+            referencedRelation: "scriptures"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scriptures: {
         Row: {
@@ -668,6 +805,42 @@ export type Database = {
           id?: string
           points_earned?: number | null
           streak_contribution?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          completed: boolean | null
+          content_id: string
+          content_type: string
+          created_at: string | null
+          id: string
+          last_accessed: string | null
+          last_position: number | null
+          progress_percentage: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          last_accessed?: string | null
+          last_position?: number | null
+          progress_percentage?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          last_accessed?: string | null
+          last_position?: number | null
+          progress_percentage?: number | null
           user_id?: string
         }
         Relationships: []
