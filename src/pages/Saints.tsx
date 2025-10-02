@@ -140,20 +140,27 @@ const Saints = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-temple">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-card-sacred/90 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
+      {/* Premium Header with Floating Elements */}
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-card/95 via-card-sacred/95 to-card/95 backdrop-blur-xl border-b-2 border-primary/20 shadow-divine">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center gap-6 mb-8">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/')}
+              className="hover:bg-primary/10 hover:scale-110 transition-all duration-300"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
-                Spiritual Saints & Guides
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Connect with enlightened masters through AI-powered conversations
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-2">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient">
+                  Divine Saints & Spiritual Masters ✨
+                </h1>
+              </div>
+              <p className="text-muted-foreground text-lg">
+                🙏 Experience enlightened wisdom through AI-powered spiritual conversations
               </p>
             </div>
           </div>
@@ -201,31 +208,54 @@ const Saints = () => {
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredSaints.map((saint) => (
-              <Card key={saint.id} className="bg-card-sacred/80 backdrop-blur-md border-border/50 hover:shadow-sacred transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-16 w-16 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
-                      <AvatarImage src={saint.image_url} alt={saint.name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                        {saint.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
+              <Card 
+                key={saint.id} 
+                className="group relative overflow-hidden bg-gradient-to-br from-card via-card-sacred to-card border-2 border-primary/20 hover:border-primary/50 shadow-divine hover:shadow-glow transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+              >
+                {/* Premium Background Pattern */}
+                <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_50%_120%,rgba(255,153,51,0.3),rgba(255,215,0,0.2))]" />
+                
+                <CardHeader className="pb-4 relative">
+                  <div className="flex items-start gap-5">
+                    {/* Enhanced Avatar with Glow */}
+                    <div className="relative">
+                      <Avatar className="h-20 w-20 ring-4 ring-primary/30 group-hover:ring-primary/60 shadow-divine transition-all duration-500 group-hover:scale-110">
+                        <AvatarImage src={saint.image_url} alt={saint.name} className="object-cover" />
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-bold">
+                          {saint.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      {saint.ai_model_fine_tuned && (
+                        <div className="absolute -top-1 -right-1 bg-accent text-white rounded-full p-1.5 shadow-lg animate-pulse">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                    
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CardTitle className="text-lg truncate">{saint.name}</CardTitle>
+                      <div className="flex items-center gap-2 mb-2">
+                        <CardTitle className="text-xl truncate bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                          {saint.name}
+                        </CardTitle>
                         {saint.verified && (
-                          <div className="text-primary">✓</div>
-                        )}
-                        {saint.ai_model_fine_tuned && (
-                          <Sparkles className="h-4 w-4 text-accent" />
+                          <div className="bg-primary/20 rounded-full p-1">
+                            <div className="text-primary text-lg">✓</div>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="secondary" className="text-xs">{saint.tradition}</Badge>
-                        <span>•</span>
-                        <span>{saint.birth_year}{saint.death_year ? ` - ${saint.death_year}` : ' - Present'}</span>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs bg-gradient-to-r from-secondary/30 to-secondary/20 border-secondary/40"
+                        >
+                          ✨ {saint.tradition}
+                        </Badge>
+                        <span className="text-muted-foreground">•</span>
+                        <span className="text-muted-foreground font-medium">
+                          {saint.birth_year}{saint.death_year ? ` - ${saint.death_year}` : ' - Present'}
+                        </span>
                       </div>
                     </div>
                   </div>
