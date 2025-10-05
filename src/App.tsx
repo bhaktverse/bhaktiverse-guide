@@ -19,6 +19,9 @@ import SpiritualCalendar from "./pages/SpiritualCalendar";
 import AudioLibrary from "./pages/AudioLibrary";
 import Community from "./pages/Community";
 import Premium from "./pages/Premium";
+import Numerology from "./pages/Numerology";
+import DivineDashboard from "./pages/DivineDashboard";
+import DailyDevotion from "./pages/DailyDevotion";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +45,9 @@ const App = () => (
             <Route path="/audio-library" element={<AudioLibrary />} />
             <Route path="/community" element={<Community />} />
             <Route path="/premium" element={<Premium />} />
+            <Route path="/numerology" element={<Numerology />} />
+            <Route path="/divine-dashboard" element={<DivineDashboard />} />
+            <Route path="/daily-devotion" element={<DailyDevotion />} />
 
             {/* CATCH-ALL */}
             <Route path="*" element={<NotFound />} />

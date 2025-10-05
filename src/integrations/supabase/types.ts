@@ -77,6 +77,57 @@ export type Database = {
         }
         Relationships: []
       }
+      astro_profiles: {
+        Row: {
+          chart_hash: string | null
+          created_at: string | null
+          dasha_data: Json | null
+          dob: string
+          id: string
+          lagna: Database["public"]["Enums"]["zodiac_sign"] | null
+          name: string
+          place: string | null
+          planets_data: Json | null
+          rashi: Database["public"]["Enums"]["zodiac_sign"] | null
+          tob: string | null
+          updated_at: string | null
+          user_id: string
+          yogas: Json | null
+        }
+        Insert: {
+          chart_hash?: string | null
+          created_at?: string | null
+          dasha_data?: Json | null
+          dob: string
+          id?: string
+          lagna?: Database["public"]["Enums"]["zodiac_sign"] | null
+          name: string
+          place?: string | null
+          planets_data?: Json | null
+          rashi?: Database["public"]["Enums"]["zodiac_sign"] | null
+          tob?: string | null
+          updated_at?: string | null
+          user_id: string
+          yogas?: Json | null
+        }
+        Update: {
+          chart_hash?: string | null
+          created_at?: string | null
+          dasha_data?: Json | null
+          dob?: string
+          id?: string
+          lagna?: Database["public"]["Enums"]["zodiac_sign"] | null
+          name?: string
+          place?: string | null
+          planets_data?: Json | null
+          rashi?: Database["public"]["Enums"]["zodiac_sign"] | null
+          tob?: string | null
+          updated_at?: string | null
+          user_id?: string
+          yogas?: Json | null
+        }
+        Relationships: []
+      }
       audio_library: {
         Row: {
           artist: string | null
@@ -287,6 +338,87 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_devotions: {
+        Row: {
+          benefits: string | null
+          color: string | null
+          created_at: string | null
+          day_of_week: number
+          deity: string
+          fast_recommendation: string | null
+          id: string
+          mantra: string | null
+          planet: Database["public"]["Enums"]["planet_type"]
+          puja_items: Json | null
+          story: string | null
+        }
+        Insert: {
+          benefits?: string | null
+          color?: string | null
+          created_at?: string | null
+          day_of_week: number
+          deity: string
+          fast_recommendation?: string | null
+          id?: string
+          mantra?: string | null
+          planet: Database["public"]["Enums"]["planet_type"]
+          puja_items?: Json | null
+          story?: string | null
+        }
+        Update: {
+          benefits?: string | null
+          color?: string | null
+          created_at?: string | null
+          day_of_week?: number
+          deity?: string
+          fast_recommendation?: string | null
+          id?: string
+          mantra?: string | null
+          planet?: Database["public"]["Enums"]["planet_type"]
+          puja_items?: Json | null
+          story?: string | null
+        }
+        Relationships: []
+      }
+      divine_conversations: {
+        Row: {
+          confidence_score: number | null
+          conversation_type: string | null
+          created_at: string | null
+          id: string
+          input_text: string
+          is_cached: boolean | null
+          metadata: Json | null
+          response_text: string
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          conversation_type?: string | null
+          created_at?: string | null
+          id?: string
+          input_text: string
+          is_cached?: boolean | null
+          metadata?: Json | null
+          response_text: string
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          conversation_type?: string | null
+          created_at?: string | null
+          id?: string
+          input_text?: string
+          is_cached?: boolean | null
+          metadata?: Json | null
+          response_text?: string
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mantra_sessions: {
         Row: {
           completed: boolean | null
@@ -322,6 +454,117 @@ export type Database = {
           session_date?: string | null
           streak_day?: number | null
           target_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mantras_library: {
+        Row: {
+          audio_url: string | null
+          benefits: string | null
+          best_time: string | null
+          bija_mantra: string | null
+          created_at: string | null
+          deity: string | null
+          id: string
+          mantra: string
+          meaning: string | null
+          planet: Database["public"]["Enums"]["planet_type"] | null
+          pronunciation: string | null
+          repetitions: number | null
+        }
+        Insert: {
+          audio_url?: string | null
+          benefits?: string | null
+          best_time?: string | null
+          bija_mantra?: string | null
+          created_at?: string | null
+          deity?: string | null
+          id?: string
+          mantra: string
+          meaning?: string | null
+          planet?: Database["public"]["Enums"]["planet_type"] | null
+          pronunciation?: string | null
+          repetitions?: number | null
+        }
+        Update: {
+          audio_url?: string | null
+          benefits?: string | null
+          best_time?: string | null
+          bija_mantra?: string | null
+          created_at?: string | null
+          deity?: string | null
+          id?: string
+          mantra?: string
+          meaning?: string | null
+          planet?: Database["public"]["Enums"]["planet_type"] | null
+          pronunciation?: string | null
+          repetitions?: number | null
+        }
+        Relationships: []
+      }
+      numerology_reports: {
+        Row: {
+          ai_version: string | null
+          birth_number: number | null
+          created_at: string | null
+          destiny_number: number | null
+          detailed_analysis: Json | null
+          dob: string
+          expression_number: number | null
+          id: string
+          lucky_color: string | null
+          lucky_day: string | null
+          lucky_gemstone: string | null
+          lucky_mantra: string | null
+          name: string
+          name_dob_hash: string | null
+          personality_number: number | null
+          remedies: Json | null
+          report_text: string | null
+          soul_number: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_version?: string | null
+          birth_number?: number | null
+          created_at?: string | null
+          destiny_number?: number | null
+          detailed_analysis?: Json | null
+          dob: string
+          expression_number?: number | null
+          id?: string
+          lucky_color?: string | null
+          lucky_day?: string | null
+          lucky_gemstone?: string | null
+          lucky_mantra?: string | null
+          name: string
+          name_dob_hash?: string | null
+          personality_number?: number | null
+          remedies?: Json | null
+          report_text?: string | null
+          soul_number?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_version?: string | null
+          birth_number?: number | null
+          created_at?: string | null
+          destiny_number?: number | null
+          detailed_analysis?: Json | null
+          dob?: string
+          expression_number?: number | null
+          id?: string
+          lucky_color?: string | null
+          lucky_day?: string | null
+          lucky_gemstone?: string | null
+          lucky_mantra?: string | null
+          name?: string
+          name_dob_hash?: string | null
+          personality_number?: number | null
+          remedies?: Json | null
+          report_text?: string | null
+          soul_number?: number | null
           user_id?: string
         }
         Relationships: []
@@ -689,6 +932,54 @@ export type Database = {
         }
         Relationships: []
       }
+      spiritual_journey: {
+        Row: {
+          achievements: Json | null
+          badges: Json | null
+          consultations_done: number | null
+          created_at: string | null
+          current_quest: string | null
+          experience_points: number | null
+          id: string
+          karma_score: number | null
+          level: number | null
+          mantras_chanted: number | null
+          reports_generated: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievements?: Json | null
+          badges?: Json | null
+          consultations_done?: number | null
+          created_at?: string | null
+          current_quest?: string | null
+          experience_points?: number | null
+          id?: string
+          karma_score?: number | null
+          level?: number | null
+          mantras_chanted?: number | null
+          reports_generated?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievements?: Json | null
+          badges?: Json | null
+          consultations_done?: number | null
+          created_at?: string | null
+          current_quest?: string | null
+          experience_points?: number | null
+          id?: string
+          karma_score?: number | null
+          level?: number | null
+          mantras_chanted?: number | null
+          reports_generated?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       temples: {
         Row: {
           booking_enabled: boolean | null
@@ -929,6 +1220,16 @@ export type Database = {
         | "meditation"
       festival_category: "major" | "regional" | "community" | "personal"
       moderation_status: "pending" | "approved" | "rejected"
+      planet_type:
+        | "sun"
+        | "moon"
+        | "mars"
+        | "mercury"
+        | "jupiter"
+        | "venus"
+        | "saturn"
+        | "rahu"
+        | "ketu"
       post_type:
         | "text"
         | "image"
@@ -958,6 +1259,19 @@ export type Database = {
         | "pilgrimage"
       spiritual_level: "beginner" | "seeker" | "devotee" | "sage"
       visibility_type: "public" | "followers" | "private"
+      zodiac_sign:
+        | "aries"
+        | "taurus"
+        | "gemini"
+        | "cancer"
+        | "leo"
+        | "virgo"
+        | "libra"
+        | "scorpio"
+        | "sagittarius"
+        | "capricorn"
+        | "aquarius"
+        | "pisces"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1140,6 +1454,17 @@ export const Constants = {
       ],
       festival_category: ["major", "regional", "community", "personal"],
       moderation_status: ["pending", "approved", "rejected"],
+      planet_type: [
+        "sun",
+        "moon",
+        "mars",
+        "mercury",
+        "jupiter",
+        "venus",
+        "saturn",
+        "rahu",
+        "ketu",
+      ],
       post_type: ["text", "image", "video", "audio", "experience", "question"],
       rarity_type: ["common", "rare", "epic", "legendary"],
       scripture_type: [
@@ -1166,6 +1491,20 @@ export const Constants = {
       ],
       spiritual_level: ["beginner", "seeker", "devotee", "sage"],
       visibility_type: ["public", "followers", "private"],
+      zodiac_sign: [
+        "aries",
+        "taurus",
+        "gemini",
+        "cancer",
+        "leo",
+        "virgo",
+        "libra",
+        "scorpio",
+        "sagittarius",
+        "capricorn",
+        "aquarius",
+        "pisces",
+      ],
     },
   },
 } as const

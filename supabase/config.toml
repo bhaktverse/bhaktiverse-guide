@@ -1,1 +1,16 @@
 project_id = "rbdbrbijgehakdsmnccm"
+
+[functions.multilingual-content]
+verify_jwt = false
+
+[functions.saint-chat]
+verify_jwt = false
+
+[functions.spiritual-audio-tts]
+verify_jwt = false
+
+[functions.numerology-analysis]
+verify_jwt = true
+
+[functions.daily-divine-recommendation]
+verify_jwt = false
