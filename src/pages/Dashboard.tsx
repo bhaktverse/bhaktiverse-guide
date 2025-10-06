@@ -269,19 +269,19 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
-                    onClick={() => navigate('/saints')}
+                    onClick={() => navigate('/numerology')}
                   >
-                    <div className="text-lg md:text-2xl">🧘‍♀️</div>
-                    <span>Chat with Saints</span>
+                    <div className="text-lg md:text-2xl">🔮</div>
+                    <span>Numerology</span>
                   </Button>
                   
                   <Button
                     variant="outline"
                     className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
-                    onClick={() => navigate('/scriptures')}
+                    onClick={() => navigate('/daily-devotion')}
                   >
-                    <div className="text-lg md:text-2xl">📖</div>
-                    <span>Read Scriptures</span>
+                    <div className="text-lg md:text-2xl">🙏</div>
+                    <span>Daily Devotion</span>
                   </Button>
                   
                   <Button
@@ -296,10 +296,10 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     className="h-16 md:h-20 flex-col space-y-1 md:space-y-2 hover:shadow-divine transition-all text-xs"
-                    onClick={() => navigate('/temples')}
+                    onClick={() => navigate('/saints')}
                   >
-                    <div className="text-lg md:text-2xl">🏛️</div>
-                    <span>Find Temples</span>
+                    <div className="text-lg md:text-2xl">🧘‍♀️</div>
+                    <span>Chat with Saints</span>
                   </Button>
                 </div>
               </CardContent>

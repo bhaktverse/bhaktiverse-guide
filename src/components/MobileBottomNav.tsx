@@ -9,7 +9,8 @@ import {
   Calendar,
   User,
   MoreHorizontal,
-  Crown
+  Crown,
+  Compass
 } from 'lucide-react';
 
 const MobileBottomNav = () => {
@@ -18,10 +19,10 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
-    { icon: Users, label: 'Saints', path: '/saints' },
+    { icon: Compass, label: 'Numerology', path: '/numerology' },
     { icon: Music, label: 'Audio', path: '/audio-library' },
     { icon: Calendar, label: 'Calendar', path: '/spiritual-calendar' },
-    { icon: Crown, label: 'Premium', path: '/premium' },
+    { icon: Crown, label: 'More', path: '/premium' },
   ];
 
   return (

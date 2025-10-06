@@ -86,6 +86,13 @@ const Navigation = () => {
                   </Button>
                   
                   <Button variant="ghost" size="sm" asChild>
+                    <Link to="/numerology" className="flex items-center space-x-1 hover:text-primary">
+                      <Compass className="h-4 w-4" />
+                      <span>Numerology</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="ghost" size="sm" asChild>
                     <Link to="/premium" className="flex items-center space-x-1 hover:text-secondary text-secondary">
                       <Crown className="h-4 w-4" />
                       <span>Premium</span>
