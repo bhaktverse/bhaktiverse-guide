@@ -208,6 +208,10 @@
     box-shadow: var(--shadow-glow);
   }
   
+  .shadow-divine-lg {
+    box-shadow: 0 20px 60px -15px hsl(25 100% 50% / 0.4), 0 10px 40px -10px hsl(45 100% 55% / 0.3);
+  }
+  
   /* Spiritual Card Styles */
   .card-sacred {
     @apply bg-card-sacred border border-border/50 shadow-lotus transition-all duration-300;
@@ -215,6 +219,24 @@
   
   .card-sacred:hover {
     @apply shadow-divine transform -translate-y-1;
+  }
+  
+  /* Scrollbar Styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-border/50 rounded-full;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-border;
   }
 }
 
