@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { 
+import { useToast } from '@/hooks/use-toast';
+import {
   Play, 
   Pause, 
   SkipBack, 
@@ -48,6 +49,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   onTrackChange,
   onPlaylistShuffle 
 }) => {
+  const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -63,8 +65,13 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     const audio = audioRef.current;
     if (!audio || !track) return;
 
+    // Reset state when track changes
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+
     const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
+    const updateDuration = () => setDuration(audio.duration || 0);
     const handleEnded = () => {
       if (repeatMode === 'one') {
         audio.currentTime = 0;
@@ -76,11 +83,27 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     
     const handleError = (e: Event) => {
       console.error('Audio playback error:', e);
-      console.log('Failed to load:', track.audio_url);
+      console.info('Failed to load:', track.audio_url);
+      toast({
+        title: "Audio Unavailable",
+        description: `Cannot play "${track.title}". Skipping to next track...`,
+        variant: "destructive",
+      });
+      setIsPlaying(false);
+      
+      // Auto-skip to next track after 1.5 seconds
+      setTimeout(() => {
+        handleNext();
+      }, 1500);
     };
 
     const handleCanPlay = () => {
       console.log('✅ Audio ready to play:', track.title);
+      setDuration(audio.duration || 0);
+    };
+
+    const handleLoadStart = () => {
+      console.log('📡 Loading audio:', track.title);
     };
 
     audio.addEventListener('timeupdate', updateTime);
@@ -88,10 +111,10 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('loadstart', handleLoadStart);
 
-    // Reset playback when track changes
-    setCurrentTime(0);
-    setIsPlaying(false);
+    // Load the new track
+    audio.load();
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
@@ -99,8 +122,9 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('loadstart', handleLoadStart);
     };
-  }, [repeatMode, track]);
+  }, [repeatMode, track, toast]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -116,12 +140,31 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
+        // Ensure audio is loaded before playing
+        if (audioRef.current.readyState < 2) {
+          console.log('Waiting for audio to load...');
+          await new Promise((resolve) => {
+            const handleCanPlay = () => {
+              audioRef.current?.removeEventListener('canplay', handleCanPlay);
+              resolve(true);
+            };
+            audioRef.current?.addEventListener('canplay', handleCanPlay);
+            audioRef.current?.load();
+          });
+        }
+        
         await audioRef.current.play();
         setIsPlaying(true);
+        console.log('▶️ Playing:', track.title);
       }
     } catch (error) {
       console.error('Playback error:', error);
       setIsPlaying(false);
+      toast({
+        title: "Playback Error",
+        description: "Unable to play this audio. The file may be unavailable.",
+        variant: "destructive",
+      });
     }
   };
 
