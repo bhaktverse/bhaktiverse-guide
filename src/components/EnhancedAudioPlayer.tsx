@@ -61,29 +61,46 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !track) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
     const handleEnded = () => {
       if (repeatMode === 'one') {
         audio.currentTime = 0;
-        audio.play();
+        audio.play().catch(console.error);
       } else {
         handleNext();
       }
+    };
+    
+    const handleError = (e: Event) => {
+      console.error('Audio playback error:', e);
+      console.log('Failed to load:', track.audio_url);
+    };
+
+    const handleCanPlay = () => {
+      console.log('✅ Audio ready to play:', track.title);
     };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('canplay', handleCanPlay);
+
+    // Reset playback when track changes
+    setCurrentTime(0);
+    setIsPlaying(false);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [repeatMode]);
+  }, [repeatMode, track]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -91,15 +108,21 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     }
   }, [volume, isMuted]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!audioRef.current || !track) return;
     
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Playback error:', error);
+      setIsPlaying(false);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleProgressChange = (value: number[]) => {
