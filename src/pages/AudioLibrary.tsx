@@ -46,8 +46,8 @@ const AudioLibrary = () => {
   const [loading, setLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
 
   useEffect(() => {
@@ -200,8 +200,8 @@ const AudioLibrary = () => {
     const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (track.artist && track.artist.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const matchesCategory = !selectedCategory || track.category === selectedCategory;
-    const matchesLanguage = !selectedLanguage || track.language === selectedLanguage;
+    const matchesCategory = !selectedCategory || selectedCategory === 'all' || track.category === selectedCategory;
+    const matchesLanguage = !selectedLanguage || selectedLanguage === 'all' || track.language === selectedLanguage;
     
     return matchesSearch && matchesCategory && matchesLanguage;
   });
@@ -259,7 +259,7 @@ const AudioLibrary = () => {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {getCategoryIcon(category)} {category}
@@ -273,7 +273,7 @@ const AudioLibrary = () => {
                   <SelectValue placeholder="Language" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Languages</SelectItem>
+                  <SelectItem value="all">All Languages</SelectItem>
                   {languages.map((language) => (
                     <SelectItem key={language} value={language}>
                       {language === 'hindi' ? 'Hindi' : 
