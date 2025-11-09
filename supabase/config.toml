@@ -9,6 +9,12 @@ verify_jwt = false
 [functions.spiritual-audio-tts]
 verify_jwt = false
 
+[functions.palm-reading-analysis]
+verify_jwt = false
+
+[functions.hindu-panchang]
+verify_jwt = false
+
 [functions.numerology-analysis]
 verify_jwt = true
 

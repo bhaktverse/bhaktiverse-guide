@@ -59,9 +59,42 @@ const SpiritualCalendar = () => {
   useEffect(() => {
     if (user) {
       loadEvents();
-      loadTithiInfo();
+      loadPanchangData();
     }
   }, [user, currentDate]);
+
+  const loadPanchangData = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('hindu-panchang', {
+        body: { 
+          date: currentDate.toISOString().split('T')[0],
+          latitude: 28.6139, // Delhi coordinates as default
+          longitude: 77.2090
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.panchang) {
+        const p = data.panchang;
+        setTodayTithi({
+          name: p.hindu?.tithi || 'Shukla Paksha Saptami',
+          type: p.hindu?.tithi?.toLowerCase().includes('amavasya') ? 'amavasya' :
+                p.hindu?.tithi?.toLowerCase().includes('purnima') ? 'purnima' :
+                p.hindu?.tithi?.toLowerCase().includes('ekadashi') ? 'ekadashi' :
+                p.hindu?.tithi?.toLowerCase().includes('chaturdashi') ? 'chaturdashi' : 'regular',
+          significance: p.hindu?.tithi
+        });
+        
+        // Store panchang data for display
+        (window as any).currentPanchang = p;
+      }
+    } catch (error) {
+      console.error('Error loading panchang:', error);
+      // Fallback to mock data
+      loadTithiInfo();
+    }
+  };
 
   const loadEvents = async () => {
     try {
@@ -236,28 +269,36 @@ const SpiritualCalendar = () => {
               <div className="text-center">
                 <div className="text-2xl mb-1">⭐</div>
                 <p className="text-xs text-muted-foreground mb-1">Nakshatra</p>
-                <p className="text-sm font-semibold">Rohini</p>
+                <p className="text-sm font-semibold">
+                  {(window as any).currentPanchang?.hindu?.nakshatra || 'Rohini'}
+                </p>
               </div>
             </Card>
             <Card className="card-sacred p-3">
               <div className="text-center">
                 <div className="text-2xl mb-1">🪐</div>
                 <p className="text-xs text-muted-foreground mb-1">Yoga</p>
-                <p className="text-sm font-semibold">Shiva</p>
+                <p className="text-sm font-semibold">
+                  {(window as any).currentPanchang?.hindu?.yoga || 'Shiva'}
+                </p>
               </div>
             </Card>
             <Card className="card-sacred p-3">
               <div className="text-center">
                 <div className="text-2xl mb-1">⏰</div>
                 <p className="text-xs text-muted-foreground mb-1">Sunrise</p>
-                <p className="text-sm font-semibold">6:12 AM</p>
+                <p className="text-sm font-semibold">
+                  {(window as any).currentPanchang?.timings?.sunrise || '6:12 AM'}
+                </p>
               </div>
             </Card>
             <Card className="card-sacred p-3">
               <div className="text-center">
                 <div className="text-2xl mb-1">🌅</div>
                 <p className="text-xs text-muted-foreground mb-1">Sunset</p>
-                <p className="text-sm font-semibold">6:45 PM</p>
+                <p className="text-sm font-semibold">
+                  {(window as any).currentPanchang?.timings?.sunset || '6:45 PM'}
+                </p>
               </div>
             </Card>
           </div>

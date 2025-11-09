@@ -22,6 +22,10 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true,
     },
+    Camera: {
+      presentationStyle: 'fullscreen',
+      saveToGallery: false
+    },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
     },

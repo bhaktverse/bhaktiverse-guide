@@ -23,6 +23,7 @@ import Numerology from "./pages/Numerology";
 import DivineDashboard from "./pages/DivineDashboard";
 import DailyDevotion from "./pages/DailyDevotion";
 import AudioLibraryGuide from "./pages/AudioLibraryGuide";
+import PalmReading from "./pages/PalmReading";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/divine-dashboard" element={<DivineDashboard />} />
             <Route path="/daily-devotion" element={<DailyDevotion />} />
             <Route path="/audio-library-guide" element={<AudioLibraryGuide />} />
+            <Route path="/palm-reading" element={<PalmReading />} />
 
             {/* CATCH-ALL */}
             <Route path="*" element={<NotFound />} />
