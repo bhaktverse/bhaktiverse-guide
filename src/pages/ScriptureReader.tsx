@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +56,9 @@ const ScriptureReader = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [fontSize, setFontSize] = useState(16);
   const [readingProgress, setReadingProgress] = useState(0);
+  const [theme, setTheme] = useState<'light' | 'sepia' | 'dark'>('light');
+  const [pageMode, setPageMode] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -112,6 +115,9 @@ const ScriptureReader = () => {
           verse_count: ch.verse_count || 0
         }));
         setChapters(dbChapters);
+        // Restore last position
+        const saved = localStorage.getItem(`bv:scripture:${scriptureId}:chapter`);
+        if (saved) setCurrentChapter(parseInt(saved, 10));
       } else {
         // Generate sample chapters if no data in database
         const sampleChapters: Chapter[] = [];
@@ -132,16 +138,51 @@ const ScriptureReader = () => {
     }
   };
 
-  const handleChapterChange = (chapterNum: number) => {
+  const handleChapterChange = async (chapterNum: number) => {
     if (chapterNum >= 1 && chapterNum <= chapters.length) {
       setCurrentChapter(chapterNum);
-      setReadingProgress(Math.floor(Math.random() * 100)); // Mock progress
+      localStorage.setItem(`bv:scripture:${scriptureId}:chapter`, String(chapterNum));
+      const percent = chapters.length > 0 ? Math.round((chapterNum - 1) / chapters.length * 100) : 0;
+      setReadingProgress(percent);
+      // Persist progress for authenticated users
+      try {
+        if (user && scripture) {
+          await supabase.from('user_progress').upsert({
+            user_id: user.id,
+            content_id: scripture.id,
+            content_type: 'scripture',
+            progress_percentage: percent,
+            last_position: chapterNum,
+            completed: chapterNum >= chapters.length
+          });
+        }
+      } catch (e) {
+        console.warn('Could not persist reading progress', e);
+      }
     }
   };
 
-  const toggleAudioPlayback = () => {
-    setIsPlaying(!isPlaying);
-    // Here you would implement actual audio playback
+  const toggleAudioPlayback = async () => {
+    const audio = audioRef.current;
+    if (!audio && scripture?.audio_url) {
+      // lazily create the element
+      const el = new Audio(scripture.audio_url);
+      audioRef.current = el;
+    }
+    try {
+      if (audioRef.current) {
+        if (isPlaying) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        } else {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        }
+      }
+    } catch (err) {
+      console.error('Scripture audio playback error:', err);
+      setIsPlaying(false);
+    }
   };
 
   if (authLoading || loading) {
@@ -277,12 +318,14 @@ const ScriptureReader = () => {
                   </div>
 
                   {/* Reading Tools */}
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {/* Audio Controls */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={toggleAudioPlayback}
+                      disabled={!scripture?.audio_url}
+                      title={scripture?.audio_url ? 'Play/Pause audio narration' : 'No audio available'}
                     >
                       {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
@@ -296,10 +339,22 @@ const ScriptureReader = () => {
                         max={24}
                         min={12}
                         step={2}
-                        className="w-20"
+                        className="w-24"
                       />
                     </div>
-                    
+
+                    {/* Theme */}
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant={theme === 'light' ? 'default' : 'outline'} onClick={() => setTheme('light')}>Light</Button>
+                      <Button size="sm" variant={theme === 'sepia' ? 'default' : 'outline'} onClick={() => setTheme('sepia')}>Sepia</Button>
+                      <Button size="sm" variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')}>Dark</Button>
+                    </div>
+
+                    {/* Page Mode */}
+                    <Button size="sm" variant={pageMode ? 'default' : 'outline'} onClick={() => setPageMode(!pageMode)}>
+                      Book Mode
+                    </Button>
+
                     {/* Action Buttons */}
                     <Button variant="outline" size="sm">
                       <Bookmark className="h-4 w-4" />
@@ -335,7 +390,11 @@ const ScriptureReader = () => {
               
               <CardContent>
                 <div 
-                  className="prose prose-lg max-w-none leading-relaxed"
+                  className={
+                    `prose prose-lg max-w-none leading-relaxed rounded-xl p-6 shadow-divine ${
+                      theme === 'sepia' ? 'bg-amber-50 dark:bg-amber-900/10' : theme === 'dark' ? 'bg-background' : 'bg-white'
+                    } ${pageMode ? 'md:columns-2 gap-12' : ''}`
+                  }
                   style={{ fontSize: `${fontSize}px` }}
                 >
                   <div className="space-y-6 text-foreground">

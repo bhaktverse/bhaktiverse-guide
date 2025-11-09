@@ -61,6 +61,21 @@ const AudioLibrary = () => {
   const loadTracks = async () => {
     try {
       setLoading(true);
+
+      const normalizeUrl = (url: string): string => {
+        if (!url) return url;
+        if (/^https?:\/\//i.test(url)) return url;
+        // Treat bare paths as coming from the public storage buckets
+        let bucket = 'audio-library';
+        let path = url;
+        const parts = url.split('/');
+        if (parts.length > 1 && (parts[0] === 'audio-library' || parts[0] === 'scriptures-audio')) {
+          bucket = parts[0];
+          path = parts.slice(1).join('/');
+        }
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        return data.publicUrl;
+      };
       
       // Load audio tracks from audio_library table
       const { data: audioTracks, error } = await supabase
@@ -77,7 +92,7 @@ const AudioLibrary = () => {
         artist: track.artist || 'Unknown Artist',
         category: track.category,
         duration: track.duration,
-        audio_url: track.audio_url,
+        audio_url: normalizeUrl(track.audio_url),
         lyrics: track.lyrics,
         meaning: track.meaning,
         language: track.language,
