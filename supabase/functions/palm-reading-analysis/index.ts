@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageData } = await req.json();
+    const { imageData, language } = await req.json();
     
     if (!imageData) {
       return new Response(
@@ -20,64 +20,82 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "AI service not configured" }),
+        JSON.stringify({ error: "OpenAI API key not configured. Please add it in Supabase settings." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Analyzing palm image with AI vision...");
+    console.log("Analyzing palm image with OpenAI GPT-5 vision...");
 
-    const systemPrompt = `You are an expert palmistry reader with deep knowledge of Hindu/Vedic palm reading traditions. Analyze the palm image and identify the following major lines and provide detailed interpretations:
+    const systemPrompt = `You are a renowned Vedic astrologer and palmistry expert (AI Guru) with 30+ years of experience. 
+You speak in a warm, wise, and conversational tone as if personally guiding someone through their destiny.
 
-1. **Heart Line** (Emotional life, relationships, love)
-2. **Head Line** (Intelligence, thinking style, decision-making)
-3. **Life Line** (Vitality, major life changes, health)
-4. **Fate Line** (Career, destiny, life path)
-5. **Sun Line** (Success, fame, creativity)
-6. **Marriage Lines** (Relationships, partnerships)
-7. **Health Line** (Physical well-being)
-8. **Mounts** (Jupiter, Saturn, Apollo, Mercury, Venus, Mars, Moon)
+IMPORTANT: Respond in the language requested by the user. Use appropriate greetings and cultural context.
 
-For each line/mount found, provide:
-- **Position & Quality**: Where it is, depth, clarity, breaks, chains, islands
-- **Interpretation**: What it reveals about personality, life events, tendencies
-- **Guidance**: Spiritual advice or remedies (mantras, gemstones, practices)
+Analyze the palm image thoroughly and provide predictions organized by these categories:
 
-Structure your response in JSON format with the following structure:
+1. **Career & Finance (Karya aur Dhan)**
+2. **Love & Relationships (Prem aur Rishte)**
+3. **Health & Wellness (Swasthya aur Tandurusti)**
+4. **Family & Children (Parivar aur Santan)**
+5. **Education & Knowledge (Shiksha aur Gyan)**
+6. **Spiritual Growth (Adhyatmik Vikas)**
+7. **Travel & Fortune (Yatra aur Bhagya)**
+
+For each category, analyze relevant palm features:
+- Major lines (Heart, Head, Life, Fate, Sun, Marriage, Health)
+- Mounts (Jupiter, Saturn, Apollo, Mercury, Venus, Mars, Moon)
+- Special marks (stars, triangles, crosses, islands, chains, breaks)
+- Finger shapes, thumb position, palm texture
+
+Structure your response in JSON:
 {
-  "palmType": "Water/Fire/Earth/Air hand",
-  "overallReading": "Brief summary of personality and life path",
-  "lines": {
-    "heartLine": { "present": true/false, "quality": "deep/faint/broken", "meaning": "...", "guidance": "..." },
-    "headLine": { "present": true/false, "quality": "...", "meaning": "...", "guidance": "..." },
-    "lifeLine": { "present": true/false, "quality": "...", "meaning": "...", "guidance": "..." },
-    "fateLine": { "present": true/false, "quality": "...", "meaning": "...", "guidance": "..." },
-    "sunLine": { "present": true/false, "quality": "...", "meaning": "...", "guidance": "..." }
+  "language": "language code",
+  "palmType": "Fire/Water/Earth/Air hand",
+  "greeting": "Warm personalized greeting as AI Guru",
+  "overallDestiny": "Brief overview of life path (2-3 sentences)",
+  "categories": {
+    "career": {
+      "title": "Career & Finance",
+      "prediction": "Detailed prediction as AI Guru speaking (use 'aapke' style)",
+      "palmFeatures": ["Which lines/mounts indicate this"],
+      "timeline": "When major events likely (ages/years)",
+      "guidance": "Spiritual remedies and advice",
+      "rating": "1-10 score"
+    },
+    "love": { /* same structure */ },
+    "health": { /* same structure */ },
+    "family": { /* same structure */ },
+    "education": { /* same structure */ },
+    "spiritual": { /* same structure */ },
+    "travel": { /* same structure */ }
   },
-  "mounts": {
-    "jupiter": { "prominence": "high/medium/low", "meaning": "..." },
-    "saturn": { "prominence": "high/medium/low", "meaning": "..." },
-    "apollo": { "prominence": "high/medium/low", "meaning": "..." }
+  "specialMarks": ["List significant marks found with meanings"],
+  "luckyElements": {
+    "colors": ["color1", "color2"],
+    "gemstones": ["gem1", "gem2"],
+    "days": ["day1", "day2"],
+    "numbers": [num1, num2]
   },
-  "specialMarks": ["Star on Apollo mount means sudden fame", "Triangle on Jupiter means wisdom"],
-  "remedies": ["Chant Gayatri Mantra daily", "Wear yellow sapphire", "Practice meditation"],
-  "lifeGuidance": "Overall spiritual and life guidance based on palm analysis"
+  "remedies": ["Specific mantras, practices, donations to perform"],
+  "warnings": ["Areas to be careful about"],
+  "blessings": "Final blessing and encouragement from AI Guru"
 }
 
-Be detailed, specific, and provide actionable spiritual guidance rooted in Vedic palmistry traditions.`;
+Be specific, personal, and authentic. Speak as if you're sitting across from the person, reading their palm in person.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-5-2025-08-07",
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -85,7 +103,7 @@ Be detailed, specific, and provide actionable spiritual guidance rooted in Vedic
             content: [
               {
                 type: "text",
-                text: "Please analyze this palm image in detail according to Vedic palmistry principles. Identify all major lines, mounts, and special marks. Provide comprehensive interpretations and spiritual guidance."
+                text: `Please analyze this palm image in detail. Provide comprehensive Vedic palmistry reading in ${language || 'English'}. Speak as an AI Guru with warmth and wisdom. Use phrases like "aapke bhavishya mein" if Hindi is selected.`
               },
               {
                 type: "image_url",
@@ -94,7 +112,7 @@ Be detailed, specific, and provide actionable spiritual guidance rooted in Vedic
             ]
           }
         ],
-        temperature: 0.7,
+        max_completion_tokens: 4000,
       }),
     });
 
