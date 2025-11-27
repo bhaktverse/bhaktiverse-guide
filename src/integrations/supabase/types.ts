@@ -569,6 +569,36 @@ export type Database = {
         }
         Relationships: []
       }
+      palm_reading_history: {
+        Row: {
+          analysis: Json
+          created_at: string | null
+          id: string
+          language: string | null
+          palm_image_url: string | null
+          palm_type: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis: Json
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          palm_image_url?: string | null
+          palm_type?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis?: Json
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          palm_image_url?: string | null
+          palm_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       playlists: {
         Row: {
           created_at: string | null
