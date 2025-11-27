@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.palm-compatibility]
 verify_jwt = false
+
+[functions.palm-daily-horoscope]
+verify_jwt = false
