@@ -109,7 +109,7 @@ Make predictions specific to their palm characteristics mentioned in their readi
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5-2025-08-07",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           {
