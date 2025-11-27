@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Navigation from '@/components/Navigation';
+import PalmLineVisualization from '@/components/PalmLineVisualization';
+import SocialShare from '@/components/SocialShare';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera as CameraPlugin } from '@capacitor/camera';
@@ -32,7 +34,6 @@ import {
   Star,
   Globe,
   Volume2,
-  VolumeX,
   History,
   Download,
   HeartHandshake,
@@ -42,7 +43,12 @@ import {
   Clock,
   Play,
   Pause,
-  RotateCcw
+  RotateCcw,
+  Eye,
+  Sun,
+  Moon,
+  Sunrise,
+  Sunset
 } from 'lucide-react';
 
 interface CategoryPrediction {
@@ -108,6 +114,28 @@ interface CompatibilityResult {
   rawAnalysis?: string;
 }
 
+interface DailyHoroscope {
+  date?: string;
+  greeting?: string;
+  overallEnergy?: string;
+  luckyTime?: string;
+  luckyColor?: string;
+  luckyNumber?: number;
+  predictions?: {
+    morning?: { title: string; prediction: string; advice: string };
+    afternoon?: { title: string; prediction: string; advice: string };
+    evening?: { title: string; prediction: string; advice: string };
+  };
+  categories?: Record<string, { score: number; prediction: string; tip: string }>;
+  mantraOfTheDay?: string;
+  mantraMeaning?: string;
+  doToday?: string[];
+  avoidToday?: string[];
+  cosmicMessage?: string;
+  blessings?: string;
+  rawAnalysis?: string;
+}
+
 const LANGUAGES = [
   { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -159,6 +187,11 @@ const PalmReading = () => {
   
   // PDF Generation
   const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  // Horoscope & Visualization
+  const [horoscope, setHoroscope] = useState<DailyHoroscope | null>(null);
+  const [loadingHoroscope, setLoadingHoroscope] = useState(false);
+  const [showVisualization, setShowVisualization] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -467,6 +500,47 @@ const PalmReading = () => {
     }
   };
 
+  const generateDailyHoroscope = async () => {
+    if (!analysis) {
+      toast({
+        title: "Complete palm reading first",
+        description: "Get a palm reading to generate personalized horoscope",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoadingHoroscope(true);
+    setHoroscope(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('palm-daily-horoscope', {
+        body: {
+          palmAnalysis: analysis,
+          language: selectedLanguage
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.horoscope) {
+        setHoroscope(data.horoscope);
+        toast({
+          title: "🌟 Daily Horoscope Ready",
+          description: "Your personalized predictions for today",
+        });
+      }
+    } catch (error) {
+      console.error('Horoscope error:', error);
+      toast({
+        title: "Failed to generate horoscope",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingHoroscope(false);
+    }
+  };
+
   const generatePdfReport = async () => {
     if (!analysis) return;
     
@@ -657,21 +731,26 @@ const PalmReading = () => {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="scan" className="gap-2">
               <Camera className="h-4 w-4" />
-              <span className="hidden sm:inline">New Scan</span>
+              <span className="hidden sm:inline">Scan</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <History className="h-4 w-4" />
               <span className="hidden sm:inline">History</span>
-              {history.length > 0 && (
-                <Badge variant="secondary" className="ml-1">{history.length}</Badge>
-              )}
+            </TabsTrigger>
+            <TabsTrigger value="horoscope" className="gap-2">
+              <Sun className="h-4 w-4" />
+              <span className="hidden sm:inline">Horoscope</span>
+            </TabsTrigger>
+            <TabsTrigger value="visualization" className="gap-2">
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">Lines</span>
             </TabsTrigger>
             <TabsTrigger value="compatibility" className="gap-2">
               <HeartHandshake className="h-4 w-4" />
-              <span className="hidden sm:inline">Compatibility</span>
+              <span className="hidden sm:inline">Match</span>
             </TabsTrigger>
           </TabsList>
 
@@ -942,6 +1021,30 @@ const PalmReading = () => {
                           {narrationLoading ? 'Generating...' : isNarrating ? 'Pause' : 'Listen'}
                         </Button>
                         
+                        <SocialShare 
+                          title="AI Guru Palm Reading"
+                          text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'}
+                          palmType={analysis.palmType}
+                        />
+                        
+                        <Button
+                          onClick={() => setActiveTab('horoscope')}
+                          variant="outline"
+                          className="gap-2"
+                        >
+                          <Sun className="h-4 w-4" />
+                          Horoscope
+                        </Button>
+                        
+                        <Button
+                          onClick={() => setActiveTab('visualization')}
+                          variant="outline"
+                          className="gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Lines
+                        </Button>
+                        
                         <Button
                           onClick={generatePdfReport}
                           disabled={generatingPdf}
@@ -953,7 +1056,7 @@ const PalmReading = () => {
                           ) : (
                             <Download className="h-4 w-4" />
                           )}
-                          Download Report
+                          Download
                         </Button>
                         
                         <Button
@@ -962,7 +1065,6 @@ const PalmReading = () => {
                           className="gap-2"
                         >
                           <RotateCcw className="h-4 w-4" />
-                          New Reading
                         </Button>
                       </div>
 
@@ -1406,6 +1508,222 @@ const PalmReading = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Horoscope Tab */}
+          <TabsContent value="horoscope">
+            <div className="grid lg:grid-cols-2 gap-8">
+              <Card className="card-sacred">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Sun className="h-5 w-5 text-warning" />
+                    <span>Daily Horoscope</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Personalized predictions based on your palm reading
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {!analysis ? (
+                    <div className="text-center py-12">
+                      <Hand className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground mt-4">
+                        Complete a palm reading first to get personalized horoscope
+                      </p>
+                      <Button onClick={() => setActiveTab('scan')} className="mt-4 gap-2">
+                        <Camera className="h-4 w-4" />
+                        Get Palm Reading
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-gradient-to-r from-warning/10 to-primary/10 p-4 rounded-lg text-center">
+                        <p className="text-sm text-muted-foreground">Your palm type</p>
+                        <p className="text-xl font-bold">{analysis.palmType || 'Standard'} Hand</p>
+                      </div>
+                      <Button
+                        onClick={generateDailyHoroscope}
+                        disabled={loadingHoroscope}
+                        className="w-full gap-2 bg-gradient-to-r from-orange-500 to-yellow-500"
+                      >
+                        {loadingHoroscope ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Consulting the stars...
+                          </>
+                        ) : (
+                          <>
+                            <Sun className="h-4 w-4" />
+                            Generate Today's Horoscope
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Horoscope Results */}
+              <Card className="card-sacred">
+                <CardHeader>
+                  <CardTitle>Today's Predictions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!horoscope ? (
+                    <div className="text-center py-12">
+                      <Sun className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground mt-4">
+                        Generate your daily horoscope
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[600px] pr-4">
+                      <div className="space-y-4">
+                        {horoscope.greeting && (
+                          <div className="bg-warning/10 p-4 rounded-lg">
+                            <p className="italic">"{horoscope.greeting}"</p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="bg-muted/50 p-3 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Lucky Time</p>
+                            <p className="font-semibold">{horoscope.luckyTime || 'N/A'}</p>
+                          </div>
+                          <div className="bg-muted/50 p-3 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Lucky Color</p>
+                            <p className="font-semibold">{horoscope.luckyColor || 'N/A'}</p>
+                          </div>
+                          <div className="bg-muted/50 p-3 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Lucky Number</p>
+                            <p className="font-semibold">{horoscope.luckyNumber || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        {horoscope.predictions && (
+                          <div className="space-y-3">
+                            {horoscope.predictions.morning && (
+                              <div className="border rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Sunrise className="h-4 w-4 text-orange-500" />
+                                  <h4 className="font-semibold">{horoscope.predictions.morning.title}</h4>
+                                </div>
+                                <p className="text-sm">{horoscope.predictions.morning.prediction}</p>
+                                <p className="text-xs text-primary mt-1">{horoscope.predictions.morning.advice}</p>
+                              </div>
+                            )}
+                            {horoscope.predictions.afternoon && (
+                              <div className="border rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Sun className="h-4 w-4 text-yellow-500" />
+                                  <h4 className="font-semibold">{horoscope.predictions.afternoon.title}</h4>
+                                </div>
+                                <p className="text-sm">{horoscope.predictions.afternoon.prediction}</p>
+                                <p className="text-xs text-primary mt-1">{horoscope.predictions.afternoon.advice}</p>
+                              </div>
+                            )}
+                            {horoscope.predictions.evening && (
+                              <div className="border rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Moon className="h-4 w-4 text-indigo-500" />
+                                  <h4 className="font-semibold">{horoscope.predictions.evening.title}</h4>
+                                </div>
+                                <p className="text-sm">{horoscope.predictions.evening.prediction}</p>
+                                <p className="text-xs text-primary mt-1">{horoscope.predictions.evening.advice}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {horoscope.categories && (
+                          <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(horoscope.categories).map(([key, cat]) => (
+                              <div key={key} className="bg-muted/30 p-3 rounded-lg">
+                                <div className="flex justify-between items-center mb-1">
+                                  <h5 className="font-medium capitalize text-sm">{key}</h5>
+                                  <Badge variant="outline" className="text-xs">{cat.score}/10</Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{cat.prediction}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {horoscope.mantraOfTheDay && (
+                          <div className="bg-primary/10 p-4 rounded-lg text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Mantra of the Day</p>
+                            <p className="font-semibold text-primary">{horoscope.mantraOfTheDay}</p>
+                            {horoscope.mantraMeaning && (
+                              <p className="text-xs mt-1">{horoscope.mantraMeaning}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {(horoscope.doToday || horoscope.avoidToday) && (
+                          <div className="grid grid-cols-2 gap-3">
+                            {horoscope.doToday && horoscope.doToday.length > 0 && (
+                              <div className="bg-success/10 p-3 rounded-lg">
+                                <h5 className="font-semibold text-success text-sm mb-2">✓ Do Today</h5>
+                                <ul className="text-xs space-y-1">
+                                  {horoscope.doToday.map((item, i) => (
+                                    <li key={i}>{item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {horoscope.avoidToday && horoscope.avoidToday.length > 0 && (
+                              <div className="bg-destructive/10 p-3 rounded-lg">
+                                <h5 className="font-semibold text-destructive text-sm mb-2">✗ Avoid Today</h5>
+                                <ul className="text-xs space-y-1">
+                                  {horoscope.avoidToday.map((item, i) => (
+                                    <li key={i}>{item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {horoscope.cosmicMessage && (
+                          <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg">
+                            <p className="text-sm font-medium">✨ {horoscope.cosmicMessage}</p>
+                          </div>
+                        )}
+
+                        {horoscope.blessings && (
+                          <div className="text-center p-4 bg-primary/5 rounded-lg">
+                            <p className="italic">🙏 {horoscope.blessings}</p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Visualization Tab */}
+          <TabsContent value="visualization">
+            {palmImages.length > 0 ? (
+              <PalmLineVisualization 
+                imageUrl={palmImages[0]} 
+                palmType={analysis?.palmType}
+              />
+            ) : (
+              <Card className="card-sacred">
+                <CardContent className="text-center py-16">
+                  <Eye className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
+                  <p className="text-muted-foreground mt-4">
+                    Upload a palm image to see line visualization
+                  </p>
+                  <Button onClick={() => setActiveTab('scan')} className="mt-4 gap-2">
+                    <Camera className="h-4 w-4" />
+                    Scan Palm
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
