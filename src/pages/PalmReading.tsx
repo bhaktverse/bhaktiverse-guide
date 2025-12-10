@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Navigation from '@/components/Navigation';
 import SocialShare from '@/components/SocialShare';
 import PalmAnalysisResults from '@/components/PalmAnalysisResults';
+import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera as CameraPlugin } from '@capacitor/camera';
@@ -1615,7 +1616,7 @@ const PalmReading = () => {
           {/* Visualization Tab */}
           <TabsContent value="visualization">
             {palmImages.length > 0 ? (
-              <PalmLineVisualization 
+              <EnhancedPalmVisualization 
                 imageUrl={palmImages[0]} 
                 palmType={analysis?.palmType}
               />
