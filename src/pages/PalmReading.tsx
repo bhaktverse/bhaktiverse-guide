@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Navigation from '@/components/Navigation';
 import PalmLineVisualization from '@/components/PalmLineVisualization';
 import SocialShare from '@/components/SocialShare';
+import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera as CameraPlugin } from '@capacitor/camera';
@@ -48,21 +49,40 @@ import {
   Sun,
   Moon,
   Sunrise,
-  Sunset
+  Sunset,
+  Languages
 } from 'lucide-react';
 
 interface CategoryPrediction {
   title: string;
   prediction: string;
-  palmFeatures: string[];
-  timeline: string;
+  palmFeatures?: string[];
+  planetaryInfluence?: string;
+  timeline?: string;
   guidance: string;
   rating: number;
+}
+
+interface MountAnalysis {
+  strength: string;
+  meaning: string;
+}
+
+interface LineAnalysis {
+  type: string;
+  meaning: string;
+  loveStyle?: string;
+  thinkingStyle?: string;
+  vitality?: string;
+  destinyPath?: string;
+  successPath?: string;
 }
 
 interface PalmAnalysis {
   language?: string;
   palmType?: string;
+  dominantPlanet?: string;
+  nakshatra?: string;
   greeting?: string;
   overallDestiny?: string;
   categories?: {
@@ -74,15 +94,35 @@ interface PalmAnalysis {
     spiritual?: CategoryPrediction;
     travel?: CategoryPrediction;
   };
+  mountAnalysis?: {
+    jupiter?: MountAnalysis;
+    saturn?: MountAnalysis;
+    apollo?: MountAnalysis;
+    mercury?: MountAnalysis;
+    venus?: MountAnalysis;
+    mars?: MountAnalysis;
+    moon?: MountAnalysis;
+  };
+  lineAnalysis?: {
+    heartLine?: LineAnalysis;
+    headLine?: LineAnalysis;
+    lifeLine?: LineAnalysis;
+    fateLine?: LineAnalysis;
+    sunLine?: LineAnalysis;
+  };
   specialMarks?: string[];
   luckyElements?: {
     colors?: string[];
     gemstones?: string[];
+    mantras?: string[];
     days?: string[];
     numbers?: number[];
+    metals?: string[];
+    directions?: string[];
   };
   remedies?: string[];
   warnings?: string[];
+  yogas?: string[];
   blessings?: string;
   rawAnalysis?: string;
 }
@@ -116,22 +156,30 @@ interface CompatibilityResult {
 
 interface DailyHoroscope {
   date?: string;
+  dayPlanet?: string;
+  tithi?: string;
   greeting?: string;
   overallEnergy?: string;
+  energyScore?: number;
+  cosmicAlignment?: string;
   luckyTime?: string;
   luckyColor?: string;
   luckyNumber?: number;
+  luckyDirection?: string;
   predictions?: {
-    morning?: { title: string; prediction: string; advice: string };
-    afternoon?: { title: string; prediction: string; advice: string };
-    evening?: { title: string; prediction: string; advice: string };
+    morning?: { title: string; ruling?: string; prediction: string; bestActivity?: string; advice: string; caution?: string };
+    afternoon?: { title: string; ruling?: string; prediction: string; bestActivity?: string; advice: string; caution?: string };
+    evening?: { title: string; ruling?: string; prediction: string; bestActivity?: string; advice: string; caution?: string };
   };
-  categories?: Record<string, { score: number; prediction: string; tip: string }>;
-  mantraOfTheDay?: string;
+  categories?: Record<string, { score: number; planetInfluence?: string; prediction: string; tip: string; auspiciousTime?: string }>;
+  mantraOfTheDay?: string | { sanskrit?: string; transliteration?: string; meaning?: string; japaCount?: string; bestTime?: string };
   mantraMeaning?: string;
+  rituals?: { morning?: string; evening?: string; special?: string };
   doToday?: string[];
   avoidToday?: string[];
+  gemstoneAdvice?: { wear?: string; avoid?: string };
   cosmicMessage?: string;
+  affirmation?: string;
   blessings?: string;
   rawAnalysis?: string;
 }
@@ -999,227 +1047,82 @@ const PalmReading = () => {
                 )}
 
                 {analysis && (
-                  <ScrollArea className="h-[800px] pr-4">
-                    <div className="space-y-6">
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={toggleNarration}
-                          disabled={narrationLoading}
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          {narrationLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : isNarrating ? (
-                            <Pause className="h-4 w-4" />
-                          ) : audioUrl ? (
-                            <Play className="h-4 w-4" />
-                          ) : (
-                            <Volume2 className="h-4 w-4" />
-                          )}
-                          {narrationLoading ? 'Generating...' : isNarrating ? 'Pause' : 'Listen'}
-                        </Button>
-                        
-                        <SocialShare 
-                          title="AI Guru Palm Reading"
-                          text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'}
-                          palmType={analysis.palmType}
-                        />
-                        
-                        <Button
-                          onClick={() => setActiveTab('horoscope')}
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          <Sun className="h-4 w-4" />
-                          Horoscope
-                        </Button>
-                        
-                        <Button
-                          onClick={() => setActiveTab('visualization')}
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View Lines
-                        </Button>
-                        
-                        <Button
-                          onClick={generatePdfReport}
-                          disabled={generatingPdf}
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          {generatingPdf ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                          Download
-                        </Button>
-                        
-                        <Button
-                          onClick={resetScan}
-                          variant="outline"
-                          className="gap-2"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* AI Guru Greeting */}
-                      {analysis.greeting && (
-                        <Card className="card-sacred border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-secondary/10">
-                          <CardContent className="pt-6">
-                            <div className="flex items-start space-x-4">
-                              <div className="text-4xl">🧘‍♂️</div>
-                              <div className="flex-1">
-                                <p className="text-lg font-semibold mb-2">AI Guru speaks:</p>
-                                <p className="text-foreground leading-relaxed italic">
-                                  "{analysis.greeting}"
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Overall Destiny */}
-                      {analysis.overallDestiny && (
-                        <Card className="card-sacred border-primary/30">
-                          <CardHeader>
-                            <CardTitle className="flex items-center space-x-2">
-                              <Star className="h-5 w-5 text-warning" />
-                              <span>Your Life Path • {analysis.palmType} Hand</span>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-foreground leading-relaxed">{analysis.overallDestiny}</p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Category-wise Predictions */}
-                      {analysis.categories && Object.entries(analysis.categories).map(([key, category]) => {
-                        if (!category) return null;
-                        const Icon = getCategoryIcon(key);
-                        return (
-                          <Card key={key} className="card-sacred">
-                            <CardHeader>
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center space-x-2">
-                                  <Icon className="h-5 w-5 text-primary" />
-                                  <span>{category.title}</span>
-                                </CardTitle>
-                                <Badge variant="outline" className="text-lg px-3">
-                                  {category.rating}/10
-                                </Badge>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <p className="text-foreground leading-relaxed">{category.prediction}</p>
-                              
-                              {category.timeline && (
-                                <div className="bg-muted/50 rounded-lg p-3">
-                                  <p className="text-sm"><strong>Timeline:</strong> {category.timeline}</p>
-                                </div>
-                              )}
-                              
-                              {category.palmFeatures && category.palmFeatures.length > 0 && (
-                                <div>
-                                  <p className="text-sm font-semibold mb-2">Palm Indicators:</p>
-                                  <ul className="text-sm text-muted-foreground space-y-1">
-                                    {category.palmFeatures.map((feature, idx) => (
-                                      <li key={idx}>• {feature}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {category.guidance && (
-                                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                                  <p className="text-sm text-primary">
-                                    <strong>Guidance:</strong> {category.guidance}
-                                  </p>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-
-                      {/* Lucky Elements */}
-                      {analysis.luckyElements && (
-                        <Card className="card-sacred bg-gradient-to-br from-warning/10 to-success/10">
-                          <CardHeader>
-                            <CardTitle className="flex items-center space-x-2">
-                              <Star className="h-5 w-5 text-warning" />
-                              <span>Your Lucky Elements</span>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="grid grid-cols-2 gap-3 text-sm">
-                            {analysis.luckyElements.colors && (
-                              <div className="bg-background/50 p-3 rounded-lg">
-                                <strong>Colors:</strong> {analysis.luckyElements.colors.join(', ')}
-                              </div>
-                            )}
-                            {analysis.luckyElements.gemstones && (
-                              <div className="bg-background/50 p-3 rounded-lg">
-                                <strong>Gemstones:</strong> {analysis.luckyElements.gemstones.join(', ')}
-                              </div>
-                            )}
-                            {analysis.luckyElements.days && (
-                              <div className="bg-background/50 p-3 rounded-lg">
-                                <strong>Days:</strong> {analysis.luckyElements.days.join(', ')}
-                              </div>
-                            )}
-                            {analysis.luckyElements.numbers && (
-                              <div className="bg-background/50 p-3 rounded-lg">
-                                <strong>Numbers:</strong> {analysis.luckyElements.numbers.join(', ')}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Spiritual Remedies */}
-                      {analysis.remedies && analysis.remedies.length > 0 && (
-                        <Card className="card-sacred bg-gradient-to-br from-primary/5 to-secondary/5">
-                          <CardHeader>
-                            <CardTitle className="flex items-center space-x-2">
-                              <Flame className="h-5 w-5 text-primary" />
-                              <span>Spiritual Remedies</span>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <ul className="space-y-2">
-                              {analysis.remedies.map((remedy, idx) => (
-                                <li key={idx} className="flex items-start space-x-2">
-                                  <span className="text-primary mt-0.5">🕉️</span>
-                                  <span className="text-sm">{remedy}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Final Blessings */}
-                      {analysis.blessings && (
-                        <Card className="card-sacred border-2 border-success/30 bg-gradient-to-br from-success/5 to-primary/5">
-                          <CardContent className="pt-6">
-                            <div className="text-center space-y-3">
-                              <div className="text-3xl">🙏</div>
-                              <p className="text-foreground leading-relaxed font-medium italic">
-                                {analysis.blessings}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
+                  <div className="space-y-4">
+                    {/* Quick Action Buttons */}
+                    <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg">
+                      <Button
+                        onClick={toggleNarration}
+                        disabled={narrationLoading}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        {narrationLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : isNarrating ? (
+                          <Pause className="h-4 w-4" />
+                        ) : audioUrl ? (
+                          <Play className="h-4 w-4" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                        {narrationLoading ? 'Generating...' : isNarrating ? 'Pause' : 'Listen'}
+                      </Button>
+                      
+                      <SocialShare 
+                        title="AI Guru Palm Reading"
+                        text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'}
+                        palmType={analysis.palmType}
+                      />
+                      
+                      <Button
+                        onClick={() => setActiveTab('horoscope')}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <Sun className="h-4 w-4" />
+                        Horoscope
+                      </Button>
+                      
+                      <Button
+                        onClick={() => setActiveTab('visualization')}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View Lines
+                      </Button>
+                      
+                      <Button
+                        onClick={generatePdfReport}
+                        disabled={generatingPdf}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        {generatingPdf ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        Download
+                      </Button>
+                      
+                      <Button
+                        onClick={resetScan}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </ScrollArea>
+
+                    {/* Enhanced Analysis Results Component */}
+                    <ScrollArea className="h-[750px] pr-4">
+                      <PalmAnalysisResults 
+                        analysis={analysis} 
+                        palmImage={palmImages[0]}
+                      />
+                    </ScrollArea>
+                  </div>
                 )}
               </div>
             </div>
@@ -1652,9 +1555,16 @@ const PalmReading = () => {
                         {horoscope.mantraOfTheDay && (
                           <div className="bg-primary/10 p-4 rounded-lg text-center">
                             <p className="text-xs text-muted-foreground mb-1">Mantra of the Day</p>
-                            <p className="font-semibold text-primary">{horoscope.mantraOfTheDay}</p>
+                            <p className="font-semibold text-primary">
+                              {typeof horoscope.mantraOfTheDay === 'string' 
+                                ? horoscope.mantraOfTheDay 
+                                : horoscope.mantraOfTheDay.sanskrit || horoscope.mantraOfTheDay.transliteration}
+                            </p>
                             {horoscope.mantraMeaning && (
                               <p className="text-xs mt-1">{horoscope.mantraMeaning}</p>
+                            )}
+                            {typeof horoscope.mantraOfTheDay === 'object' && horoscope.mantraOfTheDay.meaning && (
+                              <p className="text-xs mt-1">{horoscope.mantraOfTheDay.meaning}</p>
                             )}
                           </div>
                         )}
