@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import DetailedCategoryCard from '@/components/DetailedCategoryCard';
+import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
 import {
   Hand,
   Briefcase,
@@ -16,22 +17,20 @@ import {
   Flame,
   Plane,
   Star,
-  Globe,
   Sparkles,
-  Gem,
-  Calendar,
-  Moon,
-  Sun,
-  Zap,
   Shield,
   AlertTriangle,
-  ChevronRight,
-  Languages
+  Languages,
+  Zap,
+  Sun,
+  Moon,
+  Eye
 } from 'lucide-react';
 
 interface CategoryPrediction {
   title: string;
   prediction: string;
+  observedFeatures?: string[];
   palmFeatures?: string[];
   planetaryInfluence?: string;
   timeline?: string;
@@ -41,10 +40,19 @@ interface CategoryPrediction {
 
 interface MountAnalysis {
   strength: string;
+  observed?: string;
   meaning: string;
 }
 
 interface LineAnalysis {
+  observed?: string;
+  position?: {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    curveIntensity?: string;
+  };
   type: string;
   meaning: string;
   loveStyle?: string;
@@ -57,7 +65,9 @@ interface LineAnalysis {
 interface PalmAnalysis {
   language?: string;
   palmType?: string;
+  tatvaExplanation?: string;
   dominantPlanet?: string;
+  secondaryPlanet?: string;
   nakshatra?: string;
   greeting?: string;
   overallDestiny?: string;
@@ -99,6 +109,8 @@ interface PalmAnalysis {
   remedies?: string[];
   warnings?: string[];
   yogas?: string[];
+  confidenceScore?: number;
+  accuracyNotes?: string;
   blessings?: string;
   rawAnalysis?: string;
 }
@@ -179,19 +191,12 @@ const LINE_CONFIG = {
 };
 
 export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysisResultsProps) {
-  const [displayLanguage, setDisplayLanguage] = useState<'hi' | 'en'>('hi');
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState('overview');
+  const [displayLanguage, setDisplayLanguage] = useState<'hi' | 'en'>((analysis.language as 'hi' | 'en') || 'hi');
+  const [activeSection, setActiveSection] = useState('predictions');
+  const [showVisualization, setShowVisualization] = useState(false);
 
   const toggleLanguage = () => {
     setDisplayLanguage(prev => prev === 'hi' ? 'en' : 'hi');
-  };
-
-  const getRatingColor = (rating: number) => {
-    if (rating >= 8) return 'text-green-500 bg-green-500/10';
-    if (rating >= 6) return 'text-yellow-500 bg-yellow-500/10';
-    if (rating >= 4) return 'text-orange-500 bg-orange-500/10';
-    return 'text-red-500 bg-red-500/10';
   };
 
   const getStrengthIcon = (strength: string) => {
@@ -203,11 +208,21 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
     }
   };
 
+  const isHindi = displayLanguage === 'hi';
+
+  // Calculate overall score from categories
+  const categoryRatings = analysis.categories 
+    ? Object.values(analysis.categories).filter(c => c).map(c => c?.rating || 0)
+    : [];
+  const overallScore = categoryRatings.length > 0 
+    ? Math.round(categoryRatings.reduce((a, b) => a + b, 0) / categoryRatings.length * 10) / 10
+    : 0;
+
   return (
     <div className="space-y-6">
-      {/* Language Toggle & Quick Stats */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      {/* Language Toggle & Quick Stats Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/10 rounded-xl">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -219,45 +234,90 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
           </Button>
           
           {analysis.palmType && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 px-3 py-1">
               <Hand className="h-3 w-3" />
               {analysis.palmType}
             </Badge>
           )}
           
           {analysis.dominantPlanet && (
-            <Badge variant="outline" className="gap-1">
+            <Badge variant="outline" className="gap-1 px-3 py-1">
               <Sparkles className="h-3 w-3" />
               {analysis.dominantPlanet}
             </Badge>
           )}
           
           {analysis.nakshatra && (
-            <Badge variant="outline" className="gap-1">
+            <Badge variant="outline" className="gap-1 px-3 py-1">
               <Star className="h-3 w-3" />
               {analysis.nakshatra}
             </Badge>
           )}
         </div>
+
+        <div className="flex items-center gap-3">
+          {/* Overall Score */}
+          {overallScore > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+              <span className="text-sm font-medium">{isHindi ? 'समग्र स्कोर' : 'Overall'}</span>
+              <span className="text-xl font-bold text-primary">{overallScore}</span>
+              <span className="text-sm text-muted-foreground">/10</span>
+            </div>
+          )}
+
+          {/* Confidence Score */}
+          {analysis.confidenceScore && (
+            <Badge variant="secondary" className="gap-1">
+              <Zap className="h-3 w-3" />
+              {analysis.confidenceScore}% {isHindi ? 'विश्वास' : 'Confidence'}
+            </Badge>
+          )}
+
+          {/* Visualization Toggle */}
+          {palmImage && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowVisualization(!showVisualization)}
+              className="gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              {showVisualization 
+                ? (isHindi ? 'छिपाएं' : 'Hide') 
+                : (isHindi ? 'रेखा दृश्य' : 'Line View')}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Palm Line Visualization */}
+      {showVisualization && palmImage && (
+        <EnhancedPalmVisualization
+          imageUrl={palmImage}
+          palmType={analysis.palmType}
+          lineAnalysis={analysis.lineAnalysis}
+          mountAnalysis={analysis.mountAnalysis}
+          language={displayLanguage}
+        />
+      )}
 
       {/* AI Guru Greeting Card */}
       {analysis.greeting && (
         <Card className="border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 overflow-hidden">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-3xl shadow-lg">
                   🧘‍♂️
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
                   ✓
                 </div>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-bold text-lg">
-                    {displayLanguage === 'hi' ? 'गुरु जी का संदेश' : 'Guru Ji Speaks'}
+                    {isHindi ? 'गुरु जी का संदेश' : 'Guru Ji Speaks'}
                   </h3>
                   <Badge variant="outline" className="text-xs">AI Guru</Badge>
                 </div>
@@ -272,163 +332,92 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
       {/* Overall Destiny Card */}
       {analysis.overallDestiny && (
-        <Card className="card-sacred">
+        <Card className="bg-gradient-to-br from-background via-primary/5 to-secondary/5">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-primary/10">
                 <Star className="h-5 w-5 text-primary" />
               </div>
-              <span>
-                {displayLanguage === 'hi' ? 'आपका जीवन पथ' : 'Your Life Path'}
-              </span>
+              <span>{isHindi ? 'आपका जीवन पथ' : 'Your Life Path'}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-foreground leading-relaxed text-lg">{analysis.overallDestiny}</p>
+            
+            {analysis.tatvaExplanation && (
+              <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>{isHindi ? 'तत्व विश्लेषण:' : 'Element Analysis:'}</strong> {analysis.tatvaExplanation}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Main Analysis Sections */}
+      {/* Main Analysis Tabs */}
       <Tabs value={activeSection} onValueChange={setActiveSection}>
-        <TabsList className="grid w-full grid-cols-4 mb-4">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">
-            {displayLanguage === 'hi' ? 'भविष्यवाणी' : 'Predictions'}
+        <TabsList className="grid w-full grid-cols-4 mb-4 h-auto">
+          <TabsTrigger value="predictions" className="text-xs sm:text-sm py-2">
+            {isHindi ? 'भविष्यवाणी' : 'Predictions'}
           </TabsTrigger>
-          <TabsTrigger value="lines" className="text-xs sm:text-sm">
-            {displayLanguage === 'hi' ? 'रेखाएं' : 'Lines'}
+          <TabsTrigger value="lines" className="text-xs sm:text-sm py-2">
+            {isHindi ? 'रेखाएं' : 'Lines'}
           </TabsTrigger>
-          <TabsTrigger value="mounts" className="text-xs sm:text-sm">
-            {displayLanguage === 'hi' ? 'पर्वत' : 'Mounts'}
+          <TabsTrigger value="mounts" className="text-xs sm:text-sm py-2">
+            {isHindi ? 'पर्वत' : 'Mounts'}
           </TabsTrigger>
-          <TabsTrigger value="remedies" className="text-xs sm:text-sm">
-            {displayLanguage === 'hi' ? 'उपाय' : 'Remedies'}
+          <TabsTrigger value="remedies" className="text-xs sm:text-sm py-2">
+            {isHindi ? 'उपाय' : 'Remedies'}
           </TabsTrigger>
         </TabsList>
 
         {/* Category Predictions Tab */}
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value="predictions" className="space-y-4">
           {analysis.categories && Object.entries(analysis.categories).map(([key, category]) => {
             if (!category) return null;
             const config = CATEGORY_CONFIG[key as keyof typeof CATEGORY_CONFIG];
             if (!config) return null;
-            
-            const Icon = config.icon;
-            const isExpanded = expandedCategory === key;
 
             return (
-              <Card 
-                key={key} 
-                className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${isExpanded ? 'ring-2 ring-primary/50' : ''}`}
-                onClick={() => setExpandedCategory(isExpanded ? null : key)}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${config.bgColor}`}>
-                        <Icon className={`h-5 w-5 ${config.color}`} />
-                      </div>
-                      <div>
-                        <span className="block">
-                          {displayLanguage === 'hi' ? config.hindiTitle : config.englishTitle}
-                        </span>
-                        {displayLanguage === 'hi' && (
-                          <span className="text-xs text-muted-foreground">{config.englishTitle}</span>
-                        )}
-                      </div>
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <div className={`px-3 py-1 rounded-full font-bold ${getRatingColor(category.rating)}`}>
-                        {category.rating}/10
-                      </div>
-                      <ChevronRight className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <Progress 
-                    value={category.rating * 10} 
-                    className="h-2 mt-2"
-                  />
-                </CardHeader>
-
-                <CardContent className={`space-y-4 transition-all ${isExpanded ? 'block' : 'hidden'}`}>
-                  {/* Main Prediction */}
-                  <div className="p-4 bg-muted/30 rounded-lg">
-                    <p className="text-foreground leading-relaxed">{category.prediction}</p>
-                  </div>
-
-                  {/* Planetary Influence */}
-                  {category.planetaryInfluence && (
-                    <div className="flex items-start gap-3 p-3 bg-purple-500/10 rounded-lg">
-                      <Sparkles className="h-5 w-5 text-purple-500 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-sm text-purple-600 dark:text-purple-400">
-                          {displayLanguage === 'hi' ? 'ग्रह प्रभाव' : 'Planetary Influence'}
-                        </p>
-                        <p className="text-sm">{category.planetaryInfluence}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Palm Features */}
-                  {category.palmFeatures && category.palmFeatures.length > 0 && (
-                    <div>
-                      <p className="font-semibold text-sm mb-2 flex items-center gap-2">
-                        <Hand className="h-4 w-4" />
-                        {displayLanguage === 'hi' ? 'हस्त संकेतक' : 'Palm Indicators'}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {category.palmFeatures.map((feature, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {feature}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Timeline */}
-                  {category.timeline && (
-                    <div className="flex items-start gap-3 p-3 bg-blue-500/10 rounded-lg">
-                      <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-sm text-blue-600 dark:text-blue-400">
-                          {displayLanguage === 'hi' ? 'समय सीमा' : 'Timeline'}
-                        </p>
-                        <p className="text-sm">{category.timeline}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Guidance */}
-                  {category.guidance && (
-                    <div className="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                      <Shield className="h-5 w-5 text-green-500 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-sm text-green-600 dark:text-green-400">
-                          {displayLanguage === 'hi' ? 'मार्गदर्शन' : 'Guidance'}
-                        </p>
-                        <p className="text-sm">{category.guidance}</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <DetailedCategoryCard
+                key={key}
+                categoryKey={key}
+                category={category}
+                icon={config.icon}
+                color={config.color}
+                bgColor={config.bgColor}
+                hindiTitle={config.hindiTitle}
+                englishTitle={config.englishTitle}
+                language={displayLanguage}
+              />
             );
           })}
+
+          {(!analysis.categories || Object.keys(analysis.categories).length === 0) && analysis.rawAnalysis && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{isHindi ? 'विश्लेषण' : 'Analysis'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="max-h-[500px]">
+                  <p className="whitespace-pre-wrap leading-relaxed">{analysis.rawAnalysis}</p>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Lines Analysis Tab */}
         <TabsContent value="lines" className="space-y-4">
-          <Card className="card-sacred">
+          <Card className="bg-gradient-to-br from-background to-primary/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Hand className="h-5 w-5 text-primary" />
-                {displayLanguage === 'hi' ? 'रेखा विश्लेषण' : 'Line Analysis'}
+                {isHindi ? 'रेखा विश्लेषण' : 'Line Analysis'}
               </CardTitle>
               <CardDescription>
-                {displayLanguage === 'hi' 
+                {isHindi 
                   ? 'आपके हाथ की प्रमुख रेखाओं का विस्तृत विश्लेषण' 
                   : 'Detailed analysis of major lines on your palm'}
               </CardDescription>
@@ -442,41 +431,77 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
                 const Icon = config.icon;
 
                 return (
-                  <div key={key} className="p-4 bg-muted/30 rounded-lg space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Icon className={`h-5 w-5 ${config.color}`} />
-                      <span className="font-semibold">
-                        {displayLanguage === 'hi' ? config.hindi : config.english}
-                      </span>
-                      {displayLanguage === 'hi' && (
-                        <span className="text-xs text-muted-foreground">({config.english})</span>
+                  <div key={key} className="p-4 bg-muted/30 rounded-xl space-y-3 border border-border/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg bg-background ${config.color}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="font-semibold">
+                            {isHindi ? config.hindi : config.english}
+                          </span>
+                          {isHindi && (
+                            <span className="text-xs text-muted-foreground ml-2">({config.english})</span>
+                          )}
+                        </div>
+                      </div>
+                      {line.type && (
+                        <Badge variant="outline" className="text-xs">{line.type}</Badge>
                       )}
                     </div>
                     
-                    {line.type && (
-                      <Badge variant="outline">{line.type}</Badge>
+                    {/* Observed details */}
+                    {line.observed && (
+                      <div className="p-3 bg-background/50 rounded-lg">
+                        <p className="text-sm font-medium mb-1 text-primary">
+                          {isHindi ? 'देखे गए विवरण:' : 'Observed Details:'}
+                        </p>
+                        <p className="text-sm text-foreground">{line.observed}</p>
+                      </div>
                     )}
                     
                     <p className="text-sm text-muted-foreground">{line.meaning}</p>
                     
-                    {line.loveStyle && (
-                      <p className="text-sm"><strong>{displayLanguage === 'hi' ? 'प्रेम शैली:' : 'Love Style:'}</strong> {line.loveStyle}</p>
-                    )}
-                    {line.thinkingStyle && (
-                      <p className="text-sm"><strong>{displayLanguage === 'hi' ? 'सोच शैली:' : 'Thinking Style:'}</strong> {line.thinkingStyle}</p>
-                    )}
-                    {line.vitality && (
-                      <p className="text-sm"><strong>{displayLanguage === 'hi' ? 'जीवन शक्ति:' : 'Vitality:'}</strong> {line.vitality}</p>
-                    )}
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {line.loveStyle && (
+                        <div className="p-2 bg-background/50 rounded">
+                          <strong className="text-rose-500">{isHindi ? 'प्रेम शैली:' : 'Love Style:'}</strong>
+                          <p className="text-xs mt-1">{line.loveStyle}</p>
+                        </div>
+                      )}
+                      {line.thinkingStyle && (
+                        <div className="p-2 bg-background/50 rounded">
+                          <strong className="text-purple-500">{isHindi ? 'सोच शैली:' : 'Thinking:'}</strong>
+                          <p className="text-xs mt-1">{line.thinkingStyle}</p>
+                        </div>
+                      )}
+                      {line.vitality && (
+                        <div className="p-2 bg-background/50 rounded">
+                          <strong className="text-green-500">{isHindi ? 'जीवन शक्ति:' : 'Vitality:'}</strong>
+                          <p className="text-xs mt-1">{line.vitality}</p>
+                        </div>
+                      )}
+                      {line.destinyPath && (
+                        <div className="p-2 bg-background/50 rounded">
+                          <strong className="text-yellow-500">{isHindi ? 'भाग्य पथ:' : 'Destiny:'}</strong>
+                          <p className="text-xs mt-1">{line.destinyPath}</p>
+                        </div>
+                      )}
+                      {line.successPath && (
+                        <div className="p-2 bg-background/50 rounded">
+                          <strong className="text-orange-500">{isHindi ? 'सफलता पथ:' : 'Success:'}</strong>
+                          <p className="text-xs mt-1">{line.successPath}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
 
               {(!analysis.lineAnalysis || Object.keys(analysis.lineAnalysis).length === 0) && (
                 <p className="text-center text-muted-foreground py-8">
-                  {displayLanguage === 'hi' 
-                    ? 'रेखा विश्लेषण उपलब्ध नहीं है' 
-                    : 'Line analysis not available'}
+                  {isHindi ? 'रेखा विश्लेषण उपलब्ध नहीं है' : 'Line analysis not available'}
                 </p>
               )}
             </CardContent>
@@ -485,16 +510,14 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
         {/* Mounts Analysis Tab */}
         <TabsContent value="mounts" className="space-y-4">
-          <Card className="card-sacred">
+          <Card className="bg-gradient-to-br from-background to-secondary/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                {displayLanguage === 'hi' ? 'पर्वत विश्लेषण' : 'Mount Analysis'}
+                {isHindi ? 'पर्वत विश्लेषण' : 'Mount Analysis'}
               </CardTitle>
               <CardDescription>
-                {displayLanguage === 'hi' 
-                  ? 'ग्रहों के पर्वत और उनका प्रभाव' 
-                  : 'Planetary mounts and their influence'}
+                {isHindi ? 'ग्रहों के पर्वत और उनका प्रभाव' : 'Planetary mounts and their influence'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -505,26 +528,36 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
                   if (!config) return null;
 
                   return (
-                    <div key={key} className="p-4 bg-muted/30 rounded-lg space-y-2">
+                    <div key={key} className="p-4 bg-muted/30 rounded-xl space-y-2 border border-border/50">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className={`text-2xl ${config.color}`}>{config.symbol}</span>
                           <div>
                             <span className="font-semibold">
-                              {displayLanguage === 'hi' ? config.planet : config.english}
+                              {isHindi ? config.planet : config.english}
                             </span>
-                            {displayLanguage === 'hi' && (
+                            {isHindi && (
                               <span className="text-xs text-muted-foreground block">{config.english}</span>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
                           {getStrengthIcon(mount.strength)}
-                          <Badge variant="outline" className="text-xs capitalize">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs capitalize ${
+                              mount.strength === 'strong' ? 'border-green-500 text-green-500' :
+                              mount.strength === 'weak' ? 'border-red-500 text-red-500' :
+                              'border-yellow-500 text-yellow-500'
+                            }`}
+                          >
                             {mount.strength}
                           </Badge>
                         </div>
                       </div>
+                      {mount.observed && (
+                        <p className="text-xs text-primary bg-primary/5 p-2 rounded">{mount.observed}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">{mount.meaning}</p>
                     </div>
                   );
@@ -533,9 +566,7 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
               {(!analysis.mountAnalysis || Object.keys(analysis.mountAnalysis).length === 0) && (
                 <p className="text-center text-muted-foreground py-8">
-                  {displayLanguage === 'hi' 
-                    ? 'पर्वत विश्लेषण उपलब्ध नहीं है' 
-                    : 'Mount analysis not available'}
+                  {isHindi ? 'पर्वत विश्लेषण उपलब्ध नहीं है' : 'Mount analysis not available'}
                 </p>
               )}
             </CardContent>
@@ -543,18 +574,18 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
           {/* Special Marks */}
           {analysis.specialMarks && analysis.specialMarks.length > 0 && (
-            <Card className="card-sacred">
+            <Card className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-warning" />
-                  {displayLanguage === 'hi' ? 'विशेष चिन्ह' : 'Special Marks'}
+                  {isHindi ? 'विशेष चिन्ह' : 'Special Marks'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {analysis.specialMarks.map((mark, idx) => (
-                    <div key={idx} className="flex items-start gap-2 p-2 bg-warning/10 rounded-lg">
-                      <span className="text-warning">✦</span>
+                    <div key={idx} className="flex items-start gap-2 p-3 bg-background/60 rounded-lg">
+                      <span className="text-warning text-lg">✦</span>
                       <span className="text-sm">{mark}</span>
                     </div>
                   ))}
@@ -568,73 +599,63 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
         <TabsContent value="remedies" className="space-y-4">
           {/* Lucky Elements */}
           {analysis.luckyElements && (
-            <Card className="card-sacred bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10">
+            <Card className="bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-orange-500/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-warning" />
-                  {displayLanguage === 'hi' ? 'शुभ तत्व' : 'Lucky Elements'}
+                  {isHindi ? 'शुभ तत्व' : 'Lucky Elements'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {analysis.luckyElements.colors && analysis.luckyElements.colors.length > 0 && (
                   <div className="p-3 bg-background/60 rounded-lg">
-                    <p className="font-semibold text-sm mb-1">
-                      🎨 {displayLanguage === 'hi' ? 'रंग' : 'Colors'}
-                    </p>
+                    <p className="font-semibold text-sm mb-1">🎨 {isHindi ? 'रंग' : 'Colors'}</p>
                     <p className="text-sm">{analysis.luckyElements.colors.join(', ')}</p>
                   </div>
                 )}
                 
                 {analysis.luckyElements.gemstones && analysis.luckyElements.gemstones.length > 0 && (
-                  <div className="p-3 bg-background/60 rounded-lg">
-                    <p className="font-semibold text-sm mb-1">
-                      💎 {displayLanguage === 'hi' ? 'रत्न' : 'Gemstones'}
-                    </p>
+                  <div className="p-3 bg-background/60 rounded-lg col-span-2 md:col-span-1">
+                    <p className="font-semibold text-sm mb-1">💎 {isHindi ? 'रत्न' : 'Gemstones'}</p>
                     <p className="text-sm">{analysis.luckyElements.gemstones.join(', ')}</p>
                   </div>
                 )}
                 
                 {analysis.luckyElements.days && analysis.luckyElements.days.length > 0 && (
                   <div className="p-3 bg-background/60 rounded-lg">
-                    <p className="font-semibold text-sm mb-1">
-                      📅 {displayLanguage === 'hi' ? 'दिन' : 'Days'}
-                    </p>
+                    <p className="font-semibold text-sm mb-1">📅 {isHindi ? 'दिन' : 'Days'}</p>
                     <p className="text-sm">{analysis.luckyElements.days.join(', ')}</p>
                   </div>
                 )}
                 
                 {analysis.luckyElements.numbers && analysis.luckyElements.numbers.length > 0 && (
                   <div className="p-3 bg-background/60 rounded-lg">
-                    <p className="font-semibold text-sm mb-1">
-                      🔢 {displayLanguage === 'hi' ? 'अंक' : 'Numbers'}
-                    </p>
+                    <p className="font-semibold text-sm mb-1">🔢 {isHindi ? 'अंक' : 'Numbers'}</p>
                     <p className="text-sm">{analysis.luckyElements.numbers.join(', ')}</p>
                   </div>
                 )}
                 
                 {analysis.luckyElements.mantras && analysis.luckyElements.mantras.length > 0 && (
                   <div className="p-3 bg-background/60 rounded-lg col-span-2">
-                    <p className="font-semibold text-sm mb-1">
-                      🕉️ {displayLanguage === 'hi' ? 'मंत्र' : 'Mantras'}
-                    </p>
-                    <p className="text-sm">{analysis.luckyElements.mantras.join(' | ')}</p>
+                    <p className="font-semibold text-sm mb-1">🕉️ {isHindi ? 'मंत्र' : 'Mantras'}</p>
+                    <div className="space-y-1">
+                      {analysis.luckyElements.mantras.map((mantra, idx) => (
+                        <p key={idx} className="text-sm font-medium text-primary">{mantra}</p>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
                 {analysis.luckyElements.metals && analysis.luckyElements.metals.length > 0 && (
                   <div className="p-3 bg-background/60 rounded-lg">
-                    <p className="font-semibold text-sm mb-1">
-                      ⚙️ {displayLanguage === 'hi' ? 'धातु' : 'Metals'}
-                    </p>
+                    <p className="font-semibold text-sm mb-1">⚙️ {isHindi ? 'धातु' : 'Metals'}</p>
                     <p className="text-sm">{analysis.luckyElements.metals.join(', ')}</p>
                   </div>
                 )}
                 
                 {analysis.luckyElements.directions && analysis.luckyElements.directions.length > 0 && (
                   <div className="p-3 bg-background/60 rounded-lg">
-                    <p className="font-semibold text-sm mb-1">
-                      🧭 {displayLanguage === 'hi' ? 'दिशाएं' : 'Directions'}
-                    </p>
+                    <p className="font-semibold text-sm mb-1">🧭 {isHindi ? 'दिशाएं' : 'Directions'}</p>
                     <p className="text-sm">{analysis.luckyElements.directions.join(', ')}</p>
                   </div>
                 )}
@@ -644,18 +665,18 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
           {/* Yogas */}
           {analysis.yogas && analysis.yogas.length > 0 && (
-            <Card className="card-sacred bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-purple-500" />
-                  {displayLanguage === 'hi' ? 'विशेष योग' : 'Special Yogas'}
+                  {isHindi ? 'विशेष योग' : 'Special Yogas'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {analysis.yogas.map((yoga, idx) => (
                     <div key={idx} className="flex items-start gap-2 p-3 bg-background/60 rounded-lg">
-                      <span className="text-purple-500">☯</span>
+                      <span className="text-purple-500 text-lg">☯</span>
                       <span className="text-sm">{yoga}</span>
                     </div>
                   ))}
@@ -666,18 +687,18 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
           {/* Spiritual Remedies */}
           {analysis.remedies && analysis.remedies.length > 0 && (
-            <Card className="card-sacred bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+            <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-green-500" />
-                  {displayLanguage === 'hi' ? 'आध्यात्मिक उपाय' : 'Spiritual Remedies'}
+                  {isHindi ? 'आध्यात्मिक उपाय' : 'Spiritual Remedies'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {analysis.remedies.map((remedy, idx) => (
                     <div key={idx} className="flex items-start gap-2 p-3 bg-background/60 rounded-lg">
-                      <span className="text-green-500">🕉️</span>
+                      <span className="text-green-500 text-lg">🕉️</span>
                       <span className="text-sm">{remedy}</span>
                     </div>
                   ))}
@@ -688,18 +709,18 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
 
           {/* Warnings */}
           {analysis.warnings && analysis.warnings.length > 0 && (
-            <Card className="card-sacred border-destructive/30 bg-gradient-to-br from-red-500/5 to-orange-500/5">
+            <Card className="border-destructive/30 bg-gradient-to-br from-red-500/5 to-orange-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">
                   <AlertTriangle className="h-5 w-5" />
-                  {displayLanguage === 'hi' ? 'सावधानियां' : 'Cautions'}
+                  {isHindi ? 'सावधानियां' : 'Cautions'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {analysis.warnings.map((warning, idx) => (
                     <div key={idx} className="flex items-start gap-2 p-3 bg-background/60 rounded-lg">
-                      <span className="text-destructive">⚠️</span>
+                      <span className="text-destructive text-lg">⚠️</span>
                       <span className="text-sm">{warning}</span>
                     </div>
                   ))}
@@ -720,7 +741,7 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
               </div>
               <div>
                 <h3 className="font-bold text-lg mb-2">
-                  {displayLanguage === 'hi' ? 'गुरु जी का आशीर्वाद' : 'Guru Ji Blessings'}
+                  {isHindi ? 'गुरु जी का आशीर्वाद' : 'Guru Ji Blessings'}
                 </h3>
                 <p className="text-foreground leading-relaxed font-medium italic text-lg max-w-2xl mx-auto">
                   "{analysis.blessings}"
@@ -731,16 +752,11 @@ export default function PalmAnalysisResults({ analysis, palmImage }: PalmAnalysi
         </Card>
       )}
 
-      {/* Raw Analysis Fallback */}
-      {analysis.rawAnalysis && !analysis.categories && (
-        <Card className="card-sacred">
-          <CardHeader>
-            <CardTitle>{displayLanguage === 'hi' ? 'विश्लेषण' : 'Analysis'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-wrap text-sm">{analysis.rawAnalysis}</p>
-          </CardContent>
-        </Card>
+      {/* Accuracy Notes */}
+      {analysis.accuracyNotes && (
+        <div className="text-center text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
+          <p>{analysis.accuracyNotes}</p>
+        </div>
       )}
     </div>
   );
