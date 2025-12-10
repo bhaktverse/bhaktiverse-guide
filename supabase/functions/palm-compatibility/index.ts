@@ -105,7 +105,7 @@ ${JSON.stringify(palmAnalysis2, null, 2)}
 Provide detailed compatibility analysis.`
           }
         ],
-        max_completion_tokens: 3000,
+        max_tokens: 3000,
       }),
     });
 

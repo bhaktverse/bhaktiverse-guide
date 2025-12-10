@@ -121,7 +121,7 @@ ${JSON.stringify(palmAnalysis, null, 2)}
 Provide personalized daily predictions.`
           }
         ],
-        max_completion_tokens: 2500,
+        max_tokens: 2500,
       }),
     });
 
