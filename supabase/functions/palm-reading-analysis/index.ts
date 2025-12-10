@@ -112,7 +112,7 @@ Be specific, personal, and authentic. Speak as if you're sitting across from the
             ]
           }
         ],
-        max_completion_tokens: 4000,
+        max_tokens: 4000,
       }),
     });
 

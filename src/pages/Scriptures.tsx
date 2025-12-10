@@ -50,16 +50,8 @@ const Scriptures = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("all");
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      loadScriptures();
-    }
-  }, [user]);
+    loadScriptures();
+  }, []);
 
   const loadScriptures = async () => {
     try {
@@ -174,7 +166,7 @@ const Scriptures = () => {
     }
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-peace flex items-center justify-center">
         <div className="text-center space-y-4">

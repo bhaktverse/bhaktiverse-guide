@@ -61,14 +61,8 @@ const Community = () => {
   ];
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-      return;
-    }
-    if (user) {
-      loadPosts();
-    }
-  }, [user, authLoading, navigate]);
+    loadPosts();
+  }, []);
 
   const loadPosts = async () => {
     try {
@@ -193,7 +187,7 @@ const Community = () => {
     return matchesSearch && matchesTag;
   });
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-peace flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -229,59 +223,65 @@ const Community = () => {
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="/placeholder.svg" />
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      {user?.email?.charAt(0).toUpperCase() || 'G'}
                     </AvatarFallback>
                   </Avatar>
-                  <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="flex-1 justify-start">
-                        Share your spiritual experience...
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Share with Community</DialogTitle>
-                        <DialogDescription>
-                          Share your spiritual insights, experiences, or questions
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Textarea
-                          placeholder="What's on your spiritual mind today?"
-                          value={newPost}
-                          onChange={(e) => setNewPost(e.target.value)}
-                          className="min-h-[100px]"
-                        />
-                        
-                        <div>
-                          <p className="text-sm font-medium mb-2">Add tags:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {availableTags.map(tag => (
-                              <Badge
-                                key={tag}
-                                variant={selectedTags.includes(tag) ? "default" : "outline"}
-                                className="cursor-pointer text-xs"
-                                onClick={() => {
-                                  if (selectedTags.includes(tag)) {
-                                    setSelectedTags(selectedTags.filter(t => t !== tag));
-                                  } else {
-                                    setSelectedTags([...selectedTags, tag]);
-                                  }
-                                }}
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        <Button onClick={createPost} className="w-full">
-                          <Send className="h-4 w-4 mr-2" />
-                          Share with Community
+                  {user ? (
+                    <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="flex-1 justify-start">
+                          Share your spiritual experience...
                         </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Share with Community</DialogTitle>
+                          <DialogDescription>
+                            Share your spiritual insights, experiences, or questions
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <Textarea
+                            placeholder="What's on your spiritual mind today?"
+                            value={newPost}
+                            onChange={(e) => setNewPost(e.target.value)}
+                            className="min-h-[100px]"
+                          />
+                          
+                          <div>
+                            <p className="text-sm font-medium mb-2">Add tags:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {availableTags.map(tag => (
+                                <Badge
+                                  key={tag}
+                                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                                  className="cursor-pointer text-xs"
+                                  onClick={() => {
+                                    if (selectedTags.includes(tag)) {
+                                      setSelectedTags(selectedTags.filter(t => t !== tag));
+                                    } else {
+                                      setSelectedTags([...selectedTags, tag]);
+                                    }
+                                  }}
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <Button onClick={createPost} className="w-full">
+                            <Send className="h-4 w-4 mr-2" />
+                            Share with Community
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  ) : (
+                    <Button variant="outline" className="flex-1 justify-start" onClick={() => navigate('/auth')}>
+                      Login to share your spiritual experience...
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

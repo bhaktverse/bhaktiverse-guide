@@ -51,12 +51,8 @@ const AudioLibrary = () => {
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-      return;
-    }
     loadTracks();
-  }, [user, authLoading, navigate]);
+  }, []);
 
   const loadTracks = async () => {
     try {
@@ -224,7 +220,7 @@ const AudioLibrary = () => {
   const categories = Array.from(new Set(tracks.map(t => t.category)));
   const languages = Array.from(new Set(tracks.map(t => t.language)));
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-peace flex items-center justify-center">
         <div className="text-center space-y-4">

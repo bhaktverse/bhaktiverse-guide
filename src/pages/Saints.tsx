@@ -32,12 +32,8 @@ const Saints = () => {
   const [selectedTradition, setSelectedTradition] = useState<string>('');
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-      return;
-    }
     loadSaints();
-  }, [user, authLoading, navigate]);
+  }, []);
 
   const loadSaints = async () => {
     try {
@@ -128,7 +124,7 @@ const Saints = () => {
 
   const traditions = Array.from(new Set(saints.map(saint => saint.tradition)));
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-temple">
         <div className="text-center">
