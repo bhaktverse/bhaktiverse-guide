@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import CameraPreviewWithGuide from './CameraPreviewWithGuide';
 import {
   Camera,
   Upload,
@@ -28,8 +29,6 @@ import {
   Shield
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Camera as CameraPlugin } from '@capacitor/camera';
-import { CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface UserMetadata {
   name?: string;
@@ -127,6 +126,7 @@ const PalmScannerBiometric = ({
   const [scanProgress, setScanProgress] = useState(0);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'capturing' | 'processing' | 'analyzing'>('idle');
+  const [showCameraPreview, setShowCameraPreview] = useState(false);
   
   // User metadata (optional)
   const [userMetadata, setUserMetadata] = useState<UserMetadata>({
@@ -168,36 +168,25 @@ const PalmScannerBiometric = ({
     }
   }, [isScanning, palmImages.length, currentScanStep]);
 
-  const handleCaptureStep = async () => {
-    try {
-      setScanPhase('capturing');
-      const image = await CameraPlugin.getPhoto({
-        quality: 95,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Prompt,
-        promptLabelHeader: `📸 ${SCAN_STEPS[currentScanStep].label}`,
-        promptLabelPhoto: SCAN_STEPS[currentScanStep].tip,
-      });
+  const handleCaptureStep = () => {
+    setShowCameraPreview(true);
+    setScanPhase('capturing');
+  };
 
-      if (image.dataUrl) {
-        setPalmImages(prev => [...prev, image.dataUrl!]);
-        setIsScanning(true);
-        setScanProgress(0);
-      }
-    } catch (error) {
-      console.error('Camera error:', error);
-      setScanPhase('idle');
-      // Fallback to file upload for web
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      } else {
-        toast({
-          title: "Camera not available",
-          description: "Please upload an image of your palm instead",
-          variant: "destructive"
-        });
-      }
+  const handleCameraCapture = (imageData: string) => {
+    setPalmImages(prev => [...prev, imageData]);
+    setShowCameraPreview(false);
+    setShowLanguageSelector(false);
+    setIsScanning(true);
+    setScanProgress(0);
+    setScanPhase('processing');
+  };
+
+  const handleCameraClose = () => {
+    setShowCameraPreview(false);
+    setScanPhase('idle');
+    if (palmImages.length === 0) {
+      setShowLanguageSelector(true);
     }
   };
 
@@ -224,7 +213,7 @@ const PalmScannerBiometric = ({
     reader.readAsDataURL(file);
   };
 
-  const startBiometricScan = async () => {
+  const startBiometricScan = () => {
     if (!selectedLanguage) {
       toast({
         title: "Select Language",
@@ -237,41 +226,8 @@ const PalmScannerBiometric = ({
     setCurrentScanStep(0);
     setPalmImages([]);
     setScanProgress(0);
-    
-    // Immediately trigger camera/upload after starting scan
-    try {
-      setScanPhase('capturing');
-      const image = await CameraPlugin.getPhoto({
-        quality: 95,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Prompt,
-        promptLabelHeader: `📸 ${SCAN_STEPS[0].label}`,
-        promptLabelPhoto: SCAN_STEPS[0].tip,
-      });
-
-      if (image.dataUrl) {
-        setPalmImages([image.dataUrl]);
-        setIsScanning(true);
-        setScanProgress(0);
-      } else {
-        setShowLanguageSelector(true);
-      }
-    } catch (error) {
-      console.error('Camera error:', error);
-      setScanPhase('idle');
-      // Fallback to file upload for web
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      } else {
-        setShowLanguageSelector(true);
-        toast({
-          title: "Camera not available",
-          description: "Please upload an image of your palm instead",
-          variant: "destructive"
-        });
-      }
-    }
+    setShowCameraPreview(true);
+    setScanPhase('capturing');
   };
 
   const resetScan = () => {
@@ -279,6 +235,7 @@ const PalmScannerBiometric = ({
     setCurrentScanStep(0);
     setScanProgress(0);
     setShowLanguageSelector(true);
+    setShowCameraPreview(false);
     setIsScanning(false);
     setScanPhase('idle');
     setUserMetadata({ name: '', dob: '', timeOfBirth: '' });
@@ -298,8 +255,18 @@ const PalmScannerBiometric = ({
 
   return (
     <div className="space-y-6">
+      {/* Camera Preview with Guide */}
+      {showCameraPreview && (
+        <CameraPreviewWithGuide
+          onCapture={handleCameraCapture}
+          onClose={handleCameraClose}
+          stepLabel={SCAN_STEPS[currentScanStep].label}
+          stepTip={SCAN_STEPS[currentScanStep].tip}
+        />
+      )}
+
       {/* Language Selection */}
-      {showLanguageSelector && (
+      {showLanguageSelector && !showCameraPreview && (
         <Card className="card-sacred border-2 border-primary/30 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
           <CardHeader className="relative">
@@ -388,6 +355,7 @@ const PalmScannerBiometric = ({
       )}
 
       {/* Biometric Scanner */}
+      {!showCameraPreview && (
       <Card className="card-sacred border-2 border-primary/20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5" />
         <CardHeader className="relative">
@@ -639,6 +607,7 @@ const PalmScannerBiometric = ({
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };
