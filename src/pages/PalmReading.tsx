@@ -13,6 +13,7 @@ import Navigation from '@/components/Navigation';
 import SocialShare from '@/components/SocialShare';
 import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
+import PalmScannerBiometric from '@/components/PalmScannerBiometric';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera as CameraPlugin } from '@capacitor/camera';
@@ -216,6 +217,12 @@ const PalmReading = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
   const [showLanguageSelector, setShowLanguageSelector] = useState(true);
+  const [showBiometricScanner, setShowBiometricScanner] = useState(false);
+  
+  // User metadata for enhanced analysis
+  const [userName, setUserName] = useState<string>('');
+  const [userDob, setUserDob] = useState<string>('');
+  const [userTimeOfBirth, setUserTimeOfBirth] = useState<string>('');
   
   // Voice Narration
   const [isNarrating, setIsNarrating] = useState(false);
@@ -326,8 +333,69 @@ const PalmReading = () => {
       return;
     }
     setShowLanguageSelector(false);
+    setShowBiometricScanner(true);
     setCurrentScanStep(0);
     setPalmImages([]);
+  };
+
+  const handleBiometricScanComplete = (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
+    setPalmImages(images);
+    setUserName(metadata.name || '');
+    setUserDob(metadata.dob || '');
+    setUserTimeOfBirth(metadata.timeOfBirth || '');
+  };
+
+  const handleBiometricAnalyze = async (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
+    setPalmImages(images);
+    setUserName(metadata.name || '');
+    setUserDob(metadata.dob || '');
+    setUserTimeOfBirth(metadata.timeOfBirth || '');
+    setShowBiometricScanner(false);
+    
+    // Trigger analysis
+    setAnalyzing(true);
+    setAnalysis(null);
+    setAudioUrl(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
+        body: { 
+          imageData: images[0],
+          language: selectedLanguage,
+          userName: metadata.name || undefined,
+          userDob: metadata.dob || undefined,
+          userTimeOfBirth: metadata.timeOfBirth || undefined
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.analysis) {
+        setAnalysis(data.analysis);
+        await saveToHistory(data.analysis, images[0]);
+        toast({
+          title: "🙏 Palm Reading Complete",
+          description: "Your detailed destiny reading is ready",
+        });
+      } else {
+        throw new Error('No analysis returned');
+      }
+
+    } catch (error) {
+      console.error('Palm analysis error:', error);
+      toast({
+        title: "Analysis failed",
+        description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const handleBiometricScanCancel = () => {
+    setShowBiometricScanner(false);
+    setShowLanguageSelector(true);
   };
 
   const handleCaptureScanStep = async () => {
@@ -408,7 +476,10 @@ const PalmReading = () => {
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
         body: { 
           imageData: palmImages[0],
-          language: selectedLanguage 
+          language: selectedLanguage,
+          userName: userName || undefined,
+          userDob: userDob || undefined,
+          userTimeOfBirth: userTimeOfBirth || undefined
         }
       });
 
@@ -722,11 +793,15 @@ const PalmReading = () => {
     setScanProgress(0);
     setAnalysis(null);
     setShowLanguageSelector(true);
+    setShowBiometricScanner(false);
     setIsScanning(false);
     setAudioUrl(null);
     setIsNarrating(false);
     setCompatibilityResult(null);
     setSelectedForCompatibility(null);
+    setUserName('');
+    setUserDob('');
+    setUserTimeOfBirth('');
   };
 
   const getCategoryIcon = (category: string) => {
@@ -804,8 +879,20 @@ const PalmReading = () => {
 
           {/* Scan Tab */}
           <TabsContent value="scan">
+            {/* Biometric Scanner Modal */}
+            {showBiometricScanner && (
+              <PalmScannerBiometric
+                selectedLanguage={selectedLanguage}
+                onLanguageChange={setSelectedLanguage}
+                onScanComplete={handleBiometricScanComplete}
+                onAnalyze={handleBiometricAnalyze}
+                analyzing={analyzing}
+                languages={LANGUAGES}
+              />
+            )}
+            
             {/* Language Selection */}
-            {showLanguageSelector && (
+            {showLanguageSelector && !showBiometricScanner && (
               <Card className="max-w-2xl mx-auto mb-8 card-sacred border-2 border-primary/30">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -833,10 +920,11 @@ const PalmReading = () => {
               </Card>
             )}
 
+            {!showBiometricScanner && (
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Left: Scanner */}
               <div className="space-y-6">
-                {!analysis && (
+                {!analysis && !showBiometricScanner && (
                   <Card className="card-sacred border-2 border-primary/20">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
@@ -1126,6 +1214,7 @@ const PalmReading = () => {
                 )}
               </div>
             </div>
+            )}
           </TabsContent>
 
           {/* History Tab */}
