@@ -14,6 +14,8 @@ import SocialShare from '@/components/SocialShare';
 import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
 import PalmScannerBiometric from '@/components/PalmScannerBiometric';
+import TarotPull from '@/components/TarotPull';
+import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Camera as CameraPlugin } from '@capacitor/camera';
@@ -247,6 +249,9 @@ const PalmReading = () => {
   const [horoscope, setHoroscope] = useState<DailyHoroscope | null>(null);
   const [loadingHoroscope, setLoadingHoroscope] = useState(false);
   const [showVisualization, setShowVisualization] = useState(false);
+  
+  // Free vs Premium reading toggle
+  const [showFullReading, setShowFullReading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -854,10 +859,14 @@ const PalmReading = () => {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="scan" className="gap-2">
               <Camera className="h-4 w-4" />
               <span className="hidden sm:inline">Scan</span>
+            </TabsTrigger>
+            <TabsTrigger value="tarot" className="gap-2">
+              <span className="text-lg">🔮</span>
+              <span className="hidden sm:inline">Tarot</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <History className="h-4 w-4" />
@@ -1215,6 +1224,70 @@ const PalmReading = () => {
               </div>
             </div>
             )}
+          </TabsContent>
+
+          {/* Tarot Tab */}
+          <TabsContent value="tarot">
+            <div className="grid lg:grid-cols-2 gap-8">
+              <TarotPull 
+                palmAnalysis={analysis || undefined}
+                language={selectedLanguage}
+                onPullComplete={(cards, interpretation) => {
+                  toast({
+                    title: "🔮 Tarot Reading Complete",
+                    description: "Your cards have revealed their wisdom",
+                  });
+                }}
+              />
+              
+              {/* Tarot + Palm Combo Info */}
+              <Card className="card-sacred">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="text-2xl">✨</span>
+                    Palm + Tarot Synergy
+                  </CardTitle>
+                  <CardDescription>
+                    Combining ancient wisdom traditions for deeper insight
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                      <span className="text-lg">🤚</span>
+                      <div>
+                        <p className="font-medium">Palm Reading</p>
+                        <p className="text-muted-foreground">Reveals your inherent nature, life patterns, and long-term destiny through physical features</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                      <span className="text-lg">🎴</span>
+                      <div>
+                        <p className="font-medium">Tarot Cards</p>
+                        <p className="text-muted-foreground">Illuminates current energies, immediate circumstances, and near-future possibilities</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <span className="text-lg">🔮</span>
+                      <div>
+                        <p className="font-medium text-primary">Combined Insight</p>
+                        <p className="text-muted-foreground">Together they provide a complete picture - what you're born with + what you're experiencing now</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {!analysis && (
+                    <Button 
+                      onClick={() => setActiveTab('scan')}
+                      className="w-full gap-2"
+                    >
+                      <Hand className="h-4 w-4" />
+                      Get Palm Reading First
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* History Tab */}
@@ -1725,6 +1798,15 @@ const PalmReading = () => {
             )}
           </TabsContent>
         </Tabs>
+        
+        {/* Disclaimer Footer */}
+        <div className="mt-12 text-center">
+          <p className="text-xs text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
+            🔮 <strong>Disclaimer:</strong> This palm reading and tarot service is for entertainment and spiritual reflection purposes only. 
+            It is not intended as medical, legal, financial, or professional advice. Readings are based on traditional Vedic palmistry (Samudrika Shastra) 
+            interpreted through AI assistance. Please consult qualified professionals for important life decisions.
+          </p>
+        </div>
       </div>
 
       <style>{`
