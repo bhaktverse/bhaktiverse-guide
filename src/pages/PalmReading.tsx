@@ -1200,6 +1200,15 @@ const PalmReading = () => {
                       >
                         <RotateCcw className="h-4 w-4" />
                       </Button>
+                      
+                      <Button
+                        onClick={() => navigate('/saint-chat')}
+                        variant="outline"
+                        className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Chat with Guru
+                      </Button>
                     </div>
 
                     {/* Conditional Results Display */}
@@ -1275,13 +1284,23 @@ const PalmReading = () => {
                   </div>
                   
                   {!analysis && (
-                    <Button 
-                      onClick={() => setActiveTab('scan')}
-                      className="w-full gap-2"
-                    >
-                      <Hand className="h-4 w-4" />
-                      Get Palm Reading First
-                    </Button>
+                      <div className="space-y-3">
+                        <Button 
+                          onClick={() => setActiveTab('scan')}
+                          className="w-full gap-2"
+                        >
+                          <Hand className="h-4 w-4" />
+                          Get Palm Reading First
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/saint-chat')}
+                          variant="outline"
+                          className="w-full gap-2"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Chat with AI Guru
+                        </Button>
+                      </div>
                   )}
                 </CardContent>
               </Card>
