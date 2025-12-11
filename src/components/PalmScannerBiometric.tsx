@@ -175,7 +175,7 @@ const PalmScannerBiometric = ({
         quality: 95,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
+        source: CameraSource.Prompt,
         promptLabelHeader: `📸 ${SCAN_STEPS[currentScanStep].label}`,
         promptLabelPhoto: SCAN_STEPS[currentScanStep].tip,
       });
@@ -188,11 +188,16 @@ const PalmScannerBiometric = ({
     } catch (error) {
       console.error('Camera error:', error);
       setScanPhase('idle');
-      toast({
-        title: "Camera access required",
-        description: "Please allow camera access or upload an image",
-        variant: "destructive"
-      });
+      // Fallback to file upload for web
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      } else {
+        toast({
+          title: "Camera not available",
+          description: "Please upload an image of your palm instead",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -219,7 +224,7 @@ const PalmScannerBiometric = ({
     reader.readAsDataURL(file);
   };
 
-  const startBiometricScan = () => {
+  const startBiometricScan = async () => {
     if (!selectedLanguage) {
       toast({
         title: "Select Language",
@@ -232,6 +237,41 @@ const PalmScannerBiometric = ({
     setCurrentScanStep(0);
     setPalmImages([]);
     setScanProgress(0);
+    
+    // Immediately trigger camera/upload after starting scan
+    try {
+      setScanPhase('capturing');
+      const image = await CameraPlugin.getPhoto({
+        quality: 95,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Prompt,
+        promptLabelHeader: `📸 ${SCAN_STEPS[0].label}`,
+        promptLabelPhoto: SCAN_STEPS[0].tip,
+      });
+
+      if (image.dataUrl) {
+        setPalmImages([image.dataUrl]);
+        setIsScanning(true);
+        setScanProgress(0);
+      } else {
+        setShowLanguageSelector(true);
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+      setScanPhase('idle');
+      // Fallback to file upload for web
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      } else {
+        setShowLanguageSelector(true);
+        toast({
+          title: "Camera not available",
+          description: "Please upload an image of your palm instead",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const resetScan = () => {
