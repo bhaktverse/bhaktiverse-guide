@@ -1,107 +1,133 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, BookOpen, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, BookOpen, ArrowRight, Play, Star, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-peace relative overflow-hidden pt-16">
-      {/* Floating Sacred Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 text-4xl animate-sacred-float opacity-20">🕉️</div>
-        <div className="absolute top-32 right-20 text-3xl animate-sacred-float opacity-15" style={{ animationDelay: '1s' }}>🪷</div>
-        <div className="absolute bottom-32 left-20 text-3xl animate-sacred-float opacity-20" style={{ animationDelay: '2s' }}>🙏</div>
-        <div className="absolute bottom-20 right-10 text-4xl animate-sacred-float opacity-15" style={{ animationDelay: '0.5s' }}>✨</div>
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-card to-background" />
+      
+      {/* Sacred Geometric Pattern */}
+      <div className="absolute inset-0 opacity-[0.03]">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--primary)) 2px, transparent 2px),
+                            radial-gradient(circle at 75% 75%, hsl(var(--secondary)) 2px, transparent 2px)`,
+          backgroundSize: '60px 60px'
+        }} />
       </div>
 
+      {/* Floating Sacred Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-[10%] text-6xl animate-sacred-float opacity-10">🕉️</div>
+        <div className="absolute top-40 right-[15%] text-4xl animate-sacred-float opacity-10" style={{ animationDelay: '1s' }}>🪷</div>
+        <div className="absolute bottom-40 left-[15%] text-5xl animate-sacred-float opacity-10" style={{ animationDelay: '2s' }}>✨</div>
+        <div className="absolute bottom-32 right-[10%] text-4xl animate-sacred-float opacity-10" style={{ animationDelay: '0.5s' }}>🙏</div>
+        <div className="absolute top-1/2 left-[5%] text-3xl animate-sacred-float opacity-5" style={{ animationDelay: '1.5s' }}>📿</div>
+        <div className="absolute top-1/3 right-[8%] text-3xl animate-sacred-float opacity-5" style={{ animationDelay: '2.5s' }}>🔔</div>
+      </div>
+
+      {/* Gradient Orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+
       <div className="container mx-auto px-4 text-center relative z-10">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
+          {/* Badge */}
+          <div className="animate-fade-in mb-6">
+            <Badge variant="outline" className="px-4 py-2 text-sm font-medium border-primary/30 bg-primary/5">
+              <Sparkles className="h-4 w-4 mr-2 text-primary animate-pulse" />
+              AI-Powered Spiritual Platform
+              <Zap className="h-4 w-4 ml-2 text-secondary" />
+            </Badge>
+          </div>
+
           {/* Main Hero Content */}
           <div className="animate-lotus-bloom">
-            <div className="text-6xl mb-6 animate-om-pulse">🕉️</div>
+            <div className="relative inline-block mb-8">
+              <div className="text-7xl md:text-8xl animate-om-pulse">🕉️</div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl -z-10" />
+            </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-temple bg-clip-text text-transparent leading-tight">
-              BhaktVerse
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
+              <span className="bg-gradient-temple bg-clip-text text-transparent">Bhakt</span>
+              <span className="bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent">Verse</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground mb-4 leading-relaxed">
+            <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-4 font-light">
               Your AI-Powered Spiritual Companion
             </p>
             
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
               Connect with ancient wisdom through modern AI. Chat with saint personalities, 
-              explore sacred scriptures, and join a global community of spiritual seekers.
+              explore sacred scriptures, discover your numerology, and join a global community of spiritual seekers.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button 
-                size="xl" 
-                variant="premium"
-                onClick={() => window.location.href = '/auth'}
-                className="shadow-divine hover:shadow-glow transition-all duration-500 transform hover:-translate-y-2"
+                size="lg" 
+                onClick={() => navigate('/auth')}
+                className="group bg-gradient-temple text-white shadow-divine hover:shadow-glow transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 px-8 py-6 text-lg"
               >
-                <Sparkles className="h-5 w-5 mr-2 animate-sacred-float" />
+                <Sparkles className="h-5 w-5 mr-2 group-hover:animate-spin" />
                 Begin Sacred Journey
+                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               
               <Button 
-                size="xl" 
-                variant="sacred"
-                onClick={() => window.location.href = '/saints'}
-                className="shadow-lotus hover:shadow-divine transition-all duration-500 transform hover:-translate-y-1"
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/saints')}
+                className="group border-2 border-primary/30 hover:border-primary hover:bg-primary/5 px-8 py-6 text-lg transition-all duration-300"
               >
-                <BookOpen className="h-5 w-5 mr-2" />
+                <BookOpen className="h-5 w-5 mr-2 group-hover:text-primary transition-colors" />
                 Explore Wisdom
               </Button>
             </div>
           </div>
 
           {/* Feature Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mt-16">
-            <Card className="card-sacred p-6 text-center animate-lotus-bloom" style={{ animationDelay: '0.2s' }}>
-              <div className="text-3xl mb-4">🧘‍♂️</div>
-              <h3 className="text-lg font-semibold mb-2 text-primary">AI Spiritual Guide</h3>
-              <p className="text-muted-foreground text-sm">
-                Chat with AI embodying wisdom of saints like Swami Vivekananda, Kabir, and Meera
-              </p>
-            </Card>
-
-            <Card className="card-sacred p-6 text-center animate-lotus-bloom" style={{ animationDelay: '0.4s' }}>
-              <div className="text-3xl mb-4">📿</div>
-              <h3 className="text-lg font-semibold mb-2 text-primary">Sacred Practices</h3>
-              <p className="text-muted-foreground text-sm">
-                Track mantras, meditation, and spiritual progress with gamified achievements
-              </p>
-            </Card>
-
-            <Card className="card-sacred p-6 text-center animate-lotus-bloom" style={{ animationDelay: '0.6s' }}>
-              <div className="text-3xl mb-4">🏛️</div>
-              <h3 className="text-lg font-semibold mb-2 text-primary">Live Darshan</h3>
-              <p className="text-muted-foreground text-sm">
-                Connect with temples worldwide, join live aarti, and experience divine presence
-              </p>
-            </Card>
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
+            {[
+              { emoji: '🧘‍♂️', title: 'AI Spiritual Guide', desc: 'Chat with AI embodying wisdom of saints like Swami Vivekananda, Kabir, and Meera', delay: '0.2s' },
+              { emoji: '🤚', title: 'Palm & Numerology', desc: 'Discover your destiny with AI-powered palm reading and numerology analysis', delay: '0.4s' },
+              { emoji: '🏛️', title: 'Live Darshan', desc: 'Connect with temples worldwide, join live aarti, and experience divine presence', delay: '0.6s' },
+            ].map((feature) => (
+              <Card 
+                key={feature.title}
+                className="group card-sacred p-6 text-center hover:shadow-divine-lg transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm bg-card/80" 
+                style={{ animationDelay: feature.delay }}
+              >
+                <div className="relative mb-4">
+                  <div className="text-4xl group-hover:scale-110 transition-transform duration-300">{feature.emoji}</div>
+                  <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
+              </Card>
+            ))}
           </div>
 
-          {/* Community Stats */}
-          <div className="mt-16 p-8 bg-card-sacred/50 rounded-2xl shadow-lotus">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">10K+</div>
-                <div className="text-sm text-muted-foreground">Spiritual Seekers</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">50+</div>
-                <div className="text-sm text-muted-foreground">Saint Personalities</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">1000+</div>
-                <div className="text-sm text-muted-foreground">Sacred Texts</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">500+</div>
-                <div className="text-sm text-muted-foreground">Temples Connected</div>
-              </div>
+          {/* Trust Stats */}
+          <div className="mt-16 p-8 bg-gradient-to-r from-card via-card-sacred to-card rounded-3xl shadow-lotus border border-border/50 backdrop-blur-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[
+                { value: '10K+', label: 'Spiritual Seekers', icon: '🙏' },
+                { value: '50+', label: 'Saint Personalities', icon: '🧘' },
+                { value: '1000+', label: 'Sacred Texts', icon: '📚' },
+                { value: '500+', label: 'Temples Connected', icon: '🏛️' },
+              ].map((stat) => (
+                <div key={stat.label} className="group">
+                  <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
+                  <div className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-1">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
