@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import CameraPreviewWithGuide from './CameraPreviewWithGuide';
+import PalmScanTutorial from './PalmScanTutorial';
 import {
   Camera,
   Upload,
@@ -26,7 +27,8 @@ import {
   Zap,
   Eye,
   Target,
-  Shield
+  Shield,
+  HelpCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -127,6 +129,11 @@ const PalmScannerBiometric = ({
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle' | 'capturing' | 'processing' | 'analyzing'>('idle');
   const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(() => {
+    // Check if user has seen tutorial before
+    const hasSeenTutorial = localStorage.getItem('palmScanTutorialSeen');
+    return !hasSeenTutorial;
+  });
   
   // User metadata (optional)
   const [userMetadata, setUserMetadata] = useState<UserMetadata>({
@@ -264,8 +271,26 @@ const PalmScannerBiometric = ({
     onAnalyze(palmImages, userMetadata);
   };
 
+  const handleTutorialComplete = () => {
+    localStorage.setItem('palmScanTutorialSeen', 'true');
+    setShowTutorial(false);
+  };
+
+  const handleTutorialSkip = () => {
+    localStorage.setItem('palmScanTutorialSeen', 'true');
+    setShowTutorial(false);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Tutorial Overlay for First-Time Users */}
+      {showTutorial && (
+        <PalmScanTutorial
+          onComplete={handleTutorialComplete}
+          onSkip={handleTutorialSkip}
+        />
+      )}
+
       {/* Camera Preview with Guide */}
       {showCameraPreview && (
         <CameraPreviewWithGuide
@@ -384,9 +409,20 @@ const PalmScannerBiometric = ({
               </Badge>
             )}
           </CardTitle>
-          <CardDescription className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-success" />
-            Advanced multi-angle scanning with ML line detection
+          <CardDescription className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-success" />
+              Advanced multi-angle scanning with ML line detection
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTutorial(true)}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <HelpCircle className="h-4 w-4 mr-1" />
+              Tutorial
+            </Button>
           </CardDescription>
         </CardHeader>
         <CardContent className="relative space-y-6">
