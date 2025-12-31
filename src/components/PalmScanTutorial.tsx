@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Hand,
   Camera,
@@ -11,7 +12,10 @@ import {
   CheckCircle2,
   Lightbulb,
   Target,
-  Eye
+  Eye,
+  Volume2,
+  VolumeX,
+  Loader2
 } from 'lucide-react';
 
 interface TutorialStep {
@@ -19,6 +23,7 @@ interface TutorialStep {
   title: string;
   description: string;
   tip: string;
+  narration: string;
   icon: React.ComponentType<{ className?: string }>;
   animation: 'pulse' | 'bounce' | 'wave' | 'glow';
   highlightArea?: 'palm' | 'lighting' | 'camera' | 'position';
@@ -30,6 +35,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Welcome to Palm Reading',
     description: 'Our AI-powered scanner will analyze your palm lines to reveal insights about your destiny.',
     tip: 'This tutorial will guide you through the scanning process step by step.',
+    narration: 'Welcome to Palm Reading. Our AI-powered scanner will analyze your palm lines to reveal insights about your destiny. This tutorial will guide you through the scanning process step by step.',
     icon: Sparkles,
     animation: 'glow'
   },
@@ -38,6 +44,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Good Lighting is Essential',
     description: 'Find a well-lit area. Natural daylight or bright indoor lighting works best.',
     tip: 'Avoid shadows on your palm for accurate line detection.',
+    narration: 'Good lighting is essential for accurate readings. Find a well-lit area. Natural daylight or bright indoor lighting works best. Make sure to avoid shadows on your palm.',
     icon: Sun,
     animation: 'pulse',
     highlightArea: 'lighting'
@@ -47,6 +54,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Position Your Palm',
     description: 'Place your palm flat facing the camera with fingers spread naturally.',
     tip: 'Keep your hand steady and fill the frame with your palm.',
+    narration: 'Now position your palm correctly. Place your palm flat facing the camera with fingers spread naturally. Keep your hand steady and fill the frame with your palm.',
     icon: Hand,
     animation: 'wave',
     highlightArea: 'palm'
@@ -56,6 +64,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Multi-Angle Capture',
     description: 'We\'ll capture 4 angles: center palm, left side, right side, and finger lines.',
     tip: 'The camera will guide you through each step automatically.',
+    narration: 'We will capture 4 different angles for accurate analysis. Center palm, left side, right side, and finger lines. The camera will guide you through each step automatically.',
     icon: Camera,
     animation: 'bounce',
     highlightArea: 'camera'
@@ -65,6 +74,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'AI Analysis',
     description: 'Our AI guru analyzes heart, head, life, fate, and sun lines using Vedic Samudrika Shastra.',
     tip: 'The more angles captured, the more accurate your reading!',
+    narration: 'Finally, our AI guru will analyze your heart line, head line, life line, fate line, and sun line using the ancient Vedic Samudrika Shastra. The more angles captured, the more accurate your reading will be. You are now ready to begin!',
     icon: Eye,
     animation: 'glow',
     highlightArea: 'position'
@@ -80,6 +90,71 @@ const PalmScanTutorial = ({ onComplete, onSkip }: PalmScanTutorialProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
   const [showHint, setShowHint] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCache = useRef<Map<number, string>>(new Map());
+
+  // Stop any playing audio
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsSpeaking(false);
+    }
+  }, []);
+
+  // Play narration for current step
+  const playNarration = useCallback(async (stepIndex: number) => {
+    if (!voiceEnabled) return;
+    
+    stopAudio();
+    
+    // Check cache first
+    if (audioCache.current.has(stepIndex)) {
+      const cachedAudio = audioCache.current.get(stepIndex)!;
+      const audio = new Audio(cachedAudio);
+      audioRef.current = audio;
+      audio.onended = () => setIsSpeaking(false);
+      audio.onplay = () => setIsSpeaking(true);
+      await audio.play();
+      return;
+    }
+
+    setIsLoadingAudio(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('palm-reading-tts', {
+        body: {
+          text: TUTORIAL_STEPS[stepIndex].narration,
+          voice: 'nova'
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.audioContent) throw new Error('No audio content');
+
+      const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+      audioCache.current.set(stepIndex, audioUrl);
+      
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => setIsSpeaking(false);
+      audio.onplay = () => setIsSpeaking(true);
+      await audio.play();
+    } catch (err) {
+      console.error('TTS error:', err);
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  }, [voiceEnabled, stopAudio]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAudio();
+    };
+  }, [stopAudio]);
 
   useEffect(() => {
     // Trigger hint after delay
@@ -91,14 +166,24 @@ const PalmScanTutorial = ({ onComplete, onSkip }: PalmScanTutorialProps) => {
     setIsAnimating(true);
     setShowHint(false);
     const timer = setTimeout(() => setIsAnimating(false), 500);
-    return () => clearTimeout(timer);
-  }, [currentStep]);
+    
+    // Play narration after animation completes
+    const narrationTimer = setTimeout(() => {
+      playNarration(currentStep);
+    }, 700);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(narrationTimer);
+    };
+  }, [currentStep, playNarration]);
 
   const step = TUTORIAL_STEPS[currentStep];
   const Icon = step.icon;
   const progress = ((currentStep + 1) / TUTORIAL_STEPS.length) * 100;
 
   const handleNext = () => {
+    stopAudio();
     if (currentStep < TUTORIAL_STEPS.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
@@ -107,9 +192,22 @@ const PalmScanTutorial = ({ onComplete, onSkip }: PalmScanTutorialProps) => {
   };
 
   const handlePrev = () => {
+    stopAudio();
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
     }
+  };
+
+  const handleSkip = () => {
+    stopAudio();
+    onSkip();
+  };
+
+  const toggleVoice = () => {
+    if (voiceEnabled) {
+      stopAudio();
+    }
+    setVoiceEnabled(!voiceEnabled);
   };
 
   const getAnimationClass = (animation: string) => {
@@ -144,16 +242,35 @@ const PalmScanTutorial = ({ onComplete, onSkip }: PalmScanTutorialProps) => {
         ))}
       </div>
 
-      {/* Skip button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onSkip}
-        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground z-10"
-      >
-        <X className="h-4 w-4 mr-1" />
-        Skip Tutorial
-      </Button>
+      {/* Top controls */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        {/* Voice toggle button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleVoice}
+          className={`text-muted-foreground hover:text-foreground ${voiceEnabled ? 'text-primary' : ''}`}
+        >
+          {isLoadingAudio ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : voiceEnabled ? (
+            <Volume2 className={`h-4 w-4 ${isSpeaking ? 'animate-pulse' : ''}`} />
+          ) : (
+            <VolumeX className="h-4 w-4" />
+          )}
+        </Button>
+        
+        {/* Skip button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSkip}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4 mr-1" />
+          Skip
+        </Button>
+      </div>
 
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-muted">
