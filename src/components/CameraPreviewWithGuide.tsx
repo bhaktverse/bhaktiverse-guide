@@ -19,13 +19,19 @@ interface CameraPreviewWithGuideProps {
   onClose: () => void;
   stepLabel: string;
   stepTip: string;
+  currentStep: number;
+  totalSteps: number;
+  autoAdvance?: boolean;
 }
 
 const CameraPreviewWithGuide = ({ 
   onCapture, 
   onClose, 
   stepLabel, 
-  stepTip 
+  stepTip,
+  currentStep,
+  totalSteps,
+  autoAdvance = true
 }: CameraPreviewWithGuideProps) => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -217,7 +223,12 @@ const CameraPreviewWithGuide = ({
         <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-white font-semibold">{stepLabel}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="secondary" className="bg-primary/20 text-primary-foreground">
+                  {currentStep + 1} / {totalSteps}
+                </Badge>
+                <h3 className="text-white font-semibold">{stepLabel}</h3>
+              </div>
               <p className="text-white/70 text-sm">{stepTip}</p>
             </div>
             <Button 
@@ -228,6 +239,14 @@ const CameraPreviewWithGuide = ({
             >
               <X className="h-5 w-5" />
             </Button>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="mt-2 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-300"
+              style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+            />
           </div>
         </div>
 

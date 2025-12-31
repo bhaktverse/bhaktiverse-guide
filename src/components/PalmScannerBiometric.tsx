@@ -135,7 +135,7 @@ const PalmScannerBiometric = ({
     timeOfBirth: ''
   });
 
-  // Biometric scan animation
+  // Biometric scan animation and auto-advance to next capture
   useEffect(() => {
     if (isScanning && palmImages.length > 0) {
       setScanPhase('processing');
@@ -144,29 +144,40 @@ const PalmScannerBiometric = ({
           if (prev >= 100) {
             clearInterval(interval);
             setIsScanning(false);
-            setScanPhase('idle');
+            
+            const currentImageIndex = palmImages.length - 1;
             
             toast({
-              title: `✓ ${SCAN_STEPS[currentScanStep].label} captured`,
-              description: currentScanStep < SCAN_STEPS.length - 1 
-                ? `Proceeding to ${SCAN_STEPS[currentScanStep + 1].label}...` 
+              title: `✓ ${SCAN_STEPS[currentImageIndex].label} captured`,
+              description: currentImageIndex < SCAN_STEPS.length - 1 
+                ? `Proceeding to ${SCAN_STEPS[currentImageIndex + 1].label}...` 
                 : '🎯 All scans complete! Ready for analysis',
             });
             
-            if (currentScanStep < SCAN_STEPS.length - 1) {
-              setCurrentScanStep(currentScanStep + 1);
+            // Auto-advance to next capture step
+            if (currentImageIndex < SCAN_STEPS.length - 1) {
+              setCurrentScanStep(currentImageIndex + 1);
               setScanProgress(0);
+              setScanPhase('idle');
+              
+              // Auto-open camera for next step after a brief delay
+              setTimeout(() => {
+                setShowCameraPreview(true);
+                setScanPhase('capturing');
+              }, 800);
             } else {
+              // All captures complete
+              setScanPhase('idle');
               onScanComplete(palmImages, userMetadata);
             }
             return 100;
           }
-          return prev + 1.5;
+          return prev + 2;
         });
-      }, 30);
+      }, 25);
       return () => clearInterval(interval);
     }
-  }, [isScanning, palmImages.length, currentScanStep]);
+  }, [isScanning, palmImages.length, currentScanStep, toast, onScanComplete, userMetadata]);
 
   const handleCaptureStep = () => {
     setShowCameraPreview(true);
@@ -262,6 +273,9 @@ const PalmScannerBiometric = ({
           onClose={handleCameraClose}
           stepLabel={SCAN_STEPS[currentScanStep].label}
           stepTip={SCAN_STEPS[currentScanStep].tip}
+          currentStep={currentScanStep}
+          totalSteps={SCAN_STEPS.length}
+          autoAdvance={true}
         />
       )}
 
