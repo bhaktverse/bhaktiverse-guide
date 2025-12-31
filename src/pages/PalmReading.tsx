@@ -14,6 +14,7 @@ import Navigation from '@/components/Navigation';
 import SocialShare from '@/components/SocialShare';
 import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
+import AILineDetectionOverlay from '@/components/AILineDetectionOverlay';
 import PalmScannerBiometric from '@/components/PalmScannerBiometric';
 import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
@@ -80,6 +81,15 @@ interface LineAnalysis {
   vitality?: string;
   destinyPath?: string;
   successPath?: string;
+  observed?: string;
+  rating?: number;
+  position?: {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    curveIntensity: string;
+  };
 }
 
 interface PalmAnalysis {
@@ -1795,16 +1805,29 @@ const PalmReading = () => {
           {/* Visualization Tab */}
           <TabsContent value="visualization">
             {palmImages.length > 0 ? (
-              <EnhancedPalmVisualization 
-                imageUrl={palmImages[0]} 
-                palmType={analysis?.palmType}
-              />
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* AI Line Detection Overlay */}
+                <AILineDetectionOverlay 
+                  imageUrl={palmImages[0]} 
+                  lineAnalysis={analysis?.lineAnalysis}
+                  isAnalyzing={analyzing}
+                  onAnalyzeRequest={analyzePalm}
+                />
+                
+                {/* Enhanced Visualization */}
+                <EnhancedPalmVisualization 
+                  imageUrl={palmImages[0]} 
+                  palmType={analysis?.palmType}
+                  lineAnalysis={analysis?.lineAnalysis}
+                  mountAnalysis={analysis?.mountAnalysis}
+                />
+              </div>
             ) : (
               <Card className="card-sacred">
                 <CardContent className="text-center py-16">
                   <Eye className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
                   <p className="text-muted-foreground mt-4">
-                    Upload a palm image to see line visualization
+                    Upload a palm image to see AI-powered line visualization
                   </p>
                   <Button onClick={() => setActiveTab('scan')} className="mt-4 gap-2">
                     <Camera className="h-4 w-4" />
