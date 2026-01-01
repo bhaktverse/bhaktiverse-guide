@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Navigation from '@/components/Navigation';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import SocialShare from '@/components/SocialShare';
 import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
@@ -20,11 +21,8 @@ import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Camera as CameraPlugin } from '@capacitor/camera';
-import { CameraResultType, CameraSource } from '@capacitor/camera';
 import {
   Camera,
-  Upload,
   Hand,
   Sparkles,
   AlertCircle,
@@ -54,8 +52,7 @@ import {
   Sun,
   Moon,
   Sunrise,
-  Sunset,
-  Languages
+  Upload
 } from 'lucide-react';
 
 interface CategoryPrediction {
@@ -207,13 +204,6 @@ const LANGUAGES = [
   { code: 'mr', name: 'मराठी (Marathi)', flag: '🇮🇳' },
 ];
 
-const SCAN_STEPS = [
-  { id: 'center', label: 'Center Palm', icon: Hand, description: 'Place palm flat, fingers spread' },
-  { id: 'left', label: 'Left Side', icon: Hand, description: 'Tilt hand slightly left' },
-  { id: 'right', label: 'Right Side', icon: Hand, description: 'Tilt hand slightly right' },
-  { id: 'fingers', label: 'Finger Lines', icon: Hand, description: 'Focus on finger tips' },
-];
-
 const PalmReading = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -223,14 +213,9 @@ const PalmReading = () => {
   
   const [activeTab, setActiveTab] = useState('scan');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('hi');
-  const [currentScanStep, setCurrentScanStep] = useState(0);
   const [palmImages, setPalmImages] = useState<string[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
-  const [showLanguageSelector, setShowLanguageSelector] = useState(true);
-  const [showBiometricScanner, setShowBiometricScanner] = useState(false);
   
   // User metadata for enhanced analysis
   const [userName, setUserName] = useState<string>('');
@@ -311,25 +296,7 @@ const PalmReading = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (isScanning && palmImages.length > 0) {
-      const interval = setInterval(() => {
-        setScanProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsScanning(false);
-            if (currentScanStep < SCAN_STEPS.length - 1) {
-              setCurrentScanStep(currentScanStep + 1);
-              setScanProgress(0);
-            }
-            return 100;
-          }
-          return prev + 2;
-        });
-      }, 50);
-      return () => clearInterval(interval);
-    }
-  }, [isScanning, palmImages.length, currentScanStep]);
+  // Note: Scanning animation is handled by PalmScannerBiometric component
 
   const loadHistory = async () => {
     if (!user) return;
@@ -380,20 +347,7 @@ const PalmReading = () => {
     }
   };
 
-  const startBiometricScan = () => {
-    if (!selectedLanguage) {
-      toast({
-        title: "Select Language",
-        description: "Please select your preferred language first",
-        variant: "destructive"
-      });
-      return;
-    }
-    setShowLanguageSelector(false);
-    setShowBiometricScanner(true);
-    setCurrentScanStep(0);
-    setPalmImages([]);
-  };
+  // Note: Biometric scan is now handled directly by PalmScannerBiometric component
 
   const handleBiometricScanComplete = (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
     setPalmImages(images);
@@ -402,12 +356,16 @@ const PalmReading = () => {
     setUserTimeOfBirth(metadata.timeOfBirth || '');
   };
 
+  const handleBiometricScanCancel = () => {
+    setPalmImages([]);
+    setAnalysis(null);
+  };
+
   const handleBiometricAnalyze = async (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
     setPalmImages(images);
     setUserName(metadata.name || '');
     setUserDob(metadata.dob || '');
     setUserTimeOfBirth(metadata.timeOfBirth || '');
-    setShowBiometricScanner(false);
     
     // Trigger analysis
     setAnalyzing(true);
@@ -450,42 +408,7 @@ const PalmReading = () => {
     }
   };
 
-  const handleBiometricScanCancel = () => {
-    setShowBiometricScanner(false);
-    setShowLanguageSelector(true);
-  };
-
-  const handleCaptureScanStep = async () => {
-    try {
-      const image = await CameraPlugin.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
-        promptLabelHeader: `Capture: ${SCAN_STEPS[currentScanStep].label}`,
-        promptLabelPhoto: 'Take Photo',
-      });
-
-      if (image.dataUrl) {
-        setPalmImages(prev => [...prev, image.dataUrl!]);
-        setIsScanning(true);
-        
-        toast({
-          title: `${SCAN_STEPS[currentScanStep].label} captured ✓`,
-          description: currentScanStep < SCAN_STEPS.length - 1 
-            ? `Next: ${SCAN_STEPS[currentScanStep + 1].label}` 
-            : 'All scans complete!',
-        });
-      }
-    } catch (error) {
-      console.error('Camera error:', error);
-      toast({
-        title: "Camera access failed",
-        description: "Please try uploading an image instead",
-        variant: "destructive"
-      });
-    }
-  };
+  // Note: Camera capture is handled by PalmScannerBiometric component
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -503,13 +426,9 @@ const PalmReading = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       setPalmImages([reader.result as string]);
-      setShowLanguageSelector(false);
-      setIsScanning(true);
-      setScanProgress(0);
-      
       toast({
         title: "Palm image uploaded",
-        description: "Processing biometric scan...",
+        description: "Ready for analysis",
       });
     };
     reader.readAsDataURL(file);
@@ -755,12 +674,7 @@ const PalmReading = () => {
 
   const resetScan = () => {
     setPalmImages([]);
-    setCurrentScanStep(0);
-    setScanProgress(0);
     setAnalysis(null);
-    setShowLanguageSelector(true);
-    setShowBiometricScanner(false);
-    setIsScanning(false);
     setAudioUrl(null);
     setIsNarrating(false);
     setCompatibilityResult(null);
@@ -805,6 +719,9 @@ const PalmReading = () => {
       <audio ref={audioRef} onEnded={() => setIsNarrating(false)} className="hidden" />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs className="mb-6" />
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-block mb-4 p-6 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-full animate-pulse">
@@ -849,8 +766,8 @@ const PalmReading = () => {
 
           {/* Scan Tab */}
           <TabsContent value="scan">
-            {/* Biometric Scanner Modal */}
-            {showBiometricScanner && (
+            {/* Show Scanner if no analysis or images */}
+            {!analysis && palmImages.length === 0 && (
               <PalmScannerBiometric
                 selectedLanguage={selectedLanguage}
                 onLanguageChange={setSelectedLanguage}
@@ -860,202 +777,107 @@ const PalmReading = () => {
                 languages={LANGUAGES}
               />
             )}
-            
-            {/* Language Selection */}
-            {showLanguageSelector && !showBiometricScanner && (
-              <Card className="max-w-2xl mx-auto mb-8 card-sacred border-2 border-primary/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Globe className="h-5 w-5 text-primary" />
-                    <span>Select Your Language / भाषा चुनें</span>
-                  </CardTitle>
-                  <CardDescription>
-                    AI Guru will speak to you in your chosen language
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                    <SelectTrigger className="w-full text-lg">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGES.map(lang => (
-                        <SelectItem key={lang.code} value={lang.code} className="text-lg">
-                          {lang.flag} {lang.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-            )}
 
-            {!showBiometricScanner && (
+            {/* Show Results Grid when palm images exist */}
+            {palmImages.length > 0 && (
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Left: Scanner */}
+              {/* Left: Image Preview */}
               <div className="space-y-6">
-                {!analysis && !showBiometricScanner && (
+                {!analysis && (
                   <Card className="card-sacred border-2 border-primary/20">
                     <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Camera className="h-5 w-5 text-primary" />
-                        <span>Biometric Palm Scanner</span>
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center space-x-2">
+                          <CheckCircle2 className="h-5 w-5 text-success" />
+                          <span>Palm Captured</span>
+                        </span>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                          {palmImages.length} scan{palmImages.length > 1 ? 's' : ''}
+                        </Badge>
                       </CardTitle>
-                      <CardDescription>
-                        Advanced multi-angle scanning for accurate predictions
-                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                      {palmImages.length === 0 ? (
-                        <div className="border-2 border-dashed border-primary/30 rounded-xl p-12 text-center space-y-4 bg-gradient-to-br from-primary/5 to-secondary/5">
-                          <div className="relative">
-                            <Hand className="h-24 w-24 mx-auto text-primary animate-pulse" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="h-32 w-32 border-4 border-primary/20 rounded-full animate-ping" />
-                            </div>
-                          </div>
-                          <p className="text-lg font-semibold text-foreground">
-                            Ready to scan your destiny
-                          </p>
-                          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                            <Button 
-                              onClick={startBiometricScan}
-                              disabled={!selectedLanguage}
-                              className="gap-2 bg-gradient-temple text-lg px-8 py-6"
-                            >
-                              <Sparkles className="h-5 w-5" />
-                              Start Biometric Scan
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={!selectedLanguage}
-                              className="gap-2 text-lg px-8 py-6"
-                            >
-                              <Upload className="h-5 w-5" />
-                              Upload Image
-                            </Button>
-                          </div>
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {/* Scan Progress */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                {SCAN_STEPS.map((step, idx) => {
-                                  const Icon = step.icon;
-                                  return (
-                                    <div key={step.id} className="flex items-center">
-                                      <div className={`p-2 rounded-full ${
-                                        idx < palmImages.length ? 'bg-success text-success-foreground' :
-                                        idx === currentScanStep ? 'bg-primary text-primary-foreground animate-pulse' :
-                                        'bg-muted text-muted-foreground'
-                                      }`}>
-                                        {idx < palmImages.length ? (
-                                          <CheckCircle2 className="h-4 w-4" />
-                                        ) : (
-                                          <Icon className="h-4 w-4" />
-                                        )}
-                                      </div>
-                                      {idx < SCAN_STEPS.length - 1 && (
-                                        <div className={`h-0.5 w-8 ${
-                                          idx < palmImages.length - 1 ? 'bg-success' : 'bg-muted'
-                                        }`} />
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <Badge variant="outline">
-                                {palmImages.length}/{SCAN_STEPS.length}
-                              </Badge>
-                            </div>
-                            
-                            {isScanning && (
-                              <div className="space-y-2">
-                                <Progress value={scanProgress} className="h-2" />
-                                <p className="text-sm text-center text-primary font-medium animate-pulse">
-                                  Analyzing biometric data... {scanProgress}%
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Current Scan Preview */}
-                          <div className="relative rounded-xl overflow-hidden shadow-divine border-2 border-primary/30">
-                            <img 
-                              src={palmImages[palmImages.length - 1]} 
-                              alt="Palm scan" 
-                              className="w-full h-auto"
-                            />
-                            {isScanning && (
-                              <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px]">
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="grid grid-cols-3 grid-rows-3 w-full h-full opacity-30">
-                                    {Array.from({ length: 9 }).map((_, i) => (
-                                      <div 
-                                        key={i} 
-                                        className="border border-primary/50 animate-pulse"
-                                        style={{ animationDelay: `${i * 100}ms` }}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="absolute top-0 left-0 right-0 h-1 bg-primary/50 animate-scan-line" />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="flex gap-3">
-                            {palmImages.length < SCAN_STEPS.length && !isScanning && (
-                              <Button
-                                onClick={handleCaptureScanStep}
-                                className="flex-1 gap-2 bg-gradient-temple"
-                              >
-                                <Camera className="h-4 w-4" />
-                                Capture {SCAN_STEPS[currentScanStep].label}
-                              </Button>
-                            )}
-                            
-                            {palmImages.length >= 1 && !analyzing && (
-                              <Button
-                                onClick={analyzePalm}
-                                disabled={isScanning}
-                                className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
-                              >
-                                {analyzing ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Consulting AI Guru...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles className="h-4 w-4" />
-                                    Get Reading
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                            
-                            <Button 
-                              variant="outline"
-                              onClick={resetScan}
-                              disabled={isScanning || analyzing}
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
+                    <CardContent className="space-y-4">
+                      <div className="relative rounded-xl overflow-hidden shadow-divine border-2 border-primary/30">
+                        <img 
+                          src={palmImages[palmImages.length - 1]} 
+                          alt="Palm scan" 
+                          className="w-full h-auto max-h-[400px] object-contain"
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={analyzePalm}
+                          disabled={analyzing}
+                          className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
+                        >
+                          {analyzing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Consulting AI Guru...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              Get Divine Reading
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={resetScan}
+                          disabled={analyzing}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center space-x-2">
+                          <CheckCircle2 className="h-5 w-5 text-success" />
+                          <span>Palm Captured</span>
+                        </span>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                          {palmImages.length} scan{palmImages.length > 1 ? 's' : ''}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="relative rounded-xl overflow-hidden shadow-divine border-2 border-primary/30">
+                        <img 
+                          src={palmImages[palmImages.length - 1]} 
+                          alt="Palm scan" 
+                          className="w-full h-auto max-h-[400px] object-contain"
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={analyzePalm}
+                          disabled={analyzing}
+                          className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
+                        >
+                          {analyzing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Consulting AI Guru...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              Get Divine Reading
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={resetScan}
+                          disabled={analyzing}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -1240,7 +1062,6 @@ const PalmReading = () => {
                 )}
               </div>
             </div>
-            )}
           </TabsContent>
 
           {/* Tarot Tab */}
