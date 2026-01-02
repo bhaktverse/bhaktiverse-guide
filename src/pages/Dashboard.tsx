@@ -355,11 +355,11 @@ const Dashboard = () => {
             {/* Featured Services */}
             <div className="grid md:grid-cols-2 gap-4">
               <Card 
-                className="group card-sacred cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                className="group card-sacred cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden relative"
                 onClick={() => navigate('/palm-reading')}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <CardContent className="p-6 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <CardContent className="p-6 relative z-10">
                   <div className="flex items-center gap-4">
                     <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg">
                       <Hand className="h-6 w-6" />
@@ -374,11 +374,11 @@ const Dashboard = () => {
               </Card>
 
               <Card 
-                className="group card-sacred cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                className="group card-sacred cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden relative"
                 onClick={() => navigate('/numerology')}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <CardContent className="p-6 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <CardContent className="p-6 relative z-10">
                   <div className="flex items-center gap-4">
                     <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg">
                       <Binary className="h-6 w-6" />
