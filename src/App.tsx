@@ -20,9 +20,7 @@ import AudioLibrary from "./pages/AudioLibrary";
 import Community from "./pages/Community";
 import Premium from "./pages/Premium";
 import Numerology from "./pages/Numerology";
-import DivineDashboard from "./pages/DivineDashboard";
 import DailyDevotion from "./pages/DailyDevotion";
-import AudioLibraryGuide from "./pages/AudioLibraryGuide";
 import PalmReading from "./pages/PalmReading";
 
 const queryClient = new QueryClient();
@@ -35,23 +33,30 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Main Dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
+            
+            {/* Content Routes */}
             <Route path="/saints" element={<Saints />} />
             <Route path="/saints/:saintId/chat" element={<SaintChat />} />
-            <Route path="/temples" element={<Temples />} />
             <Route path="/scriptures" element={<Scriptures />} />
             <Route path="/scriptures/:scriptureId" element={<ScriptureReader />} />
+            <Route path="/temples" element={<Temples />} />
+            
+            {/* Features Routes */}
             <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
             <Route path="/audio-library" element={<AudioLibrary />} />
+            <Route path="/numerology" element={<Numerology />} />
+            <Route path="/palm-reading" element={<PalmReading />} />
+            <Route path="/daily-devotion" element={<DailyDevotion />} />
+            
+            {/* Social & Premium */}
             <Route path="/community" element={<Community />} />
             <Route path="/premium" element={<Premium />} />
-            <Route path="/numerology" element={<Numerology />} />
-            <Route path="/divine-dashboard" element={<DivineDashboard />} />
-            <Route path="/daily-devotion" element={<DailyDevotion />} />
-            <Route path="/audio-library-guide" element={<AudioLibraryGuide />} />
-            <Route path="/palm-reading" element={<PalmReading />} />
 
             {/* CATCH-ALL */}
             <Route path="*" element={<NotFound />} />
