@@ -11,10 +11,11 @@ import {
   BookOpen, 
   Calendar,
   Music,
-  Settings,
   Compass,
   Building,
-  Crown
+  Crown,
+  Hand,
+  MessageCircle
 } from 'lucide-react';
 
 const Navigation = () => {
@@ -42,11 +43,25 @@ const Navigation = () => {
             {user ? (
               <>
                 {/* Desktop Navigation Links */}
-                <div className="hidden md:flex items-center space-x-6">
+                <div className="hidden md:flex items-center space-x-4">
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/dashboard" className="flex items-center space-x-1 hover:text-primary">
                       <Home className="h-4 w-4" />
                       <span>Dashboard</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/palm-reading" className="flex items-center space-x-1 hover:text-primary">
+                      <Hand className="h-4 w-4" />
+                      <span>Palm Reading</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/numerology" className="flex items-center space-x-1 hover:text-primary">
+                      <Compass className="h-4 w-4" />
+                      <span>Numerology</span>
                     </Link>
                   </Button>
                   
@@ -72,13 +87,6 @@ const Navigation = () => {
                   </Button>
                   
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/spiritual-calendar" className="flex items-center space-x-1 hover:text-primary">
-                      <Calendar className="h-4 w-4" />
-                      <span>Calendar</span>
-                    </Link>
-                  </Button>
-                  
-                  <Button variant="ghost" size="sm" asChild>
                     <Link to="/temples" className="flex items-center space-x-1 hover:text-primary">
                       <Building className="h-4 w-4" />
                       <span>Temples</span>
@@ -86,9 +94,9 @@ const Navigation = () => {
                   </Button>
                   
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/numerology" className="flex items-center space-x-1 hover:text-primary">
-                      <Compass className="h-4 w-4" />
-                      <span>Numerology</span>
+                    <Link to="/community" className="flex items-center space-x-1 hover:text-primary">
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Community</span>
                     </Link>
                   </Button>
                   
