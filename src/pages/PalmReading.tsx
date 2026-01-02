@@ -833,54 +833,6 @@ const PalmReading = () => {
                     </CardContent>
                   </Card>
                 )}
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center space-x-2">
-                          <CheckCircle2 className="h-5 w-5 text-success" />
-                          <span>Palm Captured</span>
-                        </span>
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                          {palmImages.length} scan{palmImages.length > 1 ? 's' : ''}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="relative rounded-xl overflow-hidden shadow-divine border-2 border-primary/30">
-                        <img 
-                          src={palmImages[palmImages.length - 1]} 
-                          alt="Palm scan" 
-                          className="w-full h-auto max-h-[400px] object-contain"
-                        />
-                      </div>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={analyzePalm}
-                          disabled={analyzing}
-                          className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
-                        >
-                          {analyzing ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Consulting AI Guru...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4 w-4" />
-                              Get Divine Reading
-                            </>
-                          )}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={resetScan}
-                          disabled={analyzing}
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
 
                 {/* Scanning Tips */}
                 <Card className="card-sacred">
@@ -1062,6 +1014,7 @@ const PalmReading = () => {
                 )}
               </div>
             </div>
+            )}
           </TabsContent>
 
           {/* Tarot Tab */}
