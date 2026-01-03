@@ -28,7 +28,9 @@ import {
   Eye,
   Target,
   Shield,
-  HelpCircle
+  HelpCircle,
+  ImagePlus,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -47,69 +49,6 @@ interface PalmScannerProps {
   languages: Array<{ code: string; name: string; flag: string }>;
 }
 
-const SCAN_STEPS = [
-  { id: 'center', label: 'Center Palm', icon: Hand, description: 'Place palm flat, fingers spread', tip: 'Keep your palm open and relaxed' },
-  { id: 'left', label: 'Left Side', icon: Hand, description: 'Tilt hand slightly left', tip: 'Show the left edge of your palm' },
-  { id: 'right', label: 'Right Side', icon: Hand, description: 'Tilt hand slightly right', tip: 'Show the right edge of your palm' },
-  { id: 'fingers', label: 'Finger Lines', icon: Hand, description: 'Focus on finger tips', tip: 'Spread fingers for clear visibility' },
-];
-
-const BiometricScanAnimation = ({ progress, step }: { progress: number; step: number }) => {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {/* Grid overlay */}
-      <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 opacity-20">
-        {Array.from({ length: 16 }).map((_, i) => (
-          <div 
-            key={i} 
-            className="border border-primary/30"
-            style={{ 
-              animation: `pulse 2s infinite`,
-              animationDelay: `${i * 50}ms`
-            }}
-          />
-        ))}
-      </div>
-      
-      {/* Scanning beam */}
-      <div 
-        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent"
-        style={{ 
-          top: `${progress}%`,
-          boxShadow: '0 0 20px var(--primary), 0 0 40px var(--primary)',
-          transition: 'top 0.1s linear'
-        }}
-      />
-      
-      {/* Corner brackets */}
-      <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-primary" />
-      <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-primary" />
-      <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-primary" />
-      <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-primary" />
-      
-      {/* Detection points */}
-      {progress > 20 && (
-        <div className="absolute top-[25%] left-[30%] w-3 h-3 rounded-full bg-success animate-ping" />
-      )}
-      {progress > 40 && (
-        <div className="absolute top-[45%] left-[50%] w-3 h-3 rounded-full bg-success animate-ping" />
-      )}
-      {progress > 60 && (
-        <div className="absolute top-[60%] left-[40%] w-3 h-3 rounded-full bg-success animate-ping" />
-      )}
-      {progress > 80 && (
-        <div className="absolute top-[35%] left-[65%] w-3 h-3 rounded-full bg-success animate-ping" />
-      )}
-      
-      {/* Status indicator */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/90 px-4 py-2 rounded-full border border-primary/50">
-        <Fingerprint className="h-4 w-4 text-primary animate-pulse" />
-        <span className="text-xs font-mono text-primary">{progress}% ANALYZED</span>
-      </div>
-    </div>
-  );
-};
-
 const PalmScannerBiometric = ({
   selectedLanguage,
   onLanguageChange,
@@ -122,15 +61,11 @@ const PalmScannerBiometric = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [showLanguageSelector, setShowLanguageSelector] = useState(true);
-  const [currentScanStep, setCurrentScanStep] = useState(0);
   const [palmImages, setPalmImages] = useState<string[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
-  const [scanPhase, setScanPhase] = useState<'idle' | 'capturing' | 'processing' | 'analyzing'>('idle');
   const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [imageSource, setImageSource] = useState<'none' | 'upload' | 'camera'>('none');
   const [showTutorial, setShowTutorial] = useState(() => {
-    // Check if user has seen tutorial before
     const hasSeenTutorial = localStorage.getItem('palmScanTutorialSeen');
     return !hasSeenTutorial;
   });
@@ -142,72 +77,7 @@ const PalmScannerBiometric = ({
     timeOfBirth: ''
   });
 
-  // Biometric scan animation and auto-advance to next capture
-  useEffect(() => {
-    if (isScanning && palmImages.length > 0) {
-      setScanPhase('processing');
-      const interval = setInterval(() => {
-        setScanProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsScanning(false);
-            
-            const currentImageIndex = palmImages.length - 1;
-            
-            toast({
-              title: `✓ ${SCAN_STEPS[currentImageIndex].label} captured`,
-              description: currentImageIndex < SCAN_STEPS.length - 1 
-                ? `Proceeding to ${SCAN_STEPS[currentImageIndex + 1].label}...` 
-                : '🎯 All scans complete! Ready for analysis',
-            });
-            
-            // Auto-advance to next capture step
-            if (currentImageIndex < SCAN_STEPS.length - 1) {
-              setCurrentScanStep(currentImageIndex + 1);
-              setScanProgress(0);
-              setScanPhase('idle');
-              
-              // Auto-open camera for next step after a brief delay
-              setTimeout(() => {
-                setShowCameraPreview(true);
-                setScanPhase('capturing');
-              }, 800);
-            } else {
-              // All captures complete
-              setScanPhase('idle');
-              onScanComplete(palmImages, userMetadata);
-            }
-            return 100;
-          }
-          return prev + 2;
-        });
-      }, 25);
-      return () => clearInterval(interval);
-    }
-  }, [isScanning, palmImages.length, currentScanStep, toast, onScanComplete, userMetadata]);
-
-  const handleCaptureStep = () => {
-    setShowCameraPreview(true);
-    setScanPhase('capturing');
-  };
-
-  const handleCameraCapture = (imageData: string) => {
-    setPalmImages(prev => [...prev, imageData]);
-    setShowCameraPreview(false);
-    setShowLanguageSelector(false);
-    setIsScanning(true);
-    setScanProgress(0);
-    setScanPhase('processing');
-  };
-
-  const handleCameraClose = () => {
-    setShowCameraPreview(false);
-    setScanPhase('idle');
-    if (palmImages.length === 0) {
-      setShowLanguageSelector(true);
-    }
-  };
-
+  // Handle file upload - ONLY uploads, does NOT auto-scan
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -223,14 +93,25 @@ const PalmScannerBiometric = ({
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPalmImages([reader.result as string]);
+      const imageData = reader.result as string;
+      setPalmImages([imageData]);
       setShowLanguageSelector(false);
-      setIsScanning(true);
-      setScanProgress(0);
+      setImageSource('upload');
+      
+      toast({
+        title: "✓ Image Uploaded",
+        description: "Click 'Start Analysis' to get your palm reading",
+      });
     };
     reader.readAsDataURL(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
+  // Start biometric camera scan
   const startBiometricScan = () => {
     if (!selectedLanguage) {
       toast({
@@ -241,33 +122,52 @@ const PalmScannerBiometric = ({
       return;
     }
     setShowLanguageSelector(false);
-    setCurrentScanStep(0);
     setPalmImages([]);
-    setScanProgress(0);
     setShowCameraPreview(true);
-    setScanPhase('capturing');
+    setImageSource('camera');
+  };
+
+  // Handle camera capture
+  const handleCameraCapture = (imageData: string) => {
+    setPalmImages([imageData]);
+    setShowCameraPreview(false);
+    setShowLanguageSelector(false);
+    setImageSource('camera');
+    
+    toast({
+      title: "✓ Palm Captured",
+      description: "Click 'Start Analysis' to get your divine reading",
+    });
+  };
+
+  const handleCameraClose = () => {
+    setShowCameraPreview(false);
+    if (palmImages.length === 0) {
+      setShowLanguageSelector(true);
+      setImageSource('none');
+    }
   };
 
   const resetScan = () => {
     setPalmImages([]);
-    setCurrentScanStep(0);
-    setScanProgress(0);
     setShowLanguageSelector(true);
     setShowCameraPreview(false);
-    setIsScanning(false);
-    setScanPhase('idle');
+    setImageSource('none');
     setUserMetadata({ name: '', dob: '', timeOfBirth: '' });
   };
 
-  const handleAnalyze = () => {
+  // Start analysis - ONLY when user clicks this button
+  const handleStartAnalysis = () => {
     if (palmImages.length === 0) {
       toast({
-        title: "No palm scan",
-        description: "Please capture or upload a palm image first",
+        title: "No Image",
+        description: "Please upload or capture a palm image first",
         variant: "destructive"
       });
       return;
     }
+    
+    // Notify parent to start analysis
     onAnalyze(palmImages, userMetadata);
   };
 
@@ -296,16 +196,16 @@ const PalmScannerBiometric = ({
         <CameraPreviewWithGuide
           onCapture={handleCameraCapture}
           onClose={handleCameraClose}
-          stepLabel={SCAN_STEPS[currentScanStep].label}
-          stepTip={SCAN_STEPS[currentScanStep].tip}
-          currentStep={currentScanStep}
-          totalSteps={SCAN_STEPS.length}
-          autoAdvance={true}
+          stepLabel="Center Palm"
+          stepTip="Keep your palm open and relaxed"
+          currentStep={0}
+          totalSteps={1}
+          autoAdvance={false}
         />
       )}
 
       {/* Language Selection */}
-      {showLanguageSelector && !showCameraPreview && (
+      {showLanguageSelector && !showCameraPreview && palmImages.length === 0 && (
         <Card className="card-sacred border-2 border-primary/30 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
           <CardHeader className="relative">
@@ -393,220 +293,211 @@ const PalmScannerBiometric = ({
         </Card>
       )}
 
-      {/* Biometric Scanner */}
+      {/* Main Scanner Card */}
       {!showCameraPreview && (
-      <Card className="card-sacred border-2 border-primary/20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5" />
-        <CardHeader className="relative">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Fingerprint className="h-5 w-5 text-primary" />
-              <span>Biometric Palm Scanner</span>
-            </div>
-            {palmImages.length > 0 && (
-              <Badge variant="outline" className="bg-primary/10 border-primary/30">
-                {palmImages.length}/{SCAN_STEPS.length} Scans
-              </Badge>
-            )}
-          </CardTitle>
-          <CardDescription className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
+        <Card className="card-sacred border-2 border-primary/20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5" />
+          <CardHeader className="relative">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Fingerprint className="h-5 w-5 text-primary" />
+                <span>AI Palm Reading</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {palmImages.length > 0 && (
+                  <Badge variant="outline" className="bg-success/10 border-success/30 text-success">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Image Ready
+                  </Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTutorial(true)}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-success" />
-              Advanced multi-angle scanning with ML line detection
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTutorial(true)}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <HelpCircle className="h-4 w-4 mr-1" />
-              Tutorial
-            </Button>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="relative space-y-6">
-          {palmImages.length === 0 ? (
-            <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 md:p-12 text-center space-y-6 bg-gradient-to-br from-primary/5 to-secondary/5 relative overflow-hidden">
-              {/* Animated background */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_var(--primary),_transparent_70%)] animate-pulse" />
-              </div>
-              
-              <div className="relative">
-                <div className="relative inline-block">
-                  <Hand className="h-24 w-24 mx-auto text-primary" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-32 w-32 border-4 border-primary/20 rounded-full animate-ping" />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full">
-                    <Scan className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-foreground">Ready to Scan Your Destiny</h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Our AI-powered scanner analyzes palm lines, mounts, and special marks using Vedic Samudrika Shastra
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
-                  onClick={startBiometricScan}
-                  disabled={!selectedLanguage}
-                  size="lg"
-                  className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8 py-6 shadow-lg"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  Start Biometric Scan
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!selectedLanguage}
-                  size="lg"
-                  className="gap-2 text-lg px-8 py-6 border-2 border-primary/30 hover:border-primary/50"
-                >
-                  <Upload className="h-5 w-5" />
-                  Upload Image
-                </Button>
-              </div>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-
-              {/* Features */}
-              <div className="grid grid-cols-3 gap-4 pt-4 text-xs text-muted-foreground">
-                <div className="flex flex-col items-center gap-1">
-                  <Eye className="h-4 w-4 text-primary" />
-                  <span>Line Detection</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <Target className="h-4 w-4 text-primary" />
-                  <span>Mount Analysis</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <Zap className="h-4 w-4 text-primary" />
-                  <span>AI Powered</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Scan Steps Progress */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-                  {SCAN_STEPS.map((step, idx) => {
-                    const Icon = step.icon;
-                    const isComplete = idx < palmImages.length;
-                    const isCurrent = idx === currentScanStep && palmImages.length <= idx;
-                    const isActive = idx === palmImages.length - 1 && isScanning;
-                    
-                    return (
-                      <div key={step.id} className="flex items-center flex-shrink-0">
-                        <div className={`
-                          relative p-2 rounded-full transition-all duration-300
-                          ${isComplete ? 'bg-success text-success-foreground scale-100' :
-                            isActive ? 'bg-primary text-primary-foreground scale-110 animate-pulse' :
-                            isCurrent ? 'bg-primary/20 text-primary border-2 border-primary' :
-                            'bg-muted text-muted-foreground'
-                          }
-                        `}>
-                          {isComplete ? (
-                            <CheckCircle2 className="h-5 w-5" />
-                          ) : (
-                            <Icon className="h-5 w-5" />
-                          )}
-                          {isActive && (
-                            <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping" />
-                          )}
-                        </div>
-                        {idx < SCAN_STEPS.length - 1 && (
-                          <div className={`h-0.5 w-6 md:w-10 mx-1 transition-colors ${
-                            idx < palmImages.length - 1 ? 'bg-success' : 'bg-muted'
-                          }`} />
-                        )}
-                      </div>
-                    );
-                  })}
+              Powered by AI Vision with Vedic Samudrika Shastra
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="relative space-y-6">
+            {/* No image yet - show upload/scan options */}
+            {palmImages.length === 0 && (
+              <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 md:p-12 text-center space-y-6 bg-gradient-to-br from-primary/5 to-secondary/5 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_var(--primary),_transparent_70%)] animate-pulse" />
                 </div>
                 
-                {/* Current step info */}
-                {currentScanStep < SCAN_STEPS.length && !isScanning && palmImages.length < SCAN_STEPS.length && (
-                  <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/30">
-                    <p className="text-sm font-medium text-primary">
-                      Next: {SCAN_STEPS[currentScanStep].label}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {SCAN_STEPS[currentScanStep].tip}
-                    </p>
-                  </div>
-                )}
-                
-                {/* Scanning progress */}
-                {isScanning && (
-                  <div className="space-y-2">
-                    <Progress value={scanProgress} className="h-3" />
-                    <div className="flex items-center justify-center gap-2 text-sm text-primary font-medium">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Processing biometric data... {Math.round(scanProgress)}%
+                <div className="relative">
+                  <div className="relative inline-block">
+                    <Hand className="h-24 w-24 mx-auto text-primary" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-32 w-32 border-4 border-primary/20 rounded-full animate-ping" />
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full">
+                      <Scan className="h-5 w-5" />
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Palm Image Preview */}
-              <div className="relative rounded-xl overflow-hidden shadow-lg border-2 border-primary/30 bg-black/5">
-                <img 
-                  src={palmImages[palmImages.length - 1]} 
-                  alt="Palm scan" 
-                  className="w-full h-auto max-h-[400px] object-contain"
-                />
-                {isScanning && <BiometricScanAnimation progress={scanProgress} step={currentScanStep} />}
-              </div>
-
-              {/* Captured Images Thumbnails */}
-              {palmImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {palmImages.map((img, idx) => (
-                    <div 
-                      key={idx}
-                      className={`
-                        flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 cursor-pointer
-                        ${idx === palmImages.length - 1 ? 'border-primary ring-2 ring-primary/30' : 'border-muted'}
-                      `}
-                    >
-                      <img src={img} alt={`Scan ${idx + 1}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                {palmImages.length < SCAN_STEPS.length && !isScanning && (
-                  <Button
-                    onClick={handleCaptureStep}
-                    className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
+                
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-foreground">Ready to Read Your Destiny</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Choose how you want to provide your palm image
+                  </p>
+                </div>
+                
+                {/* Two clear options: Scan vs Upload */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
+                  <Button 
+                    onClick={startBiometricScan}
+                    disabled={!selectedLanguage}
                     size="lg"
+                    className="flex-1 gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-6 py-6 shadow-lg"
                   >
-                    <Camera className="h-5 w-5" />
-                    Capture {SCAN_STEPS[currentScanStep].label}
+                    <Camera className="h-6 w-6" />
+                    <div className="text-left">
+                      <div className="font-semibold">Use Camera</div>
+                      <div className="text-xs opacity-80">Take a live photo</div>
+                    </div>
                   </Button>
-                )}
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!selectedLanguage}
+                    size="lg"
+                    className="flex-1 gap-3 text-lg px-6 py-6 border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <ImagePlus className="h-6 w-6" />
+                    <div className="text-left">
+                      <div className="font-semibold">Upload Image</div>
+                      <div className="text-xs text-muted-foreground">From gallery/files</div>
+                    </div>
+                  </Button>
+                </div>
                 
-                {palmImages.length >= 1 && !isScanning && (
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                {!selectedLanguage && (
+                  <p className="text-sm text-amber-500 mt-2">
+                    ⚠️ Please select a language above first
+                  </p>
+                )}
+
+                {/* Features */}
+                <div className="grid grid-cols-3 gap-4 pt-4 text-xs text-muted-foreground">
+                  <div className="flex flex-col items-center gap-1">
+                    <Eye className="h-4 w-4 text-primary" />
+                    <span>Line Detection</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Target className="h-4 w-4 text-primary" />
+                    <span>Mount Analysis</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Zap className="h-4 w-4 text-primary" />
+                    <span>AI Powered</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Image uploaded/captured - show preview and analyze button */}
+            {palmImages.length > 0 && (
+              <div className="space-y-4">
+                {/* Image Preview */}
+                <div className="relative rounded-xl overflow-hidden shadow-lg border-2 border-primary/30 bg-black/5">
+                  <img 
+                    src={palmImages[0]} 
+                    alt="Palm scan" 
+                    className="w-full h-auto max-h-[400px] object-contain"
+                  />
+                  
+                  {/* Source badge */}
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+                      {imageSource === 'upload' ? (
+                        <><Upload className="h-3 w-3 mr-1" /> Uploaded</>
+                      ) : (
+                        <><Camera className="h-3 w-3 mr-1" /> Captured</>
+                      )}
+                    </Badge>
+                  </div>
+                  
+                  {/* Remove button */}
                   <Button
-                    onClick={handleAnalyze}
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-3 right-3 h-8 w-8"
+                    onClick={resetScan}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* User metadata input */}
+                <Collapsible open={showOptionalFields} onOpenChange={setShowOptionalFields}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground text-sm">
+                      <span className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Add personal details for personalized reading
+                      </span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name2">Name</Label>
+                        <Input
+                          id="name2"
+                          placeholder="Your name"
+                          value={userMetadata.name}
+                          onChange={(e) => setUserMetadata(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="dob2">Date of Birth</Label>
+                        <Input
+                          id="dob2"
+                          type="date"
+                          value={userMetadata.dob}
+                          onChange={(e) => setUserMetadata(prev => ({ ...prev, dob: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="tob2">Time of Birth</Label>
+                        <Input
+                          id="tob2"
+                          type="time"
+                          value={userMetadata.timeOfBirth}
+                          onChange={(e) => setUserMetadata(prev => ({ ...prev, timeOfBirth: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleStartAnalysis}
                     disabled={analyzing}
-                    className="flex-1 gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                    className="flex-1 gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-lg py-6"
                     size="lg"
                   >
                     {analyzing ? (
@@ -617,46 +508,48 @@ const PalmScannerBiometric = ({
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5" />
-                        Get Divine Reading
+                        Start Analysis
                       </>
                     )}
                   </Button>
-                )}
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={analyzing}
+                    size="lg"
+                    className="border-2"
+                  >
+                    <Upload className="h-5 w-5" />
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={resetScan}
+                    disabled={analyzing}
+                    size="lg"
+                    className="border-2"
+                  >
+                    <RotateCcw className="h-5 w-5" />
+                  </Button>
+                </div>
                 
-                <Button 
-                  variant="outline"
-                  onClick={resetScan}
-                  disabled={isScanning || analyzing}
-                  size="lg"
-                  className="border-2"
-                >
-                  <RotateCcw className="h-5 w-5" />
-                </Button>
-              </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
 
-              {/* Quick upload option */}
-              {palmImages.length < SCAN_STEPS.length && !isScanning && (
-                <Button
-                  variant="ghost"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full text-muted-foreground hover:text-foreground"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Or upload additional images
-                </Button>
-              )}
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                {/* Tips */}
+                <div className="text-center text-sm text-muted-foreground">
+                  <p>🔍 For best results, ensure your palm lines are clearly visible</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

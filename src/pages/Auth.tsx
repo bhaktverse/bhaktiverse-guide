@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,11 @@ import { useToast } from '@/components/ui/use-toast';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,16 +24,42 @@ const Auth = () => {
     confirmPassword: ''
   });
 
+  // Get the intended destination from state or default to dashboard
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
+
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      } finally {
+        setCheckingSession(false);
       }
     };
     checkUser();
-  }, [navigate]);
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event);
+      if (event === 'SIGNED_IN' && session) {
+        toast({
+          title: "Welcome! 🙏",
+          description: "Redirecting to your dashboard...",
+        });
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 500);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -45,13 +73,18 @@ const Auth = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -64,10 +97,20 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Registration Successful! 🕉️",
-        description: "Welcome to your spiritual journey. Please check your email to confirm your account.",
-      });
+      // Check if email confirmation is required
+      if (data?.user && !data.session) {
+        toast({
+          title: "Registration Successful! 🕉️",
+          description: "Please check your email to confirm your account.",
+        });
+      } else if (data?.session) {
+        // Auto-login successful
+        toast({
+          title: "Welcome to BhaktVerse! 🙏",
+          description: "Your spiritual journey begins now.",
+        });
+        navigate('/dashboard', { replace: true });
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -81,25 +124,39 @@ const Auth = () => {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Welcome Back! 🙏",
-        description: "Continue your spiritual journey",
-      });
-      
-      navigate('/');
+      if (data?.session) {
+        toast({
+          title: "Welcome Back! 🙏",
+          description: "Redirecting to your dashboard...",
+        });
+        // Navigate to dashboard
+        navigate('/dashboard', { replace: true });
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // Show loading while checking session
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-temple">
+        <div className="text-center space-y-4">
+          <div className="text-6xl animate-om-pulse">🕉️</div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-temple p-4">

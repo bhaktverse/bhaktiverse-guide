@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -18,7 +17,6 @@ import {
   Target, 
   Trophy, 
   Star, 
-  Clock, 
   Sparkles,
   Hand,
   Binary,
@@ -26,9 +24,16 @@ import {
   MapPin,
   Users,
   ArrowRight,
-  TrendingUp,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Sun,
+  Moon,
+  Clock,
+  TrendingUp,
+  Gift,
+  Crown,
+  Scroll,
+  Play
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +43,8 @@ interface DashboardStats {
   totalMantras: number;
   readingMinutes: number;
   meditationMinutes: number;
+  level: number;
+  xp: number;
   dailyGoals: {
     mantras: number;
     reading_minutes: number;
@@ -54,6 +61,8 @@ const Dashboard = () => {
     totalMantras: 0,
     readingMinutes: 0,
     meditationMinutes: 0,
+    level: 1,
+    xp: 0,
     dailyGoals: {
       mantras: 108,
       reading_minutes: 15,
@@ -62,7 +71,8 @@ const Dashboard = () => {
   });
   const [todayQuote, setTodayQuote] = useState("");
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-  const [greeting, setGreeting] = useState("Namaste");
+  const [greeting, setGreeting] = useState({ text: "Namaste", icon: "🙏" });
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -73,9 +83,13 @@ const Dashboard = () => {
   useEffect(() => {
     // Set greeting based on time of day
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting("शुभ प्रभात");
-    else if (hour < 17) setGreeting("नमस्ते");
-    else setGreeting("शुभ संध्या");
+    if (hour < 12) {
+      setGreeting({ text: "शुभ प्रभात", icon: "🌅" });
+    } else if (hour < 17) {
+      setGreeting({ text: "नमस्ते", icon: "🙏" });
+    } else {
+      setGreeting({ text: "शुभ संध्या", icon: "🌆" });
+    }
   }, []);
 
   useEffect(() => {
@@ -86,21 +100,44 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Load profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
-      if (profile?.streak_data && typeof profile.streak_data === 'object') {
-        const streakData = profile.streak_data as any;
-        setStats(prevStats => ({
-          ...prevStats,
-          currentStreak: streakData.current_streak || 0,
-          longestStreak: streakData.longest_streak || 0
+      if (profile) {
+        setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
+        
+        if (profile.streak_data && typeof profile.streak_data === 'object') {
+          const streakData = profile.streak_data as any;
+          setStats(prevStats => ({
+            ...prevStats,
+            currentStreak: streakData.current_streak || 0,
+            longestStreak: streakData.longest_streak || 0
+          }));
+        }
+      } else {
+        setUserName(user?.email?.split('@')[0] || 'Seeker');
+      }
+
+      // Load spiritual journey
+      const { data: journey } = await supabase
+        .from('spiritual_journey')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (journey) {
+        setStats(prev => ({
+          ...prev,
+          level: journey.level || 1,
+          xp: journey.experience_points || 0
         }));
       }
 
+      // Load today's activities
       const today = new Date().toISOString().split('T')[0];
       const { data: activities } = await supabase
         .from('user_activities')
@@ -129,6 +166,7 @@ const Dashboard = () => {
         }));
       }
 
+      // Load upcoming events
       const { data: events } = await supabase
         .from('calendar_events')
         .select('*')
@@ -144,6 +182,7 @@ const Dashboard = () => {
         })));
       }
 
+      // Set daily quote
       const quotes = [
         "The mind is everything. What you think you become. — Buddha",
         "The best way to find yourself is to lose yourself in service. — Gandhi", 
@@ -177,52 +216,88 @@ const Dashboard = () => {
   const meditationProgress = Math.min((stats.meditationMinutes / stats.dailyGoals.meditation_minutes) * 100, 100);
   const overallProgress = Math.round((mantrasProgress + readingProgress + meditationProgress) / 3);
 
+  // Featured services - main actions
+  const mainServices = [
+    { 
+      icon: Hand, 
+      emoji: '🤚',
+      label: 'AI Palm Reading', 
+      description: 'Discover your destiny through AI-powered palm analysis',
+      path: '/palm-reading', 
+      gradient: 'from-purple-500 to-pink-500',
+      featured: true
+    },
+    { 
+      icon: Binary, 
+      emoji: '🔮',
+      label: 'Vedic Numerology', 
+      description: 'Unlock the secrets hidden in your numbers',
+      path: '/numerology', 
+      gradient: 'from-blue-500 to-indigo-500',
+      featured: true
+    },
+  ];
+
+  // Quick action grid
   const quickActions = [
-    { icon: '🤚', label: 'Palm Reading', path: '/palm-reading', color: 'from-purple-500 to-pink-500' },
-    { icon: '🔮', label: 'Numerology', path: '/numerology', color: 'from-blue-500 to-indigo-500' },
-    { icon: '🧘‍♂️', label: 'Saints', path: '/saints', color: 'from-orange-500 to-amber-500' },
-    { icon: '🙏', label: 'Daily Devotion', path: '/daily-devotion', color: 'from-rose-500 to-red-500' },
-    { icon: '🎵', label: 'Audio', path: '/audio-library', color: 'from-green-500 to-emerald-500' },
-    { icon: '🏛️', label: 'Temples', path: '/temples', color: 'from-cyan-500 to-blue-500' },
+    { emoji: '🧘‍♂️', label: 'Saints', path: '/saints' },
+    { emoji: '🙏', label: 'Daily Devotion', path: '/daily-devotion' },
+    { emoji: '🎵', label: 'Audio Library', path: '/audio-library' },
+    { emoji: '🏛️', label: 'Temples', path: '/temples' },
+    { emoji: '📖', label: 'Scriptures', path: '/scriptures' },
+    { emoji: '📅', label: 'Calendar', path: '/spiritual-calendar' },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-6 pb-24 md:pb-8">
+      <div className="container mx-auto px-4 py-6 pb-24 md:pb-8 max-w-7xl">
         {/* Breadcrumbs */}
         <Breadcrumbs className="mb-6" />
 
-        {/* Welcome Header with Gradient */}
-        <div className="relative mb-8 p-6 md:p-8 rounded-3xl overflow-hidden">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-card" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+        {/* Welcome Header */}
+        <div className="relative mb-8 p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -mr-32 -mt-32 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full -ml-24 -mb-24 pointer-events-none" />
           
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 md:h-20 md:w-20 shadow-divine border-4 border-primary/20">
+              <Avatar className="h-16 w-16 md:h-20 md:w-20 shadow-divine border-4 border-primary/20 ring-4 ring-primary/10">
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback className="bg-gradient-temple text-white text-2xl font-bold">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                  {userName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Clock className="h-4 w-4" />
+                  {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
                 <h1 className="text-2xl md:text-3xl font-bold">
-                  <span className="bg-gradient-temple bg-clip-text text-transparent">{greeting}</span>
-                  <span className="text-foreground">, Seeker! 🙏</span>
+                  <span className="text-3xl mr-2">{greeting.icon}</span>
+                  <span className="bg-gradient-temple bg-clip-text text-transparent">{greeting.text}</span>
+                  <span className="text-foreground">, {userName}!</span>
                 </h1>
-                <p className="text-muted-foreground mt-1">Continue your spiritual journey with devotion</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <Badge variant="outline" className="bg-primary/10 border-primary/30">
+                    <Crown className="h-3 w-3 mr-1" />
+                    Level {stats.level}
+                  </Badge>
+                  <Badge variant="outline" className="bg-secondary/10 border-secondary/30">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    {stats.xp} XP
+                  </Badge>
+                </div>
               </div>
             </div>
             
-            {/* Quick Stats */}
-            <div className="flex items-center gap-4 bg-card/80 backdrop-blur-sm rounded-2xl p-4 shadow-lotus">
+            {/* Quick Stats Card */}
+            <div className="flex items-center gap-6 bg-card/80 backdrop-blur-sm rounded-2xl p-4 shadow-lotus border border-border/50">
               <div className="text-center px-4 border-r border-border/50">
                 <div className="text-2xl font-bold text-primary">{stats.currentStreak}</div>
-                <div className="text-xs text-muted-foreground">Day Streak</div>
+                <div className="text-xs text-muted-foreground">Day Streak 🔥</div>
               </div>
               <div className="text-center px-4">
                 <div className="text-2xl font-bold text-secondary">{overallProgress}%</div>
@@ -232,40 +307,53 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Today's Inspiration Quote */}
-        <Card className="mb-8 bg-gradient-to-r from-card via-card-sacred to-card border-primary/20 shadow-lotus overflow-hidden">
-          <CardContent className="p-6 relative">
-            <div className="absolute top-0 right-0 text-8xl opacity-5 -mt-4 -mr-4">✨</div>
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 text-3xl animate-sacred-float">📿</div>
-              <div>
-                <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Today's Spiritual Wisdom
-                </h3>
-                <p className="text-foreground italic text-lg leading-relaxed">{todayQuote}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+        {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Content - Left 2 Columns */}
+          {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* Featured Services - Palm Reading & Numerology */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {mainServices.map((service) => (
+                <Card 
+                  key={service.path}
+                  className="group cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-transparent hover:border-primary/30 relative"
+                  onClick={() => navigate(service.path)}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                  <CardContent className="p-6 relative z-10">
+                    <div className="flex items-start gap-4">
+                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                        <service.icon className="h-7 w-7" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{service.label}</h3>
+                          {service.featured && (
+                            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs">
+                              Popular
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
+                        <Button size="sm" variant="ghost" className="gap-1 p-0 h-auto text-primary hover:text-primary/80">
+                          Start Now <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
             {/* Quick Actions Grid */}
             <Card className="card-sacred">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-primary" />
-                      Quick Actions
-                    </CardTitle>
-                    <CardDescription>Jump into your spiritual practices</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/premium')} className="text-primary">
-                    View All <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-primary" />
+                    Quick Actions
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -277,7 +365,7 @@ const Dashboard = () => {
                       className="h-auto flex-col gap-2 p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group"
                       onClick={() => navigate(action.path)}
                     >
-                      <div className={`text-2xl group-hover:scale-110 transition-transform`}>{action.icon}</div>
+                      <div className="text-2xl group-hover:scale-110 transition-transform">{action.emoji}</div>
                       <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">{action.label}</span>
                     </Button>
                   ))}
@@ -285,25 +373,22 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Daily Progress */}
+            {/* Today's Goals */}
             <Card className="card-sacred">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="h-5 w-5 text-primary" />
-                      Today's Spiritual Goals
-                    </CardTitle>
-                    <CardDescription>Track your daily practices</CardDescription>
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    Today's Spiritual Goals
+                  </CardTitle>
                   <Badge variant="outline" className="text-primary border-primary/30">
                     {overallProgress}% Complete
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-5">
                 {/* Mantras */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-orange-500/10">
@@ -311,15 +396,15 @@ const Dashboard = () => {
                       </div>
                       Mantras Chanted
                     </span>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-muted-foreground">
                       {stats.totalMantras}/{stats.dailyGoals.mantras}
                     </span>
                   </div>
-                  <Progress value={mantrasProgress} className="h-3" />
+                  <Progress value={mantrasProgress} className="h-2" />
                 </div>
 
                 {/* Reading */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-blue-500/10">
@@ -327,15 +412,15 @@ const Dashboard = () => {
                       </div>
                       Scripture Reading
                     </span>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-muted-foreground">
                       {stats.readingMinutes}/{stats.dailyGoals.reading_minutes} min
                     </span>
                   </div>
-                  <Progress value={readingProgress} className="h-3" />
+                  <Progress value={readingProgress} className="h-2" />
                 </div>
 
                 {/* Meditation */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-purple-500/10">
@@ -343,156 +428,136 @@ const Dashboard = () => {
                       </div>
                       Meditation
                     </span>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-muted-foreground">
                       {stats.meditationMinutes}/{stats.dailyGoals.meditation_minutes} min
                     </span>
                   </div>
-                  <Progress value={meditationProgress} className="h-3" />
+                  <Progress value={meditationProgress} className="h-2" />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Featured Services */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card 
-                className="group card-sacred cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden relative"
-                onClick={() => navigate('/palm-reading')}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <CardContent className="p-6 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg">
-                      <Hand className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold group-hover:text-primary transition-colors">AI Palm Reading</h3>
-                      <p className="text-sm text-muted-foreground">Discover your destiny</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            {/* Today's Wisdom Quote */}
+            <Card className="bg-gradient-to-r from-card via-card-sacred to-card border-primary/20 shadow-lotus overflow-hidden">
+              <CardContent className="p-6 relative">
+                <div className="absolute top-0 right-0 text-8xl opacity-5 -mt-4 -mr-4">✨</div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 text-3xl animate-sacred-float">📿</div>
+                  <div>
+                    <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Today's Spiritual Wisdom
+                    </h3>
+                    <p className="text-foreground italic text-lg leading-relaxed">{todayQuote}</p>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="group card-sacred cursor-pointer hover:shadow-divine transition-all duration-300 hover:-translate-y-1 overflow-hidden relative"
-                onClick={() => navigate('/numerology')}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <CardContent className="p-6 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg">
-                      <Binary className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold group-hover:text-primary transition-colors">Vedic Numerology</h3>
-                      <p className="text-sm text-muted-foreground">Know your numbers</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Streak & Achievements */}
+            {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
-              <CardHeader className="relative">
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-primary" />
-                  Spiritual Streaks
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative space-y-6">
-                <div className="text-center p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl">
-                  <div className="text-5xl font-bold bg-gradient-temple bg-clip-text text-transparent animate-divine-glow">
-                    {stats.currentStreak}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">Days Current Streak</p>
-                  {stats.currentStreak > 0 && (
-                    <Badge className="mt-2 bg-gradient-temple text-white">
-                      🔥 Keep it up!
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-muted/30 rounded-xl">
-                    <div className="text-xl font-bold text-secondary">{stats.longestStreak}</div>
-                    <p className="text-xs text-muted-foreground">Best Streak</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/30 rounded-xl">
-                    <div className="text-xl font-bold text-primary">{Math.floor(stats.totalMantras / 108)}</div>
-                    <p className="text-xs text-muted-foreground">Mala Rounds</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Achievements */}
-            <Card className="card-sacred">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary" />
-                  Recent Achievements
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  Your Progress
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {[
-                  { badge: '🔥 Streak Master', time: '7 days ago', color: 'bg-orange-500/10 text-orange-700' },
-                  { badge: '📿 Mantra Devotee', time: '12 days ago', color: 'bg-purple-500/10 text-purple-700' },
-                  { badge: '📚 Knowledge Seeker', time: '18 days ago', color: 'bg-blue-500/10 text-blue-700' },
-                ].map((achievement, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <Badge variant="secondary" className={achievement.color}>
-                      {achievement.badge}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{achievement.time}</span>
+              <CardContent className="space-y-4">
+                <div className="text-center p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
+                  <div className="text-4xl font-bold text-amber-500">{stats.currentStreak}</div>
+                  <div className="text-sm text-muted-foreground">Day Streak 🔥</div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 bg-muted/30 rounded-lg">
+                    <div className="text-xl font-bold text-primary">{stats.level}</div>
+                    <div className="text-xs text-muted-foreground">Level</div>
                   </div>
-                ))}
+                  <div className="text-center p-3 bg-muted/30 rounded-lg">
+                    <div className="text-xl font-bold text-secondary">{stats.xp}</div>
+                    <div className="text-xs text-muted-foreground">XP</div>
+                  </div>
+                </div>
+                
+                <div className="text-center pt-2">
+                  <div className="text-sm text-muted-foreground mb-1">Longest Streak</div>
+                  <div className="font-semibold">{stats.longestStreak} days</div>
+                </div>
               </CardContent>
             </Card>
 
             {/* Upcoming Events */}
             <Card className="card-sacred">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Upcoming Events
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/spiritual-calendar')}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Upcoming Events
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {upcomingEvents.length > 0 ? upcomingEvents.map((event, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="text-2xl">
-                      {event.type === 'festival' ? '🎉' : event.type === 'ekadashi' ? '🌙' : '🕉️'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{event.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {event.date}
-                      </p>
-                    </div>
+              <CardContent>
+                {upcomingEvents.length > 0 ? (
+                  <div className="space-y-3">
+                    {upcomingEvents.map((event, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Calendar className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{event.name}</p>
+                          <p className="text-xs text-muted-foreground">{event.date}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {event.type}
+                        </Badge>
+                      </div>
+                    ))}
+                    <Button 
+                      variant="ghost" 
+                      className="w-full text-primary"
+                      onClick={() => navigate('/spiritual-calendar')}
+                    >
+                      View Calendar <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
                   </div>
-                )) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No upcoming events
-                  </p>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p className="text-sm">No upcoming events</p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="mt-2 text-primary"
+                      onClick={() => navigate('/spiritual-calendar')}
+                    >
+                      Explore Calendar
+                    </Button>
+                  </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Premium CTA */}
+            <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
+              <CardContent className="p-5 text-center">
+                <Crown className="h-10 w-10 mx-auto mb-3 text-amber-500" />
+                <h3 className="font-bold text-lg mb-1">Unlock Premium</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Get detailed readings, PDF reports, and exclusive features
+                </p>
+                <Button 
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                  onClick={() => navigate('/premium')}
+                >
+                  Upgrade Now <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-      
+
       <MobileBottomNav />
     </div>
   );
