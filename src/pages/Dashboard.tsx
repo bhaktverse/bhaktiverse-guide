@@ -222,30 +222,32 @@ const Dashboard = () => {
       icon: Hand, 
       emoji: '🤚',
       label: 'AI Palm Reading', 
-      description: 'Discover your destiny through AI-powered palm analysis',
+      description: 'Get personalized destiny insights from AI Guru',
       path: '/palm-reading', 
       gradient: 'from-purple-500 to-pink-500',
-      featured: true
+      featured: true,
+      badge: 'Most Popular'
     },
     { 
       icon: Binary, 
       emoji: '🔮',
       label: 'Vedic Numerology', 
-      description: 'Unlock the secrets hidden in your numbers',
+      description: 'Discover your life path through sacred numbers',
       path: '/numerology', 
       gradient: 'from-blue-500 to-indigo-500',
-      featured: true
+      featured: true,
+      badge: 'New'
     },
   ];
 
   // Quick action grid
   const quickActions = [
-    { emoji: '🧘‍♂️', label: 'Saints', path: '/saints' },
-    { emoji: '🙏', label: 'Daily Devotion', path: '/daily-devotion' },
-    { emoji: '🎵', label: 'Audio Library', path: '/audio-library' },
-    { emoji: '🏛️', label: 'Temples', path: '/temples' },
-    { emoji: '📖', label: 'Scriptures', path: '/scriptures' },
-    { emoji: '📅', label: 'Calendar', path: '/spiritual-calendar' },
+    { emoji: '🧘‍♂️', label: 'Saints', path: '/saints', description: 'Chat with saints' },
+    { emoji: '🙏', label: 'Daily Puja', path: '/daily-devotion', description: 'Today\'s rituals' },
+    { emoji: '🎵', label: 'Mantras', path: '/audio-library', description: 'Listen & chant' },
+    { emoji: '🏛️', label: 'Temples', path: '/temples', description: 'Find nearby' },
+    { emoji: '📖', label: 'Scriptures', path: '/scriptures', description: 'Read & learn' },
+    { emoji: '📅', label: 'Calendar', path: '/spiritual-calendar', description: 'Festivals' },
   ];
 
   return (
@@ -329,15 +331,15 @@ const Dashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{service.label}</h3>
-                          {service.featured && (
-                            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs">
-                              Popular
+                          {service.badge && (
+                            <Badge className={`text-xs ${service.badge === 'Most Popular' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'bg-green-500/20 text-green-600'}`}>
+                              {service.badge}
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
-                        <Button size="sm" variant="ghost" className="gap-1 p-0 h-auto text-primary hover:text-primary/80">
-                          Start Now <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        <Button size="sm" variant="ghost" className="gap-1 p-0 h-auto text-primary hover:text-primary/80 hover:bg-transparent">
+                          Get Reading <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </div>
                     </div>
@@ -362,11 +364,12 @@ const Dashboard = () => {
                     <Button
                       key={action.path}
                       variant="ghost"
-                      className="h-auto flex-col gap-2 p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group"
+                      className="h-auto flex-col gap-2 p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl"
                       onClick={() => navigate(action.path)}
                     >
-                      <div className="text-2xl group-hover:scale-110 transition-transform">{action.emoji}</div>
-                      <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">{action.label}</span>
+                      <div className="text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
+                      <span className="text-xs font-semibold text-foreground">{action.label}</span>
+                      <span className="text-[10px] text-muted-foreground hidden md:block">{action.description}</span>
                     </Button>
                   ))}
                 </div>

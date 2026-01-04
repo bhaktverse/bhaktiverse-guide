@@ -19,6 +19,7 @@ import AILineDetectionOverlay from '@/components/AILineDetectionOverlay';
 import PalmScannerBiometric from '@/components/PalmScannerBiometric';
 import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
+import PalmReadingReport from '@/components/PalmReadingReport';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -249,6 +250,7 @@ const PalmReading = () => {
   // Free vs Premium reading toggle
   const [showFullReading, setShowFullReading] = useState(false);
   const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const [showReportView, setShowReportView] = useState(false);
 
   // Check premium status (demo: check if user has level 3+ or 500+ XP)
   useEffect(() => {
@@ -713,6 +715,28 @@ const PalmReading = () => {
     return null;
   }
 
+  // Show full report view when requested
+  if (showReportView && analysis) {
+    return (
+      <div className="relative">
+        <Button 
+          variant="outline" 
+          className="fixed top-4 left-4 z-50 gap-2"
+          onClick={() => setShowReportView(false)}
+        >
+          ← Back to Scan
+        </Button>
+        <PalmReadingReport
+          analysis={analysis}
+          palmImage={palmImages.length > 0 ? palmImages[palmImages.length - 1] : undefined}
+          userName={userName || user?.email?.split('@')[0]}
+          onDownloadPDF={generatePdfReport}
+          isPremium={isPremiumUser}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-peace">
       <Navigation />
@@ -975,6 +999,15 @@ const PalmReading = () => {
                         )}
                         PDF Report
                         {!isPremiumUser && <span className="text-xs">👑</span>}
+                      </Button>
+                      
+                      <Button
+                        onClick={() => setShowReportView(true)}
+                        variant="default"
+                        className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View Full Report
                       </Button>
                       
                       <Button
