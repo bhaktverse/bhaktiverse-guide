@@ -28,38 +28,46 @@ const Auth = () => {
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Check if user is already logged in
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          navigate('/dashboard', { replace: true });
+        if (session && isMounted) {
+          console.log('Existing session found, redirecting to dashboard');
+          window.location.href = '/dashboard';
         }
       } catch (error) {
         console.error('Session check error:', error);
       } finally {
-        setCheckingSession(false);
+        if (isMounted) {
+          setCheckingSession(false);
+        }
       }
     };
     checkUser();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event);
-      if (event === 'SIGNED_IN' && session) {
+      console.log('Auth state change:', event, session?.user?.email);
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && isMounted) {
         toast({
           title: "Welcome! 🙏",
           description: "Redirecting to your dashboard...",
         });
-        // Redirect to dashboard after successful login
+        // Use window.location for reliable redirect
         setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 500);
+          window.location.href = '/dashboard';
+        }, 300);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [toast]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -109,7 +117,7 @@ const Auth = () => {
           title: "Welcome to BhaktVerse! 🙏",
           description: "Your spiritual journey begins now.",
         });
-        navigate('/dashboard', { replace: true });
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
       setError(error.message);
@@ -136,8 +144,8 @@ const Auth = () => {
           title: "Welcome Back! 🙏",
           description: "Redirecting to your dashboard...",
         });
-        // Navigate to dashboard
-        navigate('/dashboard', { replace: true });
+        // Use window.location for reliable redirect
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
       setError(error.message);
