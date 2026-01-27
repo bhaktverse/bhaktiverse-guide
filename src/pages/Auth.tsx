@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -17,6 +17,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,47 +28,64 @@ const Auth = () => {
   // Get the intended destination from state or default to dashboard
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
+  // Reliable redirect function with visual feedback
+  const performRedirect = (showToast = true) => {
+    setRedirecting(true);
+    if (showToast) {
+      toast({
+        title: "🙏 Welcome!",
+        description: "Redirecting to your spiritual dashboard...",
+      });
+    }
+    // Use setTimeout to ensure state updates render before redirect
+    setTimeout(() => {
+      window.location.replace('/dashboard');
+    }, 500);
+  };
+
   useEffect(() => {
     let isMounted = true;
+    let redirectTimeout: NodeJS.Timeout;
     
-    // Check if user is already logged in
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      if (!isMounted) return;
+      
+      if (event === 'SIGNED_IN' && session) {
+        performRedirect(true);
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        // Already logged in, redirect silently
+        performRedirect(false);
+      }
+    });
+    
+    // Check existing session AFTER setting up listener
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session && isMounted) {
-          console.log('Existing session found, redirecting to dashboard');
-          window.location.href = '/dashboard';
+          console.log('Existing session found, redirecting...');
+          performRedirect(false);
         }
       } catch (error) {
         console.error('Session check error:', error);
       } finally {
-        if (isMounted) {
+        if (isMounted && !redirecting) {
           setCheckingSession(false);
         }
       }
     };
+    
     checkUser();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && isMounted) {
-        toast({
-          title: "Welcome! 🙏",
-          description: "Redirecting to your dashboard...",
-        });
-        // Use window.location for reliable redirect
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 300);
-      }
-    });
 
     return () => {
       isMounted = false;
+      if (redirectTimeout) clearTimeout(redirectTimeout);
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -111,17 +129,13 @@ const Auth = () => {
           title: "Registration Successful! 🕉️",
           description: "Please check your email to confirm your account.",
         });
+        setLoading(false);
       } else if (data?.session) {
-        // Auto-login successful
-        toast({
-          title: "Welcome to BhaktVerse! 🙏",
-          description: "Your spiritual journey begins now.",
-        });
-        window.location.href = '/dashboard';
+        // Auto-login successful - redirect will be handled by onAuthStateChange
+        setRedirecting(true);
       }
     } catch (error: any) {
       setError(error.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -140,19 +154,31 @@ const Auth = () => {
       if (error) throw error;
 
       if (data?.session) {
-        toast({
-          title: "Welcome Back! 🙏",
-          description: "Redirecting to your dashboard...",
-        });
-        // Use window.location for reliable redirect
-        window.location.href = '/dashboard';
+        // Redirect will be handled by onAuthStateChange
+        setRedirecting(true);
       }
     } catch (error: any) {
       setError(error.message);
-    } finally {
       setLoading(false);
     }
   };
+
+  // Show redirecting state
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-temple">
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="relative">
+            <div className="text-7xl animate-om-pulse">🕉️</div>
+            <CheckCircle2 className="h-8 w-8 text-green-500 absolute -bottom-2 -right-2 animate-scale-in" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground">Welcome to BhaktVerse!</h2>
+          <p className="text-muted-foreground">Preparing your spiritual dashboard...</p>
+          <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   // Show loading while checking session
   if (checkingSession) {
@@ -161,6 +187,7 @@ const Auth = () => {
         <div className="text-center space-y-4">
           <div className="text-6xl animate-om-pulse">🕉️</div>
           <p className="text-muted-foreground">Loading...</p>
+          <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary/50" />
         </div>
       </div>
     );
@@ -168,10 +195,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-temple p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4 animate-om-pulse">🕉️</div>
-          <h1 className="text-3xl font-bold bg-gradient-text bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-2">
             BhaktVerse
           </h1>
           <p className="text-muted-foreground">
@@ -179,7 +206,7 @@ const Auth = () => {
           </p>
         </div>
 
-        <Card className="bg-card-sacred/80 backdrop-blur-md border-border/50 shadow-sacred">
+        <Card className="bg-card-sacred/80 backdrop-blur-md border-border/50 shadow-divine">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center text-primary">
               Spiritual Authentication
@@ -217,6 +244,7 @@ const Auth = () => {
                       placeholder="your@email.com"
                       required
                       className="bg-background/70"
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -229,11 +257,12 @@ const Auth = () => {
                       placeholder="••••••••"
                       required
                       className="bg-background/70"
+                      disabled={loading}
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow"
+                    className="w-full bg-gradient-temple hover:opacity-90 transition-all duration-300 shadow-glow"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -254,6 +283,7 @@ const Auth = () => {
                       placeholder="Your name"
                       required
                       className="bg-background/70"
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -266,6 +296,7 @@ const Auth = () => {
                       placeholder="your@email.com"
                       required
                       className="bg-background/70"
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -279,6 +310,7 @@ const Auth = () => {
                       required
                       minLength={6}
                       className="bg-background/70"
+                      disabled={loading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -291,11 +323,12 @@ const Auth = () => {
                       placeholder="••••••••"
                       required
                       className="bg-background/70"
+                      disabled={loading}
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-primary hover:opacity-90 transition-all duration-300 shadow-glow"
+                    className="w-full bg-gradient-temple hover:opacity-90 transition-all duration-300 shadow-glow"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -22,6 +22,7 @@ import Premium from "./pages/Premium";
 import Numerology from "./pages/Numerology";
 import DailyDevotion from "./pages/DailyDevotion";
 import PalmReading from "./pages/PalmReading";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,9 @@ const App = () => (
             <Route path="/numerology" element={<Numerology />} />
             <Route path="/palm-reading" element={<PalmReading />} />
             <Route path="/daily-devotion" element={<DailyDevotion />} />
+            
+            {/* User Routes */}
+            <Route path="/profile" element={<Profile />} />
             
             {/* Social & Premium */}
             <Route path="/community" element={<Community />} />
