@@ -13,12 +13,18 @@ import {
   Users,
   Building,
   Menu,
-  Sun
+  Sun,
+  User,
+  LogOut
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [moreOpen, setMoreOpen] = useState(false);
 
   // Primary nav items (always visible)
@@ -39,6 +45,7 @@ const MobileBottomNav = () => {
     { icon: Sun, label: 'Daily Devotion', path: '/daily-devotion' },
     { icon: Users, label: 'Community', path: '/community' },
     { icon: Crown, label: 'Premium', path: '/premium' },
+    { icon: User, label: 'Profile', path: '/profile' },
   ];
 
   const handleNavClick = (path: string | null) => {
@@ -47,6 +54,20 @@ const MobileBottomNav = () => {
     } else {
       navigate(path);
       setMoreOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged Out",
+        description: "May your journey continue with blessings. 🙏",
+      });
+      setMoreOpen(false);
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
@@ -87,6 +108,17 @@ const MobileBottomNav = () => {
                     </Button>
                   ))}
                 </div>
+                
+                {/* Logout Section */}
+                <Separator className="my-4" />
+                <Button
+                  variant="destructive"
+                  onClick={handleLogout}
+                  className="w-full gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
               </SheetContent>
             </Sheet>
           ) : (
