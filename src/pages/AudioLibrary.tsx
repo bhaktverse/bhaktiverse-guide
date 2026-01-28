@@ -6,10 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
+import PlaylistManager from '@/components/PlaylistManager';
+import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Play, 
   Pause, 
@@ -21,7 +25,8 @@ import {
   ArrowLeft,
   Clock,
   Users,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react';
 
 interface AudioTrack {
@@ -42,6 +47,8 @@ interface AudioTrack {
 const AudioLibrary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const { downloadAudio, downloadState } = useDownload();
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
@@ -49,6 +56,7 @@ const AudioLibrary = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
+  const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTracks();
@@ -205,6 +213,20 @@ const AudioLibrary = () => {
   const handlePlaylistShuffle = () => {
     const shuffled = [...playlist].sort(() => Math.random() - 0.5);
     setPlaylist(shuffled);
+  };
+
+  const handleDownload = async (track: AudioTrack, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDownloadingTrackId(track.id);
+    await downloadAudio(track.audio_url, track.title, track.artist);
+    setDownloadingTrackId(null);
+  };
+
+  const handlePlayPlaylist = (playlistTracks: AudioTrack[]) => {
+    setPlaylist(playlistTracks);
+    if (playlistTracks.length > 0) {
+      setCurrentTrack(playlistTracks[0]);
+    }
   };
 
   const filteredTracks = tracks.filter(track => {
@@ -370,8 +392,17 @@ const AudioLibrary = () => {
                           <Button variant="ghost" size="sm">
                             <Heart className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => handleDownload(track, e)}
+                            disabled={downloadingTrackId === track.id}
+                          >
+                            {downloadingTrackId === track.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -390,13 +421,18 @@ const AudioLibrary = () => {
             </Card>
           </div>
 
-          {/* Audio Player */}
-          <div className="lg:col-span-1">
+          {/* Audio Player & Playlist Manager */}
+          <div className="lg:col-span-1 space-y-6">
             <EnhancedAudioPlayer
               track={currentTrack}
               playlist={playlist}
               onTrackChange={handleTrackChange}
               onPlaylistShuffle={handlePlaylistShuffle}
+            />
+            
+            <PlaylistManager 
+              allTracks={tracks}
+              onPlayPlaylist={handlePlayPlaylist}
             />
           </div>
         </div>

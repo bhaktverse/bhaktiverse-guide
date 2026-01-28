@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 import { 
   Calendar, 
   BookOpen, 
@@ -55,6 +56,7 @@ interface DashboardStats {
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     currentStreak: 0,
     longestStreak: 0,
@@ -73,6 +75,7 @@ const Dashboard = () => {
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [greeting, setGreeting] = useState({ text: "Namaste", icon: "🙏" });
   const [userName, setUserName] = useState("");
+  const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -99,6 +102,7 @@ const Dashboard = () => {
   }, [user]);
 
   const loadDashboardData = async () => {
+    setIsDataLoading(true);
     try {
       // Load profile
       const { data: profile } = await supabase
@@ -197,16 +201,22 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error loading dashboard:', error);
       setTodayQuote("Peace comes from within. Do not seek it without. — Buddha");
+    } finally {
+      setIsDataLoading(false);
+      // Trigger entrance animations after data loads
+      setTimeout(() => setAnimateIn(true), 100);
     }
   };
 
-  if (authLoading) {
+  if (authLoading || isDataLoading) {
     return (
-      <div className="min-h-screen bg-gradient-peace flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="text-6xl animate-om-pulse">🕉️</div>
-          <p className="text-muted-foreground">Loading your spiritual journey...</p>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-6 pb-24 md:pb-8 max-w-7xl">
+          <Breadcrumbs className="mb-6" />
+          <DashboardSkeleton />
         </div>
+        <MobileBottomNav />
       </div>
     );
   }
@@ -258,8 +268,11 @@ const Dashboard = () => {
         {/* Breadcrumbs */}
         <Breadcrumbs className="mb-6" />
 
+        {/* Animated Content Wrapper */}
+        <div className={`space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        
         {/* Welcome Header */}
-        <div className="relative mb-8 p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden">
+        <div className="relative p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -mr-32 -mt-32 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full -ml-24 -mb-24 pointer-events-none" />
@@ -559,6 +572,7 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+        </div> {/* End animated wrapper */}
       </div>
 
       <MobileBottomNav />
