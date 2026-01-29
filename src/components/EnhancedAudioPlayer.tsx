@@ -84,17 +84,19 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     const handleError = (e: Event) => {
       console.error('Audio playback error:', e);
       console.info('Failed to load:', track.audio_url);
-      toast({
-        title: "Audio Unavailable",
-        description: `Cannot play "${track.title}". Skipping to next track...`,
-        variant: "destructive",
-      });
       setIsPlaying(false);
       
-      // Auto-skip to next track after 1.5 seconds
+      // Auto-skip to next track after short delay
       setTimeout(() => {
-        handleNext();
-      }, 1500);
+        const currentIndex = playlist.findIndex(t => t.id === track?.id);
+        if (currentIndex < playlist.length - 1) {
+          toast({
+            title: "Skipping unavailable track",
+            description: `"${track.title}" could not be played.`,
+          });
+          onTrackChange(playlist[currentIndex + 1]);
+        }
+      }, 500);
     };
 
     const handleCanPlay = () => {
@@ -102,16 +104,11 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       setDuration(audio.duration || 0);
     };
 
-    const handleLoadStart = () => {
-      console.log('📡 Loading audio:', track.title);
-    };
-
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('loadstart', handleLoadStart);
 
     // Load the new track
     audio.load();
@@ -122,9 +119,8 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('loadstart', handleLoadStart);
     };
-  }, [repeatMode, track, toast]);
+  }, [repeatMode, track, toast, playlist, onTrackChange]);
 
   useEffect(() => {
     if (audioRef.current) {
