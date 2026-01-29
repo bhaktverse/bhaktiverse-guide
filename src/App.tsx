@@ -13,6 +13,7 @@ import SaintChat from "./pages/SaintChat";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Temples from "./pages/Temples";
+import TempleDetail from "./pages/TempleDetail";
 import Scriptures from "./pages/Scriptures";
 import ScriptureReader from "./pages/ScriptureReader";
 import SpiritualCalendar from "./pages/SpiritualCalendar";
@@ -46,7 +47,8 @@ const App = () => (
             <Route path="/saints/:saintId/chat" element={<SaintChat />} />
             <Route path="/scriptures" element={<Scriptures />} />
             <Route path="/scriptures/:scriptureId" element={<ScriptureReader />} />
-            <Route path="/temples" element={<Temples />} />
+<Route path="/temples" element={<Temples />} />
+            <Route path="/temples/:templeId" element={<TempleDetail />} />
             
             {/* Features Routes */}
             <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
