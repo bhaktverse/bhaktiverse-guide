@@ -24,6 +24,8 @@ import Numerology from "./pages/Numerology";
 import DailyDevotion from "./pages/DailyDevotion";
 import PalmReading from "./pages/PalmReading";
 import Profile from "./pages/Profile";
+import Horoscope from "./pages/Horoscope";
+import KundaliMatch from "./pages/KundaliMatch";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +49,7 @@ const App = () => (
             <Route path="/saints/:saintId/chat" element={<SaintChat />} />
             <Route path="/scriptures" element={<Scriptures />} />
             <Route path="/scriptures/:scriptureId" element={<ScriptureReader />} />
-<Route path="/temples" element={<Temples />} />
+            <Route path="/temples" element={<Temples />} />
             <Route path="/temples/:templeId" element={<TempleDetail />} />
             
             {/* Features Routes */}
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/numerology" element={<Numerology />} />
             <Route path="/palm-reading" element={<PalmReading />} />
             <Route path="/daily-devotion" element={<DailyDevotion />} />
+            <Route path="/horoscope" element={<Horoscope />} />
+            <Route path="/kundali-match" element={<KundaliMatch />} />
             
             {/* User Routes */}
             <Route path="/profile" element={<Profile />} />
