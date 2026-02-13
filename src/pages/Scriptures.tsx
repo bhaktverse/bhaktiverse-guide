@@ -322,7 +322,7 @@ const Scriptures = () => {
                       </Badge>
                       <Badge variant="outline" className="bg-white/70 dark:bg-white/10 border-orange-300">
                         <Star className="h-3 w-3 mr-1 fill-yellow-500 text-yellow-500" />
-                        4.{Math.floor(Math.random() * 3) + 7}
+                        Sacred
                       </Badge>
                     </div>
                   </div>

@@ -738,60 +738,49 @@ const PalmReading = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-peace">
+    <div className="min-h-screen bg-background">
       <Navigation />
       <audio ref={audioRef} onEnded={() => setIsNarrating(false)} className="hidden" />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 pb-28">
         {/* Breadcrumbs */}
-        <Breadcrumbs className="mb-6" />
+        <Breadcrumbs className="mb-4" />
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-block mb-4 p-6 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-full animate-pulse">
-            <Hand className="h-12 w-12 text-primary" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent mb-4">
-            AI Guru Palm Reading
+        {/* Compact Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-2">
+            🤚 AI Guru Palm Reading
           </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Premium Vedic Palm Analysis • Voice Narration • History & Compatibility
+          <p className="text-sm text-muted-foreground">
+            Vedic Samudrika Shastra Analysis • Voice Narration • PDF Reports
           </p>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
-            <TabsTrigger value="scan" className="gap-2">
-              <Camera className="h-4 w-4" />
-              <span className="hidden sm:inline">Scan</span>
-            </TabsTrigger>
-            <TabsTrigger value="tarot" className="gap-2">
-              <span className="text-lg">🔮</span>
-              <span className="hidden sm:inline">Tarot</span>
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2">
-              <History className="h-4 w-4" />
-              <span className="hidden sm:inline">History</span>
-            </TabsTrigger>
-            <TabsTrigger value="horoscope" className="gap-2">
-              <Sun className="h-4 w-4" />
-              <span className="hidden sm:inline">Horoscope</span>
-            </TabsTrigger>
-            <TabsTrigger value="visualization" className="gap-2">
-              <Eye className="h-4 w-4" />
-              <span className="hidden sm:inline">Lines</span>
-            </TabsTrigger>
-            <TabsTrigger value="compatibility" className="gap-2">
-              <HeartHandshake className="h-4 w-4" />
-              <span className="hidden sm:inline">Match</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Progress Stepper */}
+        <div className="flex items-center justify-center gap-2 mb-8 max-w-md mx-auto">
+          {[
+            { label: 'Language', done: !!selectedLanguage },
+            { label: 'Scan', done: palmImages.length > 0 },
+            { label: 'Analysis', done: !!analysis },
+            { label: 'Results', done: !!analysis },
+          ].map((step, i) => (
+            <div key={i} className="flex items-center gap-2 flex-1">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                step.done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}>
+                {step.done ? '✓' : i + 1}
+              </div>
+              <span className="text-[10px] text-muted-foreground hidden sm:inline">{step.label}</span>
+              {i < 3 && <div className={`flex-1 h-0.5 ${step.done ? 'bg-primary' : 'bg-muted'}`} />}
+            </div>
+          ))}
+        </div>
 
-          {/* Scan Tab */}
-          <TabsContent value="scan">
-            {/* Show Scanner if no analysis or images */}
-            {!analysis && palmImages.length === 0 && (
+        {/* MAIN CONTENT: Scan or Results */}
+        {!analysis ? (
+          /* === SCAN PHASE === */
+          <div className="max-w-4xl mx-auto">
+            {palmImages.length === 0 ? (
               <PalmScannerBiometric
                 selectedLanguage={selectedLanguage}
                 onLanguageChange={setSelectedLanguage}
@@ -800,828 +789,100 @@ const PalmReading = () => {
                 analyzing={analyzing}
                 languages={LANGUAGES}
               />
-            )}
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Palm Preview */}
+                <Card className="border border-border/50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      Palm Captured
+                      <Badge variant="outline" className="ml-auto">{palmImages.length} scan{palmImages.length > 1 ? 's' : ''}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="rounded-xl overflow-hidden border border-border/50">
+                      <img src={palmImages[palmImages.length - 1]} alt="Palm" className="w-full h-auto max-h-[350px] object-contain" />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button onClick={analyzePalm} disabled={analyzing} className="flex-1 gap-2">
+                        {analyzing ? <><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</> : <><Sparkles className="h-4 w-4" />Get Reading</>}
+                      </Button>
+                      <Button variant="outline" onClick={resetScan} disabled={analyzing}>
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Show Results Grid when palm images exist */}
-            {palmImages.length > 0 && (
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Left: Image Preview */}
-              <div className="space-y-6">
-                {!analysis && (
-                  <Card className="card-sacred border-2 border-primary/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center space-x-2">
-                          <CheckCircle2 className="h-5 w-5 text-success" />
-                          <span>Palm Captured</span>
-                        </span>
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                          {palmImages.length} scan{palmImages.length > 1 ? 's' : ''}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="relative rounded-xl overflow-hidden shadow-divine border-2 border-primary/30">
-                        <img 
-                          src={palmImages[palmImages.length - 1]} 
-                          alt="Palm scan" 
-                          className="w-full h-auto max-h-[400px] object-contain"
-                        />
-                      </div>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={analyzePalm}
-                          disabled={analyzing}
-                          className="flex-1 gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
-                        >
-                          {analyzing ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Consulting AI Guru...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4 w-4" />
-                              Get Divine Reading
-                            </>
-                          )}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={resetScan}
-                          disabled={analyzing}
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Scanning Tips */}
-                <Card className="card-sacred">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <AlertCircle className="h-5 w-5 text-primary" />
-                      <span>Scanning Tips</span>
+                {/* Tips */}
+                <Card className="border border-border/50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-primary" />Scanning Tips
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm text-muted-foreground">
-                    <p>🤚 Use your dominant hand (right for most people)</p>
+                    <p>🤚 Use your dominant hand</p>
                     <p>💡 Bright, natural lighting works best</p>
-                    <p>📸 Keep palm flat with fingers slightly spread</p>
-                    <p>🎯 Follow on-screen guidance for each angle</p>
-                    <p>🔍 Ensure all major lines are clearly visible</p>
+                    <p>📸 Keep palm flat with fingers spread</p>
+                    <p>🔍 Ensure all major lines are visible</p>
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Right: Results */}
-              <div className="space-y-6">
-                {!analysis && !analyzing && (
-                  <Card className="card-sacred">
-                    <CardContent className="text-center py-16">
-                      <Sparkles className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground">
-                        Complete your biometric palm scan to receive<br />your personalized destiny reading from AI Guru
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {analyzing && (
-                  <Card className="card-sacred border-primary/30">
-                    <CardContent className="text-center py-16 space-y-4">
-                      <div className="relative inline-block">
-                        <div className="text-6xl animate-om-pulse">🙏</div>
-                        <div className="absolute -inset-4 border-4 border-primary/20 rounded-full animate-ping" />
-                      </div>
-                      <p className="text-lg font-semibold">AI Guru is reading your palm...</p>
-                      <p className="text-sm text-muted-foreground">Analyzing destiny patterns</p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {analysis && (
-                  <div className="space-y-4">
-                    {/* Premium Toggle */}
-                    {!isPremiumUser && (
-                      <Card className="border-2 border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
-                        <CardContent className="py-4">
-                          <div className="flex items-center justify-between flex-wrap gap-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">👑</span>
-                              <div>
-                                <p className="font-semibold">Viewing Free Summary</p>
-                                <p className="text-sm text-muted-foreground">Upgrade to see all 7 detailed category predictions</p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant={showFullReading ? "outline" : "default"}
-                                size="sm"
-                                onClick={() => setShowFullReading(!showFullReading)}
-                              >
-                                {showFullReading ? 'Show Free' : 'Preview Full'}
-                              </Button>
-                              <Button
-                                onClick={handleUpgradeToPremium}
-                                size="sm"
-                                className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500"
-                              >
-                                Unlock Premium
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Quick Action Buttons */}
-                    <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg">
-                      <Button
-                        onClick={toggleNarration}
-                        disabled={narrationLoading || (!isPremiumUser && !showFullReading)}
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        {narrationLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : isNarrating ? (
-                          <Pause className="h-4 w-4" />
-                        ) : audioUrl ? (
-                          <Play className="h-4 w-4" />
-                        ) : (
-                          <Volume2 className="h-4 w-4" />
-                        )}
-                        {narrationLoading ? 'Generating...' : isNarrating ? 'Pause' : 'Listen'}
-                        {!isPremiumUser && <span className="text-xs">👑</span>}
-                      </Button>
-                      
-                      <SocialShare 
-                        title="AI Guru Palm Reading"
-                        text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'}
-                        palmType={analysis.palmType}
-                      />
-                      
-                      <Button
-                        onClick={() => setActiveTab('horoscope')}
-                        variant="outline"
-                        className="gap-2"
-                        disabled={!isPremiumUser && !showFullReading}
-                      >
-                        <Sun className="h-4 w-4" />
-                        Horoscope
-                        {!isPremiumUser && <span className="text-xs">👑</span>}
-                      </Button>
-                      
-                      <Button
-                        onClick={() => setActiveTab('visualization')}
-                        variant="outline"
-                        className="gap-2"
-                        disabled={!isPremiumUser && !showFullReading}
-                      >
-                        <Eye className="h-4 w-4" />
-                        View Lines
-                        {!isPremiumUser && <span className="text-xs">👑</span>}
-                      </Button>
-                      
-                      <Button
-                        onClick={generatePdfReport}
-                        disabled={generatingPdf}
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        {generatingPdf ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Download className="h-4 w-4" />
-                        )}
-                        PDF Report
-                        {!isPremiumUser && <span className="text-xs">👑</span>}
-                      </Button>
-                      
-                      <Button
-                        onClick={() => setShowReportView(true)}
-                        variant="default"
-                        className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600"
-                      >
-                        <FileText className="h-4 w-4" />
-                        View Full Report
-                      </Button>
-                      
-                      <Button
-                        onClick={resetScan}
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        onClick={() => navigate('/saint-chat')}
-                        variant="outline"
-                        className="gap-2 border-primary/50 text-primary hover:bg-primary/10"
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        Chat with Guru
-                      </Button>
-                    </div>
-
-                    {/* Conditional Results Display */}
-                    <ScrollArea className="h-[750px] pr-4">
-                      {(isPremiumUser || showFullReading) ? (
-                        <PalmAnalysisResults 
-                          analysis={analysis} 
-                          palmImage={palmImages[0]}
-                        />
-                      ) : (
-                        <FreePalmReadingSummary 
-                          analysis={analysis}
-                          onUpgrade={handleUpgradeToPremium}
-                          showUpgradePrompt={true}
-                        />
-                      )}
-                    </ScrollArea>
-                  </div>
-                )}
-              </div>
-            </div>
             )}
-          </TabsContent>
 
-          {/* Tarot Tab */}
-          <TabsContent value="tarot">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <TarotPull 
-                palmAnalysis={analysis || undefined}
-                language={selectedLanguage}
-                onPullComplete={(cards, interpretation) => {
-                  toast({
-                    title: "🔮 Tarot Reading Complete",
-                    description: "Your cards have revealed their wisdom",
-                  });
-                }}
-              />
-              
-              {/* Tarot + Palm Combo Info */}
-              <Card className="card-sacred">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="text-2xl">✨</span>
-                    Palm + Tarot Synergy
-                  </CardTitle>
-                  <CardDescription>
-                    Combining ancient wisdom traditions for deeper insight
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-                      <span className="text-lg">🤚</span>
-                      <div>
-                        <p className="font-medium">Palm Reading</p>
-                        <p className="text-muted-foreground">Reveals your inherent nature, life patterns, and long-term destiny through physical features</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-                      <span className="text-lg">🎴</span>
-                      <div>
-                        <p className="font-medium">Tarot Cards</p>
-                        <p className="text-muted-foreground">Illuminates current energies, immediate circumstances, and near-future possibilities</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                      <span className="text-lg">🔮</span>
-                      <div>
-                        <p className="font-medium text-primary">Combined Insight</p>
-                        <p className="text-muted-foreground">Together they provide a complete picture - what you're born with + what you're experiencing now</p>
-                      </div>
-                    </div>
+            {/* Analyzing State */}
+            {analyzing && (
+              <Card className="mt-6 border-primary/30">
+                <CardContent className="text-center py-12 space-y-4">
+                  <div className="relative inline-block">
+                    <div className="text-6xl animate-pulse">🙏</div>
+                    <div className="absolute -inset-4 border-2 border-primary/20 rounded-full animate-ping" />
                   </div>
-                  
-                  {!analysis && (
-                      <div className="space-y-3">
-                        <Button 
-                          onClick={() => setActiveTab('scan')}
-                          className="w-full gap-2"
-                        >
-                          <Hand className="h-4 w-4" />
-                          Get Palm Reading First
-                        </Button>
-                        <Button 
-                          onClick={() => navigate('/saint-chat')}
-                          variant="outline"
-                          className="w-full gap-2"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          Chat with AI Guru
-                        </Button>
-                      </div>
-                  )}
+                  <p className="text-lg font-semibold">AI Guru is reading your palm...</p>
+                  <p className="text-sm text-muted-foreground">Analyzing lines, mounts, and destiny patterns</p>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
-
-          {/* History Tab */}
-          <TabsContent value="history">
-            <Card className="card-sacred">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <History className="h-5 w-5 text-primary" />
-                  <span>Your Palm Reading History</span>
-                </CardTitle>
-                <CardDescription>
-                  View and manage your past palm readings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingHistory ? (
-                  <div className="text-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                    <p className="text-muted-foreground mt-2">Loading history...</p>
-                  </div>
-                ) : history.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground mt-4">No palm readings yet</p>
-                    <Button 
-                      onClick={() => setActiveTab('scan')}
-                      className="mt-4 gap-2"
-                    >
-                      <Camera className="h-4 w-4" />
-                      Get Your First Reading
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {history.map((item) => (
-                      <Card key={item.id} className="hover:border-primary/50 transition-colors">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="outline">{item.palm_type || 'Standard'}</Badge>
-                                <Badge variant="secondary">
-                                  {LANGUAGES.find(l => l.code === item.language)?.name || item.language}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                                <Calendar className="h-4 w-4" />
-                                {new Date(item.created_at).toLocaleDateString()}
-                                <Clock className="h-4 w-4 ml-2" />
-                                {new Date(item.created_at).toLocaleTimeString()}
-                              </p>
-                              {item.analysis?.overallDestiny && (
-                                <p className="text-sm mt-2 line-clamp-2">
-                                  {item.analysis.overallDestiny}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => setSelectedHistoryItem(item)}
-                                  >
-                                    View
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                                  <DialogHeader>
-                                    <DialogTitle>Palm Reading Details</DialogTitle>
-                                  </DialogHeader>
-                                  {selectedHistoryItem && (
-                                    <div className="space-y-4">
-                                      {selectedHistoryItem.analysis?.greeting && (
-                                        <div className="bg-primary/10 p-4 rounded-lg">
-                                          <p className="italic">"{selectedHistoryItem.analysis.greeting}"</p>
-                                        </div>
-                                      )}
-                                      {selectedHistoryItem.analysis?.overallDestiny && (
-                                        <div>
-                                          <h4 className="font-semibold mb-2">Life Path</h4>
-                                          <p className="text-sm">{selectedHistoryItem.analysis.overallDestiny}</p>
-                                        </div>
-                                      )}
-                                      {selectedHistoryItem.analysis?.blessings && (
-                                        <div className="bg-success/10 p-4 rounded-lg">
-                                          <p className="italic text-center">🙏 {selectedHistoryItem.analysis.blessings}</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </DialogContent>
-                              </Dialog>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedForCompatibility(item);
-                                  setActiveTab('compatibility');
-                                }}
-                              >
-                                <HeartHandshake className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => deleteFromHistory(item.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Compatibility Tab */}
-          <TabsContent value="compatibility">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <Card className="card-sacred">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <HeartHandshake className="h-5 w-5 text-primary" />
-                    <span>Palm Compatibility Analysis</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Compare two palm readings to discover relationship insights
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium mb-2">Person 1 (Current Reading)</p>
-                      {analysis ? (
-                        <Badge variant="secondary">{analysis.palmType || 'Current'} Palm</Badge>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Complete a new reading first</p>
-                      )}
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium mb-2">Person 2 (From History)</p>
-                      {selectedForCompatibility ? (
-                        <div className="flex items-center justify-between">
-                          <Badge variant="secondary">{selectedForCompatibility.palm_type || 'Selected'} Palm</Badge>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setSelectedForCompatibility(null)}
-                          >
-                            Clear
-                          </Button>
-                        </div>
-                      ) : (
-                        <Select 
-                          onValueChange={(value) => {
-                            const item = history.find(h => h.id === value);
-                            setSelectedForCompatibility(item || null);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select from history" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {history.map(item => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.palm_type || 'Reading'} - {new Date(item.created_at).toLocaleDateString()}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Button
-                    onClick={analyzeCompatibility}
-                    disabled={!analysis || !selectedForCompatibility || analyzingCompatibility}
-                    className="w-full gap-2 bg-gradient-to-r from-pink-500 to-red-500"
-                  >
-                    {analyzingCompatibility ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Analyzing Compatibility...
-                      </>
-                    ) : (
-                      <>
-                        <Heart className="h-4 w-4" />
-                        Check Compatibility
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Compatibility Results */}
-              <Card className="card-sacred">
-                <CardHeader>
-                  <CardTitle>Compatibility Results</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!compatibilityResult ? (
-                    <div className="text-center py-12">
-                      <Heart className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground mt-4">
-                        Select two readings to analyze compatibility
-                      </p>
-                    </div>
-                  ) : (
-                    <ScrollArea className="h-[500px] pr-4">
-                      <div className="space-y-4">
-                        {compatibilityResult.overallScore !== undefined && (
-                          <div className="text-center p-6 bg-gradient-to-br from-pink-100 to-red-100 dark:from-pink-900/20 dark:to-red-900/20 rounded-xl">
-                            <div className="text-5xl font-bold text-primary">
-                              {compatibilityResult.overallScore}%
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">Overall Compatibility</p>
-                          </div>
-                        )}
-
-                        {compatibilityResult.greeting && (
-                          <div className="bg-primary/10 p-4 rounded-lg">
-                            <p className="italic">"{compatibilityResult.greeting}"</p>
-                          </div>
-                        )}
-
-                        {compatibilityResult.summary && (
-                          <div>
-                            <h4 className="font-semibold mb-2">Summary</h4>
-                            <p className="text-sm">{compatibilityResult.summary}</p>
-                          </div>
-                        )}
-
-                        {compatibilityResult.categories && Object.entries(compatibilityResult.categories).map(([key, cat]) => (
-                          <div key={key} className="border rounded-lg p-4">
-                            <div className="flex justify-between items-center mb-2">
-                              <h4 className="font-semibold">{cat.title}</h4>
-                              <Badge variant={cat.score >= 70 ? 'default' : cat.score >= 50 ? 'secondary' : 'destructive'}>
-                                {cat.score}%
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{cat.analysis}</p>
-                            <p className="text-sm text-primary">{cat.advice}</p>
-                          </div>
-                        ))}
-
-                        {compatibilityResult.strengths && compatibilityResult.strengths.length > 0 && (
-                          <div className="bg-success/10 p-4 rounded-lg">
-                            <h4 className="font-semibold mb-2 text-success">Strengths</h4>
-                            <ul className="text-sm space-y-1">
-                              {compatibilityResult.strengths.map((s, i) => (
-                                <li key={i}>✓ {s}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {compatibilityResult.challenges && compatibilityResult.challenges.length > 0 && (
-                          <div className="bg-warning/10 p-4 rounded-lg">
-                            <h4 className="font-semibold mb-2 text-warning">Challenges</h4>
-                            <ul className="text-sm space-y-1">
-                              {compatibilityResult.challenges.map((c, i) => (
-                                <li key={i}>⚠ {c}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {compatibilityResult.blessings && (
-                          <div className="text-center p-4 bg-primary/5 rounded-lg">
-                            <p className="italic">🙏 {compatibilityResult.blessings}</p>
-                          </div>
-                        )}
+            )}
+          </div>
+        ) : (
+          /* === RESULTS PHASE === */
+          <div className="max-w-6xl mx-auto space-y-6">
+            {/* Premium Toggle for Free Users */}
+            {!isPremiumUser && (
+              <Card className="border-2 border-amber-500/30 bg-amber-500/5">
+                <CardContent className="py-3">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">👑</span>
+                      <div>
+                        <p className="font-semibold text-sm">Free Summary</p>
+                        <p className="text-xs text-muted-foreground">Upgrade to unlock all 7 category predictions</p>
                       </div>
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Horoscope Tab */}
-          <TabsContent value="horoscope">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <Card className="card-sacred">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Sun className="h-5 w-5 text-warning" />
-                    <span>Daily Horoscope</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Personalized predictions based on your palm reading
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {!analysis ? (
-                    <div className="text-center py-12">
-                      <Hand className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground mt-4">
-                        Complete a palm reading first to get personalized horoscope
-                      </p>
-                      <Button onClick={() => setActiveTab('scan')} className="mt-4 gap-2">
-                        <Camera className="h-4 w-4" />
-                        Get Palm Reading
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant={showFullReading ? "outline" : "default"} size="sm" onClick={() => setShowFullReading(!showFullReading)}>
+                        {showFullReading ? 'Show Free' : 'Preview Full'}
+                      </Button>
+                      <Button onClick={handleUpgradeToPremium} size="sm" className="gap-1 bg-gradient-to-r from-amber-500 to-orange-500">
+                        Unlock Premium
                       </Button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="bg-gradient-to-r from-warning/10 to-primary/10 p-4 rounded-lg text-center">
-                        <p className="text-sm text-muted-foreground">Your palm type</p>
-                        <p className="text-xl font-bold">{analysis.palmType || 'Standard'} Hand</p>
-                      </div>
-                      <Button
-                        onClick={generateDailyHoroscope}
-                        disabled={loadingHoroscope}
-                        className="w-full gap-2 bg-gradient-to-r from-orange-500 to-yellow-500"
-                      >
-                        {loadingHoroscope ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Consulting the stars...
-                          </>
-                        ) : (
-                          <>
-                            <Sun className="h-4 w-4" />
-                            Generate Today's Horoscope
-                          </>
-                        )}
-                      </Button>
-                    </>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Horoscope Results */}
-              <Card className="card-sacred">
-                <CardHeader>
-                  <CardTitle>Today's Predictions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!horoscope ? (
-                    <div className="text-center py-12">
-                      <Sun className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-                      <p className="text-muted-foreground mt-4">
-                        Generate your daily horoscope
-                      </p>
-                    </div>
-                  ) : (
-                    <ScrollArea className="h-[600px] pr-4">
-                      <div className="space-y-4">
-                        {horoscope.greeting && (
-                          <div className="bg-warning/10 p-4 rounded-lg">
-                            <p className="italic">"{horoscope.greeting}"</p>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="bg-muted/50 p-3 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Lucky Time</p>
-                            <p className="font-semibold">{horoscope.luckyTime || 'N/A'}</p>
-                          </div>
-                          <div className="bg-muted/50 p-3 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Lucky Color</p>
-                            <p className="font-semibold">{horoscope.luckyColor || 'N/A'}</p>
-                          </div>
-                          <div className="bg-muted/50 p-3 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Lucky Number</p>
-                            <p className="font-semibold">{horoscope.luckyNumber || 'N/A'}</p>
-                          </div>
-                        </div>
-
-                        {horoscope.predictions && (
-                          <div className="space-y-3">
-                            {horoscope.predictions.morning && (
-                              <div className="border rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Sunrise className="h-4 w-4 text-orange-500" />
-                                  <h4 className="font-semibold">{horoscope.predictions.morning.title}</h4>
-                                </div>
-                                <p className="text-sm">{horoscope.predictions.morning.prediction}</p>
-                                <p className="text-xs text-primary mt-1">{horoscope.predictions.morning.advice}</p>
-                              </div>
-                            )}
-                            {horoscope.predictions.afternoon && (
-                              <div className="border rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Sun className="h-4 w-4 text-yellow-500" />
-                                  <h4 className="font-semibold">{horoscope.predictions.afternoon.title}</h4>
-                                </div>
-                                <p className="text-sm">{horoscope.predictions.afternoon.prediction}</p>
-                                <p className="text-xs text-primary mt-1">{horoscope.predictions.afternoon.advice}</p>
-                              </div>
-                            )}
-                            {horoscope.predictions.evening && (
-                              <div className="border rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Moon className="h-4 w-4 text-indigo-500" />
-                                  <h4 className="font-semibold">{horoscope.predictions.evening.title}</h4>
-                                </div>
-                                <p className="text-sm">{horoscope.predictions.evening.prediction}</p>
-                                <p className="text-xs text-primary mt-1">{horoscope.predictions.evening.advice}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {horoscope.categories && (
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(horoscope.categories).map(([key, cat]) => (
-                              <div key={key} className="bg-muted/30 p-3 rounded-lg">
-                                <div className="flex justify-between items-center mb-1">
-                                  <h5 className="font-medium capitalize text-sm">{key}</h5>
-                                  <Badge variant="outline" className="text-xs">{cat.score}/10</Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground">{cat.prediction}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {horoscope.mantraOfTheDay && (
-                          <div className="bg-primary/10 p-4 rounded-lg text-center">
-                            <p className="text-xs text-muted-foreground mb-1">Mantra of the Day</p>
-                            <p className="font-semibold text-primary">
-                              {typeof horoscope.mantraOfTheDay === 'string' 
-                                ? horoscope.mantraOfTheDay 
-                                : horoscope.mantraOfTheDay.sanskrit || horoscope.mantraOfTheDay.transliteration}
-                            </p>
-                            {horoscope.mantraMeaning && (
-                              <p className="text-xs mt-1">{horoscope.mantraMeaning}</p>
-                            )}
-                            {typeof horoscope.mantraOfTheDay === 'object' && horoscope.mantraOfTheDay.meaning && (
-                              <p className="text-xs mt-1">{horoscope.mantraOfTheDay.meaning}</p>
-                            )}
-                          </div>
-                        )}
-
-                        {(horoscope.doToday || horoscope.avoidToday) && (
-                          <div className="grid grid-cols-2 gap-3">
-                            {horoscope.doToday && horoscope.doToday.length > 0 && (
-                              <div className="bg-success/10 p-3 rounded-lg">
-                                <h5 className="font-semibold text-success text-sm mb-2">✓ Do Today</h5>
-                                <ul className="text-xs space-y-1">
-                                  {horoscope.doToday.map((item, i) => (
-                                    <li key={i}>{item}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {horoscope.avoidToday && horoscope.avoidToday.length > 0 && (
-                              <div className="bg-destructive/10 p-3 rounded-lg">
-                                <h5 className="font-semibold text-destructive text-sm mb-2">✗ Avoid Today</h5>
-                                <ul className="text-xs space-y-1">
-                                  {horoscope.avoidToday.map((item, i) => (
-                                    <li key={i}>{item}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {horoscope.cosmicMessage && (
-                          <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg">
-                            <p className="text-sm font-medium">✨ {horoscope.cosmicMessage}</p>
-                          </div>
-                        )}
-
-                        {horoscope.blessings && (
-                          <div className="text-center p-4 bg-primary/5 rounded-lg">
-                            <p className="italic">🙏 {horoscope.blessings}</p>
-                          </div>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Visualization Tab */}
-          <TabsContent value="visualization">
-            {palmImages.length > 0 ? (
+            {/* Palm Image + Lines Visualization */}
+            {palmImages.length > 0 && (
               <div className="grid lg:grid-cols-2 gap-6">
-                {/* AI Line Detection Overlay */}
                 <AILineDetectionOverlay 
                   imageUrl={palmImages[0]} 
                   lineAnalysis={analysis?.lineAnalysis}
-                  isAnalyzing={analyzing}
+                  isAnalyzing={false}
                   onAnalyzeRequest={analyzePalm}
                 />
-                
-                {/* Enhanced Visualization */}
                 <EnhancedPalmVisualization 
                   imageUrl={palmImages[0]} 
                   palmType={analysis?.palmType}
@@ -1629,42 +890,207 @@ const PalmReading = () => {
                   mountAnalysis={analysis?.mountAnalysis}
                 />
               </div>
-            ) : (
-              <Card className="card-sacred">
-                <CardContent className="text-center py-16">
-                  <Eye className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-                  <p className="text-muted-foreground mt-4">
-                    Upload a palm image to see AI-powered line visualization
-                  </p>
-                  <Button onClick={() => setActiveTab('scan')} className="mt-4 gap-2">
-                    <Camera className="h-4 w-4" />
-                    Scan Palm
-                  </Button>
-                </CardContent>
-              </Card>
             )}
-          </TabsContent>
-        </Tabs>
-        
-        {/* Disclaimer Footer */}
-        <div className="mt-12 text-center">
-          <p className="text-xs text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
-            🔮 <strong>Disclaimer:</strong> This palm reading and tarot service is for entertainment and spiritual reflection purposes only. 
-            It is not intended as medical, legal, financial, or professional advice. Readings are based on traditional Vedic palmistry (Samudrika Shastra) 
-            interpreted through AI assistance. Please consult qualified professionals for important life decisions.
+
+            {/* Main Results */}
+            <Tabs defaultValue="reading" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-10">
+                <TabsTrigger value="reading" className="text-xs gap-1"><Sparkles className="h-3 w-3" />Reading</TabsTrigger>
+                <TabsTrigger value="tarot" className="text-xs gap-1"><span>🔮</span>Tarot</TabsTrigger>
+                <TabsTrigger value="horoscope" className="text-xs gap-1"><Sun className="h-3 w-3" />Horoscope</TabsTrigger>
+                <TabsTrigger value="history" className="text-xs gap-1"><History className="h-3 w-3" />History</TabsTrigger>
+              </TabsList>
+
+              {/* Reading Tab */}
+              <TabsContent value="reading" className="mt-4">
+                <ScrollArea className="h-[600px] pr-4">
+                  {(isPremiumUser || showFullReading) ? (
+                    <PalmAnalysisResults analysis={analysis} palmImage={palmImages[0]} />
+                  ) : (
+                    <FreePalmReadingSummary analysis={analysis} onUpgrade={handleUpgradeToPremium} showUpgradePrompt={true} />
+                  )}
+                </ScrollArea>
+              </TabsContent>
+
+              {/* Tarot Tab */}
+              <TabsContent value="tarot" className="mt-4">
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <TarotPull palmAnalysis={analysis || undefined} language={selectedLanguage} onPullComplete={(cards, interp) => {
+                    toast({ title: "🔮 Tarot Reading Complete", description: "Cards have revealed their wisdom" });
+                  }} />
+                  <Card className="border border-border/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">✨ Palm + Tarot Synergy</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                      <div className="bg-muted/30 rounded-lg p-3">
+                        <p className="font-medium">🤚 Palm Reading</p>
+                        <p className="text-muted-foreground text-xs mt-1">Your inherent nature and long-term destiny</p>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-3">
+                        <p className="font-medium">🎴 Tarot Cards</p>
+                        <p className="text-muted-foreground text-xs mt-1">Current energies and near-future possibilities</p>
+                      </div>
+                      <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+                        <p className="font-medium text-primary">🔮 Combined Insight</p>
+                        <p className="text-muted-foreground text-xs mt-1">Complete picture of destiny + current experience</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Horoscope Tab */}
+              <TabsContent value="horoscope" className="mt-4">
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <Card className="border border-border/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Sun className="h-5 w-5 text-orange-500" />Daily Horoscope
+                      </CardTitle>
+                      <CardDescription>Personalized predictions from your palm analysis</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-muted/30 p-3 rounded-lg text-center">
+                        <p className="text-xs text-muted-foreground">Your palm type</p>
+                        <p className="font-bold">{analysis.palmType || 'Standard'} Hand</p>
+                      </div>
+                      <Button onClick={generateDailyHoroscope} disabled={loadingHoroscope} className="w-full gap-2">
+                        {loadingHoroscope ? <><Loader2 className="h-4 w-4 animate-spin" />Consulting stars...</> : <><Sun className="h-4 w-4" />Generate Horoscope</>}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  <Card className="border border-border/50">
+                    <CardHeader><CardTitle className="text-lg">Predictions</CardTitle></CardHeader>
+                    <CardContent>
+                      {!horoscope ? (
+                        <div className="text-center py-8"><Sun className="h-12 w-12 mx-auto text-muted-foreground/30" /><p className="text-muted-foreground text-sm mt-3">Generate your daily horoscope</p></div>
+                      ) : (
+                        <ScrollArea className="h-[400px] pr-4">
+                          <div className="space-y-3">
+                            {horoscope.greeting && <div className="bg-primary/5 p-3 rounded-lg"><p className="text-sm italic">"{horoscope.greeting}"</p></div>}
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-muted/50 p-2 rounded-lg"><p className="text-[10px] text-muted-foreground">Lucky Time</p><p className="font-semibold text-xs">{horoscope.luckyTime || 'N/A'}</p></div>
+                              <div className="bg-muted/50 p-2 rounded-lg"><p className="text-[10px] text-muted-foreground">Lucky Color</p><p className="font-semibold text-xs">{horoscope.luckyColor || 'N/A'}</p></div>
+                              <div className="bg-muted/50 p-2 rounded-lg"><p className="text-[10px] text-muted-foreground">Lucky Number</p><p className="font-semibold text-xs">{horoscope.luckyNumber || 'N/A'}</p></div>
+                            </div>
+                            {horoscope.predictions && Object.entries(horoscope.predictions).map(([key, pred]) => pred && (
+                              <div key={key} className="border rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  {key === 'morning' && <Sunrise className="h-4 w-4 text-orange-500" />}
+                                  {key === 'afternoon' && <Sun className="h-4 w-4 text-yellow-500" />}
+                                  {key === 'evening' && <Moon className="h-4 w-4 text-indigo-500" />}
+                                  <h4 className="font-semibold text-sm">{pred.title}</h4>
+                                </div>
+                                <p className="text-xs">{pred.prediction}</p>
+                                <p className="text-xs text-primary mt-1">{pred.advice}</p>
+                              </div>
+                            ))}
+                            {horoscope.mantraOfTheDay && (
+                              <div className="bg-primary/10 p-3 rounded-lg text-center">
+                                <p className="text-[10px] text-muted-foreground mb-1">Mantra of the Day</p>
+                                <p className="font-semibold text-primary text-sm">
+                                  {typeof horoscope.mantraOfTheDay === 'string' ? horoscope.mantraOfTheDay : horoscope.mantraOfTheDay.sanskrit || horoscope.mantraOfTheDay.transliteration}
+                                </p>
+                              </div>
+                            )}
+                            {horoscope.blessings && <div className="text-center p-3 bg-primary/5 rounded-lg"><p className="italic text-xs">🙏 {horoscope.blessings}</p></div>}
+                          </div>
+                        </ScrollArea>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* History Tab */}
+              <TabsContent value="history" className="mt-4">
+                <Card className="border border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg"><History className="h-5 w-5 text-primary" />Reading History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingHistory ? (
+                      <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                    ) : history.length === 0 ? (
+                      <div className="text-center py-8"><FileText className="h-12 w-12 mx-auto text-muted-foreground/30" /><p className="text-muted-foreground text-sm mt-3">No readings yet</p></div>
+                    ) : (
+                      <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                        {history.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:border-primary/30 transition-colors">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className="text-[10px]">{item.palm_type || 'Standard'}</Badge>
+                                <Badge variant="secondary" className="text-[10px]">{LANGUAGES.find(l => l.code === item.language)?.name || item.language}</Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(item.created_at).toLocaleDateString()} • {new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                              </p>
+                              {item.analysis?.overallDestiny && <p className="text-xs mt-1 line-clamp-1">{item.analysis.overallDestiny}</p>}
+                            </div>
+                            <div className="flex gap-1 ml-2">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelectedHistoryItem(item)}>View</Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader><DialogTitle>Palm Reading Details</DialogTitle></DialogHeader>
+                                  {selectedHistoryItem && (
+                                    <div className="space-y-4">
+                                      {selectedHistoryItem.analysis?.greeting && <div className="bg-primary/10 p-4 rounded-lg"><p className="italic">"{selectedHistoryItem.analysis.greeting}"</p></div>}
+                                      {selectedHistoryItem.analysis?.overallDestiny && <div><h4 className="font-semibold mb-2">Life Path</h4><p className="text-sm">{selectedHistoryItem.analysis.overallDestiny}</p></div>}
+                                      {selectedHistoryItem.analysis?.blessings && <div className="bg-green-500/10 p-4 rounded-lg"><p className="italic text-center">🙏 {selectedHistoryItem.analysis.blessings}</p></div>}
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                              <Button variant="ghost" size="sm" className="h-7" onClick={() => deleteFromHistory(item.id)}>
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+
+        {/* Disclaimer */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            🔮 <strong>Disclaimer:</strong> This service is for spiritual reflection and entertainment only.
+            Readings use traditional Vedic Samudrika Shastra interpreted through AI. Consult qualified professionals for important decisions.
           </p>
         </div>
       </div>
 
-      <style>{`
-        @keyframes scan-line {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(400px); }
-        }
-        .animate-scan-line {
-          animation: scan-line 2s linear infinite;
-        }
-      `}</style>
+      {/* Sticky Action Bar - shown when results are available */}
+      {analysis && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 py-3 px-4">
+          <div className="container mx-auto flex items-center justify-center gap-2 flex-wrap max-w-2xl">
+            <Button onClick={toggleNarration} disabled={narrationLoading || (!isPremiumUser && !showFullReading)} variant="outline" size="sm" className="gap-1.5">
+              {narrationLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isNarrating ? <Pause className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+              {narrationLoading ? 'Loading...' : isNarrating ? 'Pause' : 'Listen'}
+              {!isPremiumUser && <span className="text-[10px]">👑</span>}
+            </Button>
+            <Button onClick={generatePdfReport} disabled={generatingPdf || !isPremiumUser} variant="outline" size="sm" className="gap-1.5">
+              {generatingPdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              PDF {!isPremiumUser && <span className="text-[10px]">👑</span>}
+            </Button>
+            <SocialShare title="AI Guru Palm Reading" text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'} palmType={analysis.palmType} />
+            <Button onClick={() => setShowReportView(true)} size="sm" className="gap-1.5">
+              <FileText className="h-3.5 w-3.5" />Full Report
+            </Button>
+            <Button onClick={resetScan} variant="ghost" size="sm" className="gap-1.5">
+              <RotateCcw className="h-3.5 w-3.5" />New Scan
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

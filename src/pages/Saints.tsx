@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, MessageCircle, BookOpen, Users, Sparkles, ArrowLeft } from 'lucide-react';
+import { Search, MessageCircle, BookOpen, Sparkles, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import Navigation from '@/components/Navigation';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 interface Saint {
   id: string;
@@ -25,27 +27,19 @@ interface Saint {
 
 const Saints = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [saints, setSaints] = useState<Saint[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTradition, setSelectedTradition] = useState<string>('');
 
-  useEffect(() => {
-    loadSaints();
-  }, []);
+  useEffect(() => { loadSaints(); }, []);
 
   const loadSaints = async () => {
     try {
-      const { data, error } = await supabase
-        .from('saints')
-        .select('*')
-        .order('name');
-
+      const { data, error } = await supabase.from('saints').select('*').order('name');
       if (error) throw error;
       setSaints(data || []);
-      
-      console.log('Loaded saints from database:', data?.length || 0);
     } catch (error) {
       console.error('Error loading saints:', error);
     } finally {
@@ -53,82 +47,20 @@ const Saints = () => {
     }
   };
 
-  const insertSampleSaints = async () => {
-    const sampleSaints = [
-      {
-        name: 'Swami Vivekananda',
-        biography: 'Swami Vivekananda was a Hindu monk and philosopher who introduced Vedanta and Yoga to the Western world.',
-        key_teachings: 'Arise, awake, and stop not until the goal is reached. Be strong, be fearless, be practical.',
-        famous_quotes: [
-          'Arise, awake, and stop not until the goal is reached!',
-          'You are the children of God, the sharers of immortal bliss.',
-          'Take up one idea. Make that one idea your life.'
-        ],
-        birth_year: 1863,
-        death_year: 1902,
-        tradition: 'Vedanta',
-        verified: true,
-        ai_model_fine_tuned: true
-      },
-      {
-        name: 'Sant Kabir',
-        tradition: 'Bhakti',
-        biography: 'Kabir was a 15th-century Indian mystic poet and saint, whose writings influenced Hinduism and Islam.',
-        key_teachings: 'Unity of all religions, importance of devotion over ritual, direct experience of divine.',
-        famous_quotes: [
-          'काल करे सो आज कर, आज करे सो अब।',
-          'सुनो भाई साधो, सब संसार है सपना।',
-          'जहाँ दया तहाँ धर्म है, जहाँ लोभ वहाँ पाप।'
-        ],
-        birth_year: 1440,
-        death_year: 1518,
-        verified: true,
-        ai_model_fine_tuned: true
-      },
-      {
-        name: 'Meera Bai',
-        tradition: 'Krishna Bhakti',
-        biography: 'Meera Bai was a 16th-century Hindu mystic poet and devotee of Lord Krishna.',
-        key_teachings: 'Devotional love (bhakti) as the path to liberation, surrender to divine will.',
-        famous_quotes: [
-          'मेरे तो गिरिधर गोपाल, दूसरो न कोई।',
-          'जो वादा सो निबाहना पड़ेगा।',
-          'हरि आप हरो जन री भीर।'
-        ],
-        birth_year: 1498,
-        death_year: 1547,
-        verified: true,
-        ai_model_fine_tuned: true
-      }
-    ];
-
-    try {
-      const { error } = await supabase
-        .from('saints')
-        .insert(sampleSaints);
-      
-      if (!error) {
-        setSaints(sampleSaints as Saint[]);
-      }
-    } catch (error) {
-      console.error('Error inserting sample saints:', error);
-    }
-  };
-
   const filteredSaints = saints.filter(saint => {
     const matchesSearch = saint.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         saint.tradition.toLowerCase().includes(searchQuery.toLowerCase());
+                         (saint.tradition || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTradition = !selectedTradition || saint.tradition === selectedTradition;
     return matchesSearch && matchesTradition;
   });
 
-  const traditions = Array.from(new Set(saints.map(saint => saint.tradition)));
+  const traditions = Array.from(new Set(saints.map(saint => saint.tradition).filter(Boolean)));
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-temple">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="text-4xl mb-4 animate-om-pulse">🕉️</div>
+          <div className="text-4xl mb-4 animate-pulse">🕉️</div>
           <p className="text-muted-foreground">Loading spiritual guides...</p>
         </div>
       </div>
@@ -136,67 +68,51 @@ const Saints = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10">
-      {/* Premium Header with Floating Elements */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-card/95 via-card-sacred/95 to-card/95 backdrop-blur-xl border-b-2 border-primary/20 shadow-divine">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center gap-6 mb-8">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate('/')}
-              className="hover:bg-primary/10 hover:scale-110 transition-all duration-300"
-            >
+    <div className="min-h-screen bg-background">
+      <Navigation />
+
+      <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient">
-                  Divine Saints & Spiritual Masters ✨
-                </h1>
-              </div>
-              <p className="text-muted-foreground text-lg">
-                🙏 Experience enlightened wisdom through AI-powered spiritual conversations
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Divine Saints & Gurus ✨
+              </h1>
+              <p className="text-muted-foreground">
+                Chat with AI-powered spiritual guides for personalized wisdom
               </p>
             </div>
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search saints, traditions, teachings..."
+                placeholder="Search saints, traditions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background/70 border-border/50"
+                className="pl-10"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={selectedTradition === '' ? 'default' : 'outline'}
-                onClick={() => setSelectedTradition('')}
-                size="sm"
-              >
-                All Traditions
+              <Button variant={!selectedTradition ? 'default' : 'outline'} onClick={() => setSelectedTradition('')} size="sm">
+                All
               </Button>
-              {traditions.map((tradition) => (
-                <Button
-                  key={tradition}
-                  variant={selectedTradition === tradition ? 'default' : 'outline'}
-                  onClick={() => setSelectedTradition(tradition)}
-                  size="sm"
-                >
-                  {tradition}
+              {traditions.map((t) => (
+                <Button key={t} variant={selectedTradition === t ? 'default' : 'outline'} onClick={() => setSelectedTradition(t)} size="sm">
+                  {t}
                 </Button>
               ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Saints Grid */}
-      <div className="container mx-auto px-4 py-6">
+        {/* Saints Grid */}
         {filteredSaints.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
@@ -204,111 +120,68 @@ const Saints = () => {
             <p className="text-muted-foreground">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSaints.map((saint) => (
-              <Card 
-                key={saint.id} 
-                className="group relative overflow-hidden bg-gradient-to-br from-card via-card-sacred to-card border-2 border-primary/20 hover:border-primary/50 shadow-divine hover:shadow-glow transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-              >
-                {/* Premium Background Pattern */}
-                <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_50%_120%,rgba(255,153,51,0.3),rgba(255,215,0,0.2))]" />
-                
-                <CardHeader className="pb-4 relative">
-                  <div className="flex items-start gap-5">
-                    {/* Enhanced Avatar with Glow */}
-                    <div className="relative">
-                      <Avatar className="h-20 w-20 ring-4 ring-primary/30 group-hover:ring-primary/60 shadow-divine transition-all duration-500 group-hover:scale-110">
-                        <AvatarImage src={saint.image_url} alt={saint.name} className="object-cover" />
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-bold">
-                          {saint.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      {saint.ai_model_fine_tuned && (
-                        <div className="absolute -top-1 -right-1 bg-accent text-white rounded-full p-1.5 shadow-lg animate-pulse">
-                          <Sparkles className="h-4 w-4" />
-                        </div>
-                      )}
-                    </div>
-                    
+              <Card key={saint.id} className="group overflow-hidden border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-16 w-16 ring-2 ring-primary/20">
+                      <AvatarImage src={saint.image_url} alt={saint.name} className="object-cover" />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-lg font-bold">
+                        {saint.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CardTitle className="text-xl truncate bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                          {saint.name}
-                        </CardTitle>
-                        {saint.verified && (
-                          <div className="bg-primary/20 rounded-full p-1">
-                            <div className="text-primary text-lg">✓</div>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2 mb-1">
+                        <CardTitle className="text-lg truncate">{saint.name}</CardTitle>
+                        {saint.verified && <span className="text-primary text-sm">✓</span>}
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Badge 
-                          variant="secondary" 
-                          className="text-xs bg-gradient-to-r from-secondary/30 to-secondary/20 border-secondary/40"
-                        >
-                          ✨ {saint.tradition}
-                        </Badge>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground font-medium">
-                          {saint.birth_year}{saint.death_year ? ` - ${saint.death_year}` : ' - Present'}
-                        </span>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Badge variant="secondary" className="text-xs">{saint.tradition}</Badge>
+                        <span>{saint.birth_year}{saint.death_year ? ` - ${saint.death_year}` : ''}</span>
                       </div>
                     </div>
+                    {saint.ai_model_fine_tuned && (
+                      <Badge className="bg-accent text-white text-[10px]">
+                        <Sparkles className="h-3 w-3 mr-1" />AI
+                      </Badge>
+                    )}
                   </div>
                 </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <CardDescription className="text-sm mb-4 line-clamp-3">
-                    {saint.biography}
-                  </CardDescription>
+                <CardContent className="pt-0 space-y-3">
+                  <p className="text-sm text-muted-foreground line-clamp-2">{saint.biography}</p>
                   
-                  {saint.famous_quotes && saint.famous_quotes.length > 0 && (
-                    <div className="mb-4 p-3 bg-background/50 rounded-lg">
-                      <p className="text-sm italic text-muted-foreground">
+                  {saint.key_teachings && (
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">📖 Key Teachings</p>
+                      <p className="text-xs line-clamp-2">{saint.key_teachings}</p>
+                    </div>
+                  )}
+
+                  {saint.famous_quotes && Array.isArray(saint.famous_quotes) && saint.famous_quotes.length > 0 && (
+                    <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+                      <p className="text-xs italic text-muted-foreground line-clamp-2">
                         "{saint.famous_quotes[0]}"
                       </p>
                     </div>
                   )}
                   
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/saints/${saint.id}/chat`);
-                      }}
-                      className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shadow-lg transition-all duration-300 hover:scale-105"
-                      size="sm"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Chat with Guru
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={(e) => e.stopPropagation()}
-                      className="hover:bg-primary/10"
-                    >
-                      <BookOpen className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <span className="text-primary">✨ {saint.tradition}</span>
-                    </div>
-                    {saint.ai_model_fine_tuned && (
-                      <div className="flex items-center gap-1 text-accent">
-                        <Sparkles className="h-3 w-3" />
-                        <span>AI Enhanced</span>
-                      </div>
-                    )}
-                  </div>
+                  <Button 
+                    onClick={() => navigate(`/saints/${saint.id}/chat`)}
+                    className="w-full gap-2"
+                    size="sm"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Chat with Guru
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+      
+      <MobileBottomNav />
     </div>
   );
 };
