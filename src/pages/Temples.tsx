@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navigation from "@/components/Navigation";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   MapPin, 
@@ -131,7 +132,7 @@ const Temples = () => {
           image_urls: Array.isArray(imageUrlsData) ? imageUrlsData : ["/placeholder.svg"],
           rating: Number(temple.rating) || 0,
           verified: temple.verified || false,
-          distance: Math.random() * 50 // Random distance for demo
+          distance: undefined // Real geolocation not yet implemented
         };
       }) || [];
 
@@ -343,9 +344,9 @@ const Temples = () => {
                     <MapPin className="h-4 w-4" />
                     <span>{temple.location.city}, {temple.location.state}</span>
                   </span>
-                  {temple.distance && (
-                    <span className="text-primary font-medium">
-                      {temple.distance} km away
+                  {temple.location?.state && (
+                    <span className="text-muted-foreground text-xs">
+                      {temple.location.country || 'India'}
                     </span>
                   )}
                 </div>
@@ -457,6 +458,8 @@ const Temples = () => {
           </Card>
         )}
       </div>
+      
+      <MobileBottomNav />
     </div>
   );
 };

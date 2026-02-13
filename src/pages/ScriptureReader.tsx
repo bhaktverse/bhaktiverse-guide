@@ -115,23 +115,16 @@ const ScriptureReader = () => {
           verse_count: ch.verse_count || 0
         }));
         setChapters(dbChapters);
-        // Restore last position
         const saved = localStorage.getItem(`bv:scripture:${scriptureId}:chapter`);
         if (saved) setCurrentChapter(parseInt(saved, 10));
       } else {
-        // Generate sample chapters if no data in database
-        const sampleChapters: Chapter[] = [];
-        const totalChapters = scripture?.total_chapters || 18;
-        
-        for (let i = 1; i <= totalChapters; i++) {
-          sampleChapters.push({
-            id: i,
-            title: `Chapter ${i}`,
-            content: `This is the content of Chapter ${i}. Here you would find the actual verses and teachings from the sacred text. The wisdom contained within these ancient words has guided countless souls on their spiritual journey.\n\nEach verse contains profound meaning that reveals deeper truths about existence, dharma, and the path to liberation.`,
-            verse_count: Math.floor(Math.random() * 50) + 10
-          });
-        }
-        setChapters(sampleChapters);
+        // No chapters in DB - show meaningful empty state
+        setChapters([{
+          id: 1,
+          title: scripture?.title || 'Scripture',
+          content: 'This scripture\'s chapters have not yet been digitized in our database. We are actively working on adding authentic content from traditional sources. Please check back soon or explore other scriptures that are fully available.',
+          verse_count: 0
+        }]);
       }
     } catch (error) {
       console.error('Error loading chapters:', error);
@@ -356,7 +349,21 @@ const ScriptureReader = () => {
                     </Button>
 
                     {/* Action Buttons */}
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const key = `bv:bookmarks:${scriptureId}`;
+                        const bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (bookmarks.includes(currentChapter)) {
+                          localStorage.setItem(key, JSON.stringify(bookmarks.filter((b: number) => b !== currentChapter)));
+                        } else {
+                          bookmarks.push(currentChapter);
+                          localStorage.setItem(key, JSON.stringify(bookmarks));
+                        }
+                      }}
+                      className={JSON.parse(localStorage.getItem(`bv:bookmarks:${scriptureId}`) || '[]').includes(currentChapter) ? 'bg-primary/10 text-primary' : ''}
+                    >
                       <Bookmark className="h-4 w-4" />
                     </Button>
                     
@@ -397,12 +404,22 @@ const ScriptureReader = () => {
                   }
                   style={{ fontSize: `${fontSize}px` }}
                 >
-                  <div className="space-y-6 text-foreground">
-                    {currentChapterData?.content.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="leading-8">
-                        {paragraph}
-                      </p>
-                    ))}
+                  <div className="space-y-4 text-foreground">
+                    {currentChapterData?.content.split('\n').filter(l => l.trim()).map((line, index) => {
+                      // Detect verse numbers (e.g. "1." or "॥1॥" patterns)
+                      const verseMatch = line.match(/^(\d+[\.\):]|\|{1,2}\d+\|{1,2}|॥\d+॥)\s*/);
+                      if (verseMatch) {
+                        return (
+                          <div key={index} className="flex gap-3 group">
+                            <span className="text-primary/60 font-mono text-xs mt-1 min-w-[2rem] text-right select-none">
+                              {verseMatch[1].replace(/[^\d]/g, '')}
+                            </span>
+                            <p className="leading-8 flex-1">{line.replace(verseMatch[0], '')}</p>
+                          </div>
+                        );
+                      }
+                      return <p key={index} className="leading-8">{line}</p>;
+                    })}
                   </div>
                 </div>
 

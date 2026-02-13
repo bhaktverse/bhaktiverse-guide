@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Mic, MicOff, Volume2, Heart, BookOpen } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MicOff, Volume2, BookOpen, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 interface Saint {
   id: string;
@@ -32,6 +33,14 @@ interface Message {
   timestamp: Date;
 }
 
+const STARTER_QUESTIONS = [
+  "What is the path to inner peace?",
+  "How can I overcome fear and doubt?",
+  "What is the meaning of dharma?",
+  "How should I deal with difficult relationships?",
+  "What is the importance of meditation?",
+];
+
 const SaintChat = () => {
   const { saintId } = useParams<{ saintId: string }>();
   const navigate = useNavigate();
@@ -42,306 +51,264 @@ const SaintChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [showTeachings, setShowTeachings] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-      return;
-    }
-    if (saintId) {
-      loadSaint();
-    }
-  }, [saintId, user, authLoading, navigate]);
+    if (!authLoading && !user) { navigate('/auth'); return; }
+    if (saintId) loadSaint();
+  }, [saintId, user, authLoading]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => { scrollToBottom(); }, [messages]);
 
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   };
 
   const loadSaint = async () => {
     try {
-      const { data, error } = await supabase
-        .from('saints')
-        .select('*')
-        .eq('id', saintId)
-        .single();
-
+      const { data, error } = await supabase.from('saints').select('*').eq('id', saintId).single();
       if (error) throw error;
       setSaint(data);
-
-      // Add welcome message
-      const welcomeMessage: Message = {
+      setMessages([{
         id: 'welcome',
         role: 'saint',
-        content: `🙏 Namaste! I am ${data.name}. I'm here to share wisdom from my tradition and guide you on your spiritual path. What questions do you have for me today?`,
+        content: `🙏 Namaste! I am ${data.name}. I'm here to share wisdom from the ${data.tradition} tradition. What guidance do you seek today?`,
         timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
-
+      }]);
     } catch (error) {
       console.error('Error loading saint:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load saint information",
-        variant: "destructive"
-      });
+      setLoadError(true);
+      toast({ title: "Error", description: "Failed to load saint info", variant: "destructive" });
     }
   };
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || !saint) return;
+  const sendMessage = async (text?: string) => {
+    const msgText = text || inputMessage.trim();
+    if (!msgText || !saint) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputMessage,
-      timestamp: new Date()
-    };
-
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: msgText, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setLoading(true);
 
     try {
-      // Simulate AI response (in production, this would call your AI service)
-      const aiResponse = await generateSaintResponse(inputMessage, saint, messages);
-      
-      const saintMessage: Message = {
+      const { data, error } = await supabase.functions.invoke('saint-chat', {
+        body: {
+          message: msgText,
+          saintId: saint.id,
+          conversationHistory: messages.slice(-6),
+          userPreferences: { language: 'English' }
+        }
+      });
+
+      if (error) throw error;
+
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'saint',
-        content: aiResponse,
+        content: data?.response || "I'm experiencing some difficulty right now. Please try again.",
         timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, saintMessage]);
+      }]);
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to get response from saint",
-        variant: "destructive"
+      console.error('Chat error:', error);
+      toast({ 
+        title: "Response failed", 
+        description: "Could not get a response. Try again.",
+        variant: "destructive",
+        action: <Button size="sm" variant="outline" onClick={() => sendMessage(msgText)}>Retry</Button>
       });
+      // Add fallback
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'saint',
+        content: `🙏 I'm having trouble connecting right now. Please try again in a moment. In the meantime, reflect on this: "${saint.famous_quotes?.[0] || 'The divine light within you guides all paths.'}"`,
+        timestamp: new Date()
+      }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateSaintResponse = async (message: string, saint: Saint, context: Message[]): Promise<string> => {
-    try {
-      console.log('Calling saint-chat edge function for:', saint.name);
-      
-      const { data, error } = await supabase.functions.invoke('saint-chat', {
-        body: {
-          message,
-          saintId: saint.id,
-          conversationHistory: context,
-          userPreferences: {
-            language: 'English' // TODO: Get from user preferences
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
-
-      return data.response || "I'm experiencing some difficulty right now. Please try again in a moment.";
-      
-    } catch (error) {
-      console.error('Error calling saint-chat function:', error);
-      
-      // Fallback responses based on saint
-      const fallbackResponses = {
-        'Swami Vivekananda': "Arise, awake, and stop not until the goal is reached! Your spiritual journey requires persistence and faith in yourself.",
-        'Sant Kabir': "सुनो भाई साधो! The divine light you seek shines within you. Look inward with devotion.",
-        'Meera Bai': "मेरे तो गिरिधर गोपाल! In pure devotion to the divine, all questions find their answers."
-      };
-      
-      return fallbackResponses[saint.name as keyof typeof fallbackResponses] || 
-             "May the divine guide you on your spiritual path. Please try asking your question again.";
-    }
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  if (authLoading || !saint) {
+  if (authLoading || (!saint && !loadError)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-temple">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="text-4xl mb-4 animate-om-pulse">🕉️</div>
+          <div className="text-4xl mb-4 animate-pulse">🕉️</div>
           <p className="text-muted-foreground">Loading sacred wisdom...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-temple">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-card-sacred/90 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/saints')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            
-            <Avatar className="h-12 w-12 ring-2 ring-primary/20">
-              <AvatarImage src={saint.image_url} alt={saint.name} />
-              <AvatarFallback className="bg-gradient-primary text-white">
-                {saint.name.split(' ').map(n => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-primary">{saint.name}</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Badge variant="secondary" className="text-xs">{saint.tradition}</Badge>
-                <span>•</span>
-                <span>{saint.birth_year}{saint.death_year ? ` - ${saint.death_year}` : ' - Present'}</span>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Heart className="h-4 w-4 mr-2" />
-                Follow
-              </Button>
-              <Button variant="outline" size="sm">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Teachings
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <Card className="h-[calc(100vh-200px)] bg-card-sacred/80 backdrop-blur-md border-border/50">
-          {/* Messages */}
-          <CardContent className="p-0 h-full flex flex-col">
-            <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-              <div className="space-y-6">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {message.role === 'saint' && (
-                      <Avatar className="h-10 w-10 ring-2 ring-primary/20">
-                        <AvatarImage src={saint.image_url} alt={saint.name} />
-                        <AvatarFallback className="bg-gradient-primary text-white text-sm">
-                          {saint.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    
-                    <div className={`max-w-[70%] ${message.role === 'user' ? 'order-first' : ''}`}>
-                      <div
-                        className={`rounded-2xl px-4 py-3 ${
-                          message.role === 'user'
-                            ? 'bg-gradient-primary text-primary-foreground ml-auto'
-                            : 'bg-background/70 text-foreground'
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                      </div>
-                      <div className={`text-xs text-muted-foreground mt-1 ${
-                        message.role === 'user' ? 'text-right' : 'text-left'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-
-                    {message.role === 'user' && (
-                      <Avatar className="h-10 w-10 bg-gradient-secondary">
-                        <AvatarFallback className="bg-gradient-secondary text-white text-sm">
-                          {user?.user_metadata?.name?.[0] || user?.email?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                ))}
-                
-                {loading && (
-                  <div className="flex gap-4 justify-start">
-                    <Avatar className="h-10 w-10 ring-2 ring-primary/20">
-                      <AvatarImage src={saint.image_url} alt={saint.name} />
-                      <AvatarFallback className="bg-gradient-primary text-white text-sm">
-                        {saint.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-background/70 rounded-2xl px-4 py-3">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-pulse delay-75"></div>
-                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-pulse delay-150"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-
-            <Separator />
-
-            {/* Input Area */}
-            <div className="p-4">
-              <div className="flex gap-3 items-end">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`shrink-0 ${isRecording ? 'bg-destructive text-destructive-foreground' : ''}`}
-                  onClick={() => setIsRecording(!isRecording)}
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                
-                <div className="flex-1">
-                  <Input
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={`Ask ${saint.name} for spiritual guidance...`}
-                    className="bg-background/70 border-border/50 resize-none"
-                    disabled={loading}
-                  />
-                </div>
-                
-                <Button
-                  onClick={sendMessage}
-                  disabled={!inputMessage.trim() || loading}
-                  className="bg-gradient-primary hover:opacity-90 shrink-0"
-                  size="icon"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-                <span>Press Enter to send, Shift+Enter for new line</span>
-                <Button variant="ghost" size="sm" className="h-auto p-1">
-                  <Volume2 className="h-3 w-3 mr-1" />
-                  Audio
-                </Button>
-              </div>
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md">
+          <CardContent className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+            <h3 className="font-semibold mb-2">Could not load saint</h3>
+            <p className="text-muted-foreground text-sm mb-4">Please try again or go back to saints.</p>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={() => navigate('/saints')}>Back to Saints</Button>
+              <Button onClick={() => { setLoadError(false); loadSaint(); }}>Retry</Button>
             </div>
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  if (!saint) return null;
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/saints')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+              <AvatarImage src={saint.image_url} alt={saint.name} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                {saint.name.split(' ').map(n => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base font-bold truncate">{saint.name}</h1>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="secondary" className="text-[10px] px-1.5">{saint.tradition}</Badge>
+                <span>{saint.birth_year}{saint.death_year ? ` - ${saint.death_year}` : ''}</span>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowTeachings(!showTeachings)}
+              className="gap-1"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Teachings</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+          <ScrollArea className="flex-1 px-4 py-4" ref={scrollRef}>
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {message.role === 'saint' && (
+                    <Avatar className="h-8 w-8 ring-1 ring-primary/20 flex-shrink-0">
+                      <AvatarImage src={saint.image_url} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {saint.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    <p className={`text-[10px] mt-1 ${message.role === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex gap-3">
+                  <Avatar className="h-8 w-8 ring-1 ring-primary/20 flex-shrink-0">
+                    <AvatarImage src={saint.image_url} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {saint.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="bg-muted rounded-2xl px-4 py-3 flex gap-1">
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Starter Questions */}
+          {messages.length <= 1 && (
+            <div className="px-4 pb-2">
+              <p className="text-xs text-muted-foreground mb-2">💡 Suggested questions:</p>
+              <div className="flex flex-wrap gap-2">
+                {STARTER_QUESTIONS.map((q, i) => (
+                  <Button key={i} variant="outline" size="sm" className="text-xs h-auto py-1.5 px-3" onClick={() => sendMessage(q)}>
+                    {q}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="border-t border-border/50 p-4 pb-20 md:pb-4">
+            <div className="flex gap-2 items-end">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder={`Ask ${saint.name} for guidance...`}
+                className="flex-1"
+                disabled={loading}
+              />
+              <Button onClick={() => sendMessage()} disabled={!inputMessage.trim() || loading} size="icon">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Teachings Sidebar */}
+        {showTeachings && (
+          <div className="hidden md:block w-80 border-l border-border/50 bg-muted/30 overflow-y-auto p-4 space-y-4">
+            <h3 className="font-semibold text-sm">📖 Teachings of {saint.name}</h3>
+            {saint.key_teachings && (
+              <div className="bg-card rounded-lg p-3 text-sm">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Key Teachings</p>
+                <p className="text-foreground/90 leading-relaxed">{saint.key_teachings}</p>
+              </div>
+            )}
+            {saint.famous_quotes && Array.isArray(saint.famous_quotes) && saint.famous_quotes.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Famous Quotes</p>
+                {saint.famous_quotes.map((q: string, i: number) => (
+                  <div key={i} className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+                    <p className="text-xs italic">"{q}"</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {saint.biography && (
+              <div className="bg-card rounded-lg p-3 text-sm">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Biography</p>
+                <p className="text-xs text-foreground/80 leading-relaxed">{saint.biography}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <MobileBottomNav />
     </div>
   );
 };

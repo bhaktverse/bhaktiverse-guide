@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, RotateCcw, Share2 } from 'lucide-react';
+import { Loader2, Sparkles, RotateCcw, Share2, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { MAJOR_ARCANA, type TarotCardData } from '@/data/tarotCards';
 
 interface TarotCard {
   name: string;
@@ -12,6 +13,7 @@ interface TarotCard {
   meaning: string;
   advice: string;
   isReversed: boolean;
+  cardData?: TarotCardData;
 }
 
 interface TarotPullProps {
@@ -24,25 +26,18 @@ interface TarotPullProps {
   onPullComplete?: (cards: TarotCard[], interpretation: string) => void;
 }
 
-// Major Arcana deck
-const TAROT_DECK = [
-  "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor",
-  "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit",
-  "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
-  "The Devil", "The Tower", "The Star", "The Moon", "The Sun",
-  "Judgement", "The World",
-  // Minor Arcana selection
-  "Ace of Wands", "Two of Wands", "Three of Wands", "Ten of Wands",
-  "Ace of Cups", "Two of Cups", "Three of Cups", "Ten of Cups",
-  "Ace of Swords", "Two of Swords", "Three of Swords", "Ten of Swords",
-  "Ace of Pentacles", "Two of Pentacles", "Three of Pentacles", "Ten of Pentacles"
+const POSITIONS = [
+  { name: "Past", description: "What has shaped your journey", icon: "🕰️" },
+  { name: "Present", description: "Your current energy", icon: "⚡" },
+  { name: "Future", description: "What lies ahead", icon: "🌟" }
 ];
 
-const POSITIONS = [
-  { name: "Past", description: "What has shaped your journey" },
-  { name: "Present", description: "Your current energy and situation" },
-  { name: "Future", description: "What lies ahead on your path" }
-];
+const CARD_GRADIENTS: Record<string, string> = {
+  Fire: 'from-red-600/90 via-orange-500/80 to-amber-400/70',
+  Water: 'from-blue-700/90 via-cyan-500/80 to-teal-400/70',
+  Air: 'from-violet-600/90 via-purple-500/80 to-indigo-400/70',
+  Earth: 'from-emerald-700/90 via-green-500/80 to-lime-400/70',
+};
 
 const TarotPull = ({ palmAnalysis, language = 'en', onPullComplete }: TarotPullProps) => {
   const { toast } = useToast();
@@ -51,20 +46,19 @@ const TarotPull = ({ palmAnalysis, language = 'en', onPullComplete }: TarotPullP
   const [isPulling, setIsPulling] = useState(false);
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [showCards, setShowCards] = useState(false);
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const shuffleAndPull = () => {
-    // Shuffle deck using Fisher-Yates
-    const shuffled = [...TAROT_DECK].sort(() => Math.random() - 0.5);
-    
-    // Pull 3 cards with random reversal
+    const shuffled = [...MAJOR_ARCANA].sort(() => Math.random() - 0.5);
     const pulled: TarotCard[] = POSITIONS.map((pos, i) => ({
-      name: shuffled[i],
+      name: shuffled[i].name,
       position: pos.name,
       meaning: '',
       advice: '',
-      isReversed: Math.random() > 0.7 // 30% chance of reversal
+      isReversed: Math.random() > 0.7,
+      cardData: shuffled[i]
     }));
-    
     return pulled;
   };
 
@@ -73,40 +67,41 @@ const TarotPull = ({ palmAnalysis, language = 'en', onPullComplete }: TarotPullP
     setShowCards(false);
     setCards([]);
     setInterpretation('');
+    setFlippedCards(new Set());
+    setExpandedCard(null);
 
-    // Animate card pull
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1200));
     
     const pulledCards = shuffleAndPull();
     setCards(pulledCards);
     setIsPulling(false);
     setShowCards(true);
 
-    // Get AI interpretation
+    // Auto-flip cards one by one
+    for (let i = 0; i < 3; i++) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setFlippedCards(prev => new Set([...prev, i]));
+    }
+
     await getInterpretation(pulledCards);
   };
 
   const getInterpretation = async (pulledCards: TarotCard[]) => {
     setIsInterpreting(true);
-
     try {
       const { data, error } = await supabase.functions.invoke('saint-chat', {
         body: {
           message: `As a Vedic spiritual guide, provide a brief 3-card tarot interpretation (max 150 words):
 
 Cards Drawn:
-1. ${pulledCards[0].position}: ${pulledCards[0].name}${pulledCards[0].isReversed ? ' (Reversed)' : ''}
-2. ${pulledCards[1].position}: ${pulledCards[1].name}${pulledCards[1].isReversed ? ' (Reversed)' : ''}
-3. ${pulledCards[2].position}: ${pulledCards[2].name}${pulledCards[2].isReversed ? ' (Reversed)' : ''}
+1. ${pulledCards[0].position}: ${pulledCards[0].name}${pulledCards[0].isReversed ? ' (Reversed)' : ''} - Hindu correlation: ${pulledCards[0].cardData?.hinduCorrelation.concept}
+2. ${pulledCards[1].position}: ${pulledCards[1].name}${pulledCards[1].isReversed ? ' (Reversed)' : ''} - Hindu correlation: ${pulledCards[1].cardData?.hinduCorrelation.concept}
+3. ${pulledCards[2].position}: ${pulledCards[2].name}${pulledCards[2].isReversed ? ' (Reversed)' : ''} - Hindu correlation: ${pulledCards[2].cardData?.hinduCorrelation.concept}
 
 ${palmAnalysis ? `Context from palm reading: ${palmAnalysis.palmType} hand, ${palmAnalysis.dominantPlanet} dominant` : ''}
 
-Provide a cohesive reading that:
-1. Briefly explains each card's significance in its position (1-2 sentences each)
-2. Gives ONE actionable suggestion
-3. Ends with a positive affirmation
-
-Keep the tone warm and encouraging. ${language === 'hi' ? 'Respond in Hindi/Hinglish.' : 'Respond in English.'}`,
+Provide a cohesive reading with Hindu spiritual context. End with a positive affirmation.
+${language === 'hi' ? 'Respond in Hindi/Hinglish.' : 'Respond in English.'}`,
           saintId: 'general',
           sessionId: `tarot-${Date.now()}`
         }
@@ -118,66 +113,65 @@ Keep the tone warm and encouraging. ${language === 'hi' ? 'Respond in Hindi/Hing
       }
     } catch (error) {
       console.error('Tarot interpretation error:', error);
-      // Fallback interpretation
-      setInterpretation(`Your three-card spread reveals: ${pulledCards.map(c => c.name).join(', ')}. This combination suggests a journey of transformation. Trust your intuition and stay open to new possibilities.`);
+      const fallback = pulledCards.map(c => {
+        const d = c.cardData;
+        const m = c.isReversed ? d?.meaning.reversed : d?.meaning.upright;
+        return `**${c.position} - ${c.name}${c.isReversed ? ' (Reversed)' : ''}**: ${m}`;
+      }).join('\n\n');
+      setInterpretation(fallback || `Your spread: ${pulledCards.map(c => c.name).join(', ')}. Trust your intuition.`);
     } finally {
       setIsInterpreting(false);
     }
   };
 
-  const getCardEmoji = (cardName: string) => {
-    if (cardName.includes('Wands')) return '🔥';
-    if (cardName.includes('Cups')) return '💧';
-    if (cardName.includes('Swords')) return '⚔️';
-    if (cardName.includes('Pentacles')) return '🪙';
-    if (cardName.includes('Sun')) return '☀️';
-    if (cardName.includes('Moon')) return '🌙';
-    if (cardName.includes('Star')) return '⭐';
-    if (cardName.includes('Fool')) return '🎭';
-    if (cardName.includes('Lovers')) return '❤️';
-    if (cardName.includes('Death')) return '🦋';
-    if (cardName.includes('Tower')) return '⚡';
-    if (cardName.includes('Wheel')) return '🎡';
-    return '🃏';
-  };
-
   return (
-    <Card className="card-sacred overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5" />
+    <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-card via-card to-card/80">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.08),transparent_60%)]" />
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">🔮</span>
-              3-Card Tarot Pull
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <span className="text-3xl">🔮</span>
+              Vedic Tarot Reading
             </CardTitle>
-            <CardDescription>
-              Complement your palm reading with tarot guidance
+            <CardDescription className="mt-1">
+              Ancient Hindu wisdom through tarot archetypes
             </CardDescription>
           </div>
-          <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-            Free Add-on
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/30">
+            ✨ Free
           </Badge>
         </div>
       </CardHeader>
+
       <CardContent className="relative space-y-6">
         {/* Pull Button */}
         {cards.length === 0 && !isPulling && (
-          <Button
-            onClick={handlePull}
-            className="w-full h-16 text-lg gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-          >
-            <Sparkles className="h-5 w-5" />
-            Pull 3 Cards from the Deck
-          </Button>
+          <div className="text-center py-8 space-y-6">
+            <div className="text-7xl animate-pulse">🎴</div>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Focus your mind, take a deep breath, and pull three cards to reveal your cosmic guidance
+            </p>
+            <Button
+              onClick={handlePull}
+              size="lg"
+              className="h-14 px-8 text-lg gap-3 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 hover:from-violet-700 hover:via-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25"
+            >
+              <Sparkles className="h-5 w-5" />
+              Pull 3 Cards
+            </Button>
+          </div>
         )}
 
         {/* Pulling Animation */}
         {isPulling && (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="text-6xl animate-bounce">🎴</div>
-            <p className="text-sm text-muted-foreground animate-pulse">
-              Shuffling the cosmic deck...
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="relative">
+              <div className="text-7xl animate-bounce">🎴</div>
+              <div className="absolute inset-0 animate-ping opacity-20 text-7xl">🎴</div>
+            </div>
+            <p className="text-sm text-muted-foreground animate-pulse font-medium">
+              🕉️ Channeling cosmic energy...
             </p>
           </div>
         )}
@@ -185,55 +179,152 @@ Keep the tone warm and encouraging. ${language === 'hi' ? 'Respond in Hindi/Hing
         {/* Cards Display */}
         {showCards && cards.length > 0 && (
           <div className="space-y-6">
-            <div className="grid grid-cols-3 gap-4">
-              {cards.map((card, i) => (
-                <div 
-                  key={i}
-                  className={`
-                    relative p-4 rounded-xl border-2 text-center
-                    ${card.isReversed ? 'bg-muted/50 border-amber-500/50' : 'bg-gradient-to-b from-primary/10 to-secondary/10 border-primary/30'}
-                    transform transition-all duration-500
-                    ${showCards ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
-                  `}
-                  style={{ transitionDelay: `${i * 200}ms` }}
-                >
-                  {/* Position */}
-                  <Badge variant="outline" className="absolute -top-2 left-1/2 -translate-x-1/2 text-xs">
-                    {card.position}
-                  </Badge>
-                  
-                  {/* Card face */}
-                  <div className={`py-4 ${card.isReversed ? 'rotate-180' : ''}`}>
-                    <div className="text-4xl mb-2">{getCardEmoji(card.name)}</div>
+            <div className="grid grid-cols-3 gap-3 sm:gap-5">
+              {cards.map((card, i) => {
+                const isFlipped = flippedCards.has(i);
+                const isExpanded = expandedCard === i;
+                const gradient = CARD_GRADIENTS[card.cardData?.element || 'Air'];
+                const keywords = card.isReversed 
+                  ? card.cardData?.keywords.reversed 
+                  : card.cardData?.keywords.upright;
+
+                return (
+                  <div key={i} className="space-y-2">
+                    {/* Position Label */}
+                    <div className="text-center">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {POSITIONS[i].icon} {card.position}
+                      </span>
+                    </div>
+
+                    {/* Card */}
+                    <div 
+                      className="perspective-1000 cursor-pointer"
+                      onClick={() => setExpandedCard(isExpanded ? null : i)}
+                      style={{ perspective: '1000px' }}
+                    >
+                      <div 
+                        className={`relative transition-all duration-700 transform-style-3d ${
+                          isFlipped ? '' : '[transform:rotateY(180deg)]'
+                        }`}
+                        style={{ transformStyle: 'preserve-3d' }}
+                      >
+                        {/* Card Front */}
+                        <div 
+                          className={`relative rounded-xl overflow-hidden border-2 ${
+                            card.isReversed ? 'border-amber-500/60' : 'border-primary/40'
+                          } shadow-lg hover:shadow-xl transition-shadow`}
+                          style={{ backfaceVisibility: 'hidden' }}
+                        >
+                          {/* Card Background */}
+                          <div className={`bg-gradient-to-br ${gradient} p-3 sm:p-4 min-h-[180px] sm:min-h-[220px] flex flex-col items-center justify-between`}>
+                            {/* Element Badge */}
+                            <Badge className="bg-black/30 text-white border-white/20 text-[10px]">
+                              {card.cardData?.element}
+                            </Badge>
+
+                            {/* Card Symbol */}
+                            <div className={`text-5xl sm:text-6xl my-3 ${card.isReversed ? 'rotate-180' : ''} drop-shadow-lg`}>
+                              {card.cardData?.imageSymbol || '🃏'}
+                            </div>
+
+                            {/* Card Name */}
+                            <div className="text-center">
+                              <p className="font-bold text-white text-xs sm:text-sm leading-tight drop-shadow">
+                                {card.name}
+                              </p>
+                              {card.isReversed && (
+                                <Badge className="mt-1 bg-amber-500/80 text-white text-[10px] border-0">
+                                  ↺ Reversed
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Roman Numeral */}
+                            <div className="absolute top-2 left-2 text-white/40 text-xs font-bold">
+                              {card.cardData?.numerology}
+                            </div>
+                          </div>
+
+                          {/* Deity Correlation */}
+                          {card.cardData?.hinduCorrelation.deity && (
+                            <div className="bg-background/95 px-3 py-2 text-center border-t border-border/50">
+                              <p className="text-[10px] text-muted-foreground font-medium">
+                                🙏 {card.cardData.hinduCorrelation.deity}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card Back (hidden when flipped) */}
+                        <div 
+                          className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-900 via-purple-900 to-violet-900 border-2 border-primary/30 flex items-center justify-center"
+                          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                        >
+                          <div className="text-center">
+                            <div className="text-5xl mb-2">🕉️</div>
+                            <p className="text-white/60 text-xs">Revealing...</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Keywords */}
+                    {isFlipped && keywords && (
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {keywords.slice(0, 2).map((kw, ki) => (
+                          <Badge key={ki} variant="outline" className="text-[9px] px-1.5 py-0">
+                            {kw}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Expanded Details */}
+                    {isExpanded && isFlipped && card.cardData && (
+                      <Card className="bg-muted/50 border-primary/20 animate-in slide-in-from-top-2">
+                        <CardContent className="p-3 space-y-2 text-xs">
+                          <p className="font-medium text-foreground">
+                            {card.isReversed ? card.cardData.meaning.reversed : card.cardData.meaning.upright}
+                          </p>
+                          <div className="bg-primary/10 rounded-lg p-2">
+                            <p className="text-[10px] text-muted-foreground font-medium mb-1">🙏 Hindu Wisdom</p>
+                            <p className="text-foreground/80">{card.cardData.hinduCorrelation.concept}</p>
+                            {card.cardData.hinduCorrelation.mantra && (
+                              <p className="text-primary font-semibold mt-1 text-[11px]">
+                                📿 {card.cardData.hinduCorrelation.mantra}
+                              </p>
+                            )}
+                          </div>
+                          <p className="italic text-muted-foreground">
+                            💡 {card.isReversed ? card.cardData.advice.reversed : card.cardData.advice.upright}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
-                  
-                  {/* Card name */}
-                  <p className="font-semibold text-sm leading-tight">
-                    {card.name}
-                  </p>
-                  
-                  {card.isReversed && (
-                    <Badge variant="outline" className="mt-2 text-xs text-amber-600 border-amber-500">
-                      Reversed
-                    </Badge>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Interpretation */}
-            <div className="bg-muted/30 rounded-xl p-4 space-y-3">
-              <h4 className="font-semibold flex items-center gap-2">
+            {/* Tap to expand hint */}
+            <p className="text-center text-xs text-muted-foreground">
+              👆 Tap any card for detailed meaning & mantra
+            </p>
+
+            {/* AI Interpretation */}
+            <div className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 rounded-xl p-4 space-y-3 border border-primary/10">
+              <h4 className="font-semibold flex items-center gap-2 text-sm">
                 <Sparkles className="h-4 w-4 text-primary" />
-                Reading Interpretation
+                AI Guru Interpretation
               </h4>
               {isInterpreting ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Channeling cosmic wisdom...
+                  Channeling divine wisdom...
                 </div>
               ) : (
-                <p className="text-sm leading-relaxed">{interpretation}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-line">{interpretation}</p>
               )}
             </div>
 
@@ -251,7 +342,10 @@ Keep the tone warm and encouraging. ${language === 'hi' ? 'Respond in Hindi/Hing
                 variant="outline"
                 className="gap-2"
                 onClick={() => {
-                  const text = `🔮 My Tarot Pull:\n${cards.map(c => `${c.position}: ${c.name}`).join('\n')}\n\nGet your reading at BhaktVerse!`;
+                  const text = `🔮 My Vedic Tarot Pull:\n${cards.map(c => {
+                    const deity = c.cardData?.hinduCorrelation.deity;
+                    return `${c.position}: ${c.name}${c.isReversed ? ' (Reversed)' : ''}${deity ? ` • ${deity}` : ''}`;
+                  }).join('\n')}\n\nGet your reading at BhaktVerse!`;
                   navigator.share?.({ text }) || navigator.clipboard.writeText(text);
                   toast({ title: "Copied to clipboard!" });
                 }}
@@ -262,9 +356,8 @@ Keep the tone warm and encouraging. ${language === 'hi' ? 'Respond in Hindi/Hing
           </div>
         )}
 
-        {/* Disclaimer */}
         <p className="text-xs text-center text-muted-foreground">
-          Tarot readings are for entertainment and spiritual reflection only.
+          🕉️ Tarot readings blend ancient Hindu wisdom with archetypal symbolism for spiritual reflection.
         </p>
       </CardContent>
     </Card>
