@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { 
   BookOpen, 
   Search, 
@@ -215,7 +216,8 @@ const Scriptures = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-background dark:via-primary/5 dark:to-secondary/10">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+        <Breadcrumbs className="mb-6" />
         {/* Premium Header */}
         <div className="text-center mb-10">
           <div className="inline-block mb-4 p-6 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 rounded-full">

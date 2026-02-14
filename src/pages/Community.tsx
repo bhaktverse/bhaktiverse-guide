@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Heart, 
@@ -203,6 +204,7 @@ const Community = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-6 pb-24 md:pb-6">
+        <Breadcrumbs className="mb-4" />
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-2">
@@ -422,18 +424,22 @@ const Community = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">1,247</div>
-                  <p className="text-sm text-muted-foreground">Active Devotees</p>
+                  <div className="text-2xl font-bold text-primary">{posts.length}</div>
+                  <p className="text-sm text-muted-foreground">Community Posts</p>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-secondary">3,891</div>
-                  <p className="text-sm text-muted-foreground">Spiritual Posts</p>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-accent">12,567</div>
+                  <div className="text-2xl font-bold text-secondary">
+                    {posts.reduce((sum, p) => sum + (p.likes_count || 0), 0)}
+                  </div>
                   <p className="text-sm text-muted-foreground">Blessings Shared</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-accent">
+                    {posts.reduce((sum, p) => sum + (p.comments_count || 0), 0)}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Comments</p>
                 </div>
               </CardContent>
             </Card>

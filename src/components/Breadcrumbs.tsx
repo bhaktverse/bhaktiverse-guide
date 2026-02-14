@@ -22,6 +22,9 @@ const ROUTE_LABELS: Record<string, { label: string; icon?: string }> = {
   '/premium': { label: 'Premium', icon: '👑' },
   '/divine-dashboard': { label: 'Divine Dashboard', icon: '✨' },
   '/auth': { label: 'Login', icon: '🔐' },
+  '/horoscope': { label: 'Horoscope', icon: '🌟' },
+  '/kundali-match': { label: 'Kundali Match', icon: '💑' },
+  '/profile': { label: 'Profile', icon: '👤' },
 };
 
 interface BreadcrumbsProps {

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Saint {
   id: string;
@@ -72,12 +73,10 @@ const Saints = () => {
       <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+        <Breadcrumbs className="mb-6" />
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+          <div className="mb-4">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Divine Saints & Gurus ✨

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon } from "@/components/ui/calendar";
 import Navigation from "@/components/Navigation";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Calendar, 
@@ -47,7 +49,8 @@ const SpiritualCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [events, setEvents] = useState<SpiritualEvent[]>([]);
-  const [todayTithi, setTodayTithi] = useState<TithiInfo>({ name: "Shukla Paksha Saptami", type: "regular" });
+  const [todayTithi, setTodayTithi] = useState<TithiInfo>({ name: "Loading...", type: "regular" });
+  const [panchangData, setPanchangData] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
 
   useEffect(() => {
@@ -77,6 +80,7 @@ const SpiritualCalendar = () => {
 
       if (data?.panchang) {
         const p = data.panchang;
+        setPanchangData(p);
         setTodayTithi({
           name: p.hindu?.tithi || 'Shukla Paksha Saptami',
           type: p.hindu?.tithi?.toLowerCase().includes('amavasya') ? 'amavasya' :
@@ -85,14 +89,10 @@ const SpiritualCalendar = () => {
                 p.hindu?.tithi?.toLowerCase().includes('chaturdashi') ? 'chaturdashi' : 'regular',
           significance: p.hindu?.tithi
         });
-        
-        // Store panchang data for display
-        (window as any).currentPanchang = p;
       }
     } catch (error) {
       console.error('Error loading panchang:', error);
-      // Fallback to mock data
-      loadTithiInfo();
+      setTodayTithi({ name: "Shukla Paksha Saptami", type: "regular", significance: "Panchang data unavailable" });
     }
   };
 
@@ -158,18 +158,7 @@ const SpiritualCalendar = () => {
     }
   };
 
-  const loadTithiInfo = () => {
-    // Generate sample tithi information
-    const tithis = [
-      { name: "Amavasya", type: "amavasya" as const, significance: "New moon - ideal for introspection and new beginnings" },
-      { name: "Purnima", type: "purnima" as const, significance: "Full moon - time for gratitude and completion" },
-      { name: "Ekadashi", type: "ekadashi" as const, significance: "Fasting day for spiritual purification" },
-      { name: "Shukla Paksha Saptami", type: "regular" as const },
-      { name: "Krishna Paksha Chaturdashi", type: "chaturdashi" as const, significance: "Day before new moon - time for release and letting go" }
-    ];
-    
-    setTodayTithi(tithis[Math.floor(Math.random() * tithis.length)]);
-  };
+  // loadTithiInfo removed - no longer using random fallback data
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
@@ -241,7 +230,8 @@ const SpiritualCalendar = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+        <Breadcrumbs className="mb-6" />
         {/* Premium Header with Panchang Info */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-4 mb-6 p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-2xl backdrop-blur-sm border border-primary/20">
@@ -270,7 +260,7 @@ const SpiritualCalendar = () => {
                 <div className="text-2xl mb-1">⭐</div>
                 <p className="text-xs text-muted-foreground mb-1">Nakshatra</p>
                 <p className="text-sm font-semibold">
-                  {(window as any).currentPanchang?.hindu?.nakshatra || 'Rohini'}
+                  {panchangData?.hindu?.nakshatra || 'Loading...'}
                 </p>
               </div>
             </Card>
@@ -279,7 +269,7 @@ const SpiritualCalendar = () => {
                 <div className="text-2xl mb-1">🪐</div>
                 <p className="text-xs text-muted-foreground mb-1">Yoga</p>
                 <p className="text-sm font-semibold">
-                  {(window as any).currentPanchang?.hindu?.yoga || 'Shiva'}
+                  {panchangData?.hindu?.yoga || 'Loading...'}
                 </p>
               </div>
             </Card>
@@ -288,7 +278,7 @@ const SpiritualCalendar = () => {
                 <div className="text-2xl mb-1">⏰</div>
                 <p className="text-xs text-muted-foreground mb-1">Sunrise</p>
                 <p className="text-sm font-semibold">
-                  {(window as any).currentPanchang?.timings?.sunrise || '6:12 AM'}
+                  {panchangData?.timings?.sunrise || 'Loading...'}
                 </p>
               </div>
             </Card>
@@ -297,7 +287,7 @@ const SpiritualCalendar = () => {
                 <div className="text-2xl mb-1">🌅</div>
                 <p className="text-xs text-muted-foreground mb-1">Sunset</p>
                 <p className="text-sm font-semibold">
-                  {(window as any).currentPanchang?.timings?.sunset || '6:45 PM'}
+                  {panchangData?.timings?.sunset || 'Loading...'}
                 </p>
               </div>
             </Card>
@@ -550,6 +540,7 @@ const SpiritualCalendar = () => {
           </div>
         </div>
       </div>
+      <MobileBottomNav />
     </div>
   );
 };

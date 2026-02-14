@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { 
   Crown, 
   CheckCircle2, 
@@ -157,6 +158,7 @@ const Premium = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-12 pb-24 md:pb-12">
+        <Breadcrumbs className="mb-6" />
         {/* Hero Section */}
         <div className="text-center mb-16 space-y-4">
           <div className="inline-block">

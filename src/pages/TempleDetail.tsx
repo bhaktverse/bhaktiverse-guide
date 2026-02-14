@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, MapPin, Clock, Phone, Mail, Globe, Star, 
@@ -144,12 +145,9 @@ const TempleDetail = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-6 pb-24 md:pb-8">
-        {/* Back Button & Actions */}
-        <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" onClick={() => navigate('/temples')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Temples
-          </Button>
+        <Breadcrumbs className="mb-4" />
+        {/* Actions */}
+        <div className="flex items-center justify-end mb-6">
           <div className="flex gap-2">
             <Button variant="outline" size="icon" onClick={() => setIsFavorite(!isFavorite)}>
               <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />

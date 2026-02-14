@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import Navigation from '@/components/Navigation';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Saint {
   id: string;
@@ -168,13 +170,12 @@ const SaintChat = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <Navigation />
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border/50">
+      <div className="sticky top-16 z-10 bg-card/95 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-3">
+          <Breadcrumbs className="mb-2" />
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/saints')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
             <Avatar className="h-10 w-10 ring-2 ring-primary/20">
               <AvatarImage src={saint.image_url} alt={saint.name} />
               <AvatarFallback className="bg-primary text-primary-foreground text-sm">

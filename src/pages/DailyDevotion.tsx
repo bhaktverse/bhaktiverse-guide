@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,8 @@ const DailyDevotion = () => {
     <div className="min-h-screen bg-gradient-divine">
       <Navigation />
       
-      <main className="container mx-auto px-4 pt-24 pb-20">
+      <main className="container mx-auto px-4 pt-24 pb-24">
+        <Breadcrumbs className="mb-6" />
         {/* Hero Header */}
         <div className="text-center mb-12 animate-fade-in">
           <Badge className="bg-gradient-saffron text-white px-6 py-2 text-lg shadow-divine mb-4">

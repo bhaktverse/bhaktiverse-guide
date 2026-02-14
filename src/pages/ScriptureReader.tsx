@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,18 +7,19 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import Navigation from "@/components/Navigation";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { 
   BookOpen, 
   ChevronLeft, 
   ChevronRight, 
   Play, 
   Pause, 
-  Volume2, 
   Type, 
   Bookmark, 
+  BookmarkCheck,
   Share, 
-  Settings,
-  ArrowLeft
+  Clock
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,6 +44,7 @@ interface Chapter {
   title: string;
   content: string;
   verse_count: number;
+  summary?: string;
 }
 
 const ScriptureReader = () => {
@@ -58,7 +60,16 @@ const ScriptureReader = () => {
   const [readingProgress, setReadingProgress] = useState(0);
   const [theme, setTheme] = useState<'light' | 'sepia' | 'dark'>('light');
   const [pageMode, setPageMode] = useState(true);
+  const [bookmarks, setBookmarks] = useState<number[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Load bookmarks from localStorage
+  useEffect(() => {
+    if (scriptureId) {
+      const saved = localStorage.getItem(`bv:bookmarks:${scriptureId}`);
+      setBookmarks(saved ? JSON.parse(saved) : []);
+    }
+  }, [scriptureId]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -98,7 +109,6 @@ const ScriptureReader = () => {
 
   const loadChapters = async () => {
     try {
-      // Load chapters from database
       const { data, error } = await supabase
         .from('scripture_chapters')
         .select('*')
@@ -112,19 +122,14 @@ const ScriptureReader = () => {
           id: ch.chapter_number,
           title: ch.title,
           content: ch.content,
-          verse_count: ch.verse_count || 0
+          verse_count: ch.verse_count || 0,
+          summary: ch.summary || undefined
         }));
         setChapters(dbChapters);
         const saved = localStorage.getItem(`bv:scripture:${scriptureId}:chapter`);
         if (saved) setCurrentChapter(parseInt(saved, 10));
       } else {
-        // No chapters in DB - show meaningful empty state
-        setChapters([{
-          id: 1,
-          title: scripture?.title || 'Scripture',
-          content: 'This scripture\'s chapters have not yet been digitized in our database. We are actively working on adding authentic content from traditional sources. Please check back soon or explore other scriptures that are fully available.',
-          verse_count: 0
-        }]);
+        setChapters([]);
       }
     } catch (error) {
       console.error('Error loading chapters:', error);
@@ -137,7 +142,6 @@ const ScriptureReader = () => {
       localStorage.setItem(`bv:scripture:${scriptureId}:chapter`, String(chapterNum));
       const percent = chapters.length > 0 ? Math.round((chapterNum - 1) / chapters.length * 100) : 0;
       setReadingProgress(percent);
-      // Persist progress for authenticated users
       try {
         if (user && scripture) {
           await supabase.from('user_progress').upsert({
@@ -155,10 +159,21 @@ const ScriptureReader = () => {
     }
   };
 
+  const toggleBookmark = () => {
+    const key = `bv:bookmarks:${scriptureId}`;
+    let updated: number[];
+    if (bookmarks.includes(currentChapter)) {
+      updated = bookmarks.filter(b => b !== currentChapter);
+    } else {
+      updated = [...bookmarks, currentChapter];
+    }
+    setBookmarks(updated);
+    localStorage.setItem(key, JSON.stringify(updated));
+  };
+
   const toggleAudioPlayback = async () => {
     const audio = audioRef.current;
     if (!audio && scripture?.audio_url) {
-      // lazily create the element
       const el = new Audio(scripture.audio_url);
       audioRef.current = el;
     }
@@ -177,6 +192,14 @@ const ScriptureReader = () => {
       setIsPlaying(false);
     }
   };
+
+  const currentChapterData = chapters.find(c => c.id === currentChapter);
+
+  const estimatedReadingTime = useMemo(() => {
+    if (!currentChapterData) return 0;
+    const wordCount = currentChapterData.content.split(/\s+/).length;
+    return Math.max(1, Math.ceil(wordCount / 200));
+  }, [currentChapterData]);
 
   if (authLoading || loading) {
     return (
@@ -208,24 +231,54 @@ const ScriptureReader = () => {
     );
   }
 
-  const currentChapterData = chapters.find(c => c.id === currentChapter);
+  // No chapters in DB - show meaningful empty state
+  if (chapters.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+          <Breadcrumbs className="mb-6" />
+          <Card className="card-sacred max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <BookOpen className="h-6 w-6 text-primary" />
+                {scripture.title}
+              </CardTitle>
+              <CardDescription>by {scripture.author || 'Ancient Sages'}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {scripture.description && (
+                <p className="text-foreground leading-relaxed">{scripture.description}</p>
+              )}
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="text-4xl mb-3">📜</div>
+                <h3 className="font-semibold mb-2">Chapters Coming Soon</h3>
+                <p className="text-sm text-muted-foreground">
+                  This scripture's chapters are being digitized from traditional sources. 
+                  Please explore other fully available scriptures in the meantime.
+                </p>
+              </div>
+              <Button onClick={() => navigate('/scriptures')} className="w-full">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Browse Other Scriptures
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <MobileBottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+        <Breadcrumbs className="mb-6" />
+
         {/* Header */}
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/scriptures')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Scriptures
-          </Button>
-          
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
@@ -266,10 +319,15 @@ const ScriptureReader = () => {
                       className="w-full justify-start text-left h-auto py-2"
                       onClick={() => handleChapterChange(chapter.id)}
                     >
-                      <div>
-                        <div className="font-medium">{chapter.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {chapter.verse_count} verses
+                      <div className="flex items-center gap-2 w-full">
+                        {bookmarks.includes(chapter.id) && (
+                          <BookmarkCheck className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{chapter.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {chapter.verse_count} verses
+                          </div>
                         </div>
                       </div>
                     </Button>
@@ -312,7 +370,6 @@ const ScriptureReader = () => {
 
                   {/* Reading Tools */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    {/* Audio Controls */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -323,7 +380,6 @@ const ScriptureReader = () => {
                       {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
                     
-                    {/* Font Size */}
                     <div className="flex items-center space-x-2">
                       <Type className="h-4 w-4" />
                       <Slider
@@ -336,38 +392,31 @@ const ScriptureReader = () => {
                       />
                     </div>
 
-                    {/* Theme */}
                     <div className="flex items-center gap-1">
-                      <Button size="sm" variant={theme === 'light' ? 'default' : 'outline'} onClick={() => setTheme('light')}>Light</Button>
-                      <Button size="sm" variant={theme === 'sepia' ? 'default' : 'outline'} onClick={() => setTheme('sepia')}>Sepia</Button>
-                      <Button size="sm" variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')}>Dark</Button>
+                      <Button size="sm" variant={theme === 'light' ? 'default' : 'outline'} onClick={() => setTheme('light')} title="Light theme">Light</Button>
+                      <Button size="sm" variant={theme === 'sepia' ? 'default' : 'outline'} onClick={() => setTheme('sepia')} title="Sepia theme">Sepia</Button>
+                      <Button size="sm" variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')} title="Dark theme">Dark</Button>
                     </div>
 
-                    {/* Page Mode */}
-                    <Button size="sm" variant={pageMode ? 'default' : 'outline'} onClick={() => setPageMode(!pageMode)}>
+                    <Button size="sm" variant={pageMode ? 'default' : 'outline'} onClick={() => setPageMode(!pageMode)} title="Toggle book mode">
                       Book Mode
                     </Button>
 
-                    {/* Action Buttons */}
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => {
-                        const key = `bv:bookmarks:${scriptureId}`;
-                        const bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
-                        if (bookmarks.includes(currentChapter)) {
-                          localStorage.setItem(key, JSON.stringify(bookmarks.filter((b: number) => b !== currentChapter)));
-                        } else {
-                          bookmarks.push(currentChapter);
-                          localStorage.setItem(key, JSON.stringify(bookmarks));
-                        }
-                      }}
-                      className={JSON.parse(localStorage.getItem(`bv:bookmarks:${scriptureId}`) || '[]').includes(currentChapter) ? 'bg-primary/10 text-primary' : ''}
+                      onClick={toggleBookmark}
+                      className={bookmarks.includes(currentChapter) ? 'bg-primary/10 text-primary' : ''}
+                      title={bookmarks.includes(currentChapter) ? 'Remove bookmark' : 'Bookmark this chapter'}
                     >
-                      <Bookmark className="h-4 w-4" />
+                      {bookmarks.includes(currentChapter) ? (
+                        <BookmarkCheck className="h-4 w-4" />
+                      ) : (
+                        <Bookmark className="h-4 w-4" />
+                      )}
                     </Button>
                     
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" title="Share">
                       <Share className="h-4 w-4" />
                     </Button>
                   </div>
@@ -384,15 +433,38 @@ const ScriptureReader = () => {
               </CardContent>
             </Card>
 
+            {/* Chapter Summary */}
+            {currentChapterData?.summary && (
+              <Card className="card-sacred mb-4 bg-primary/5 border-primary/20">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-sm mb-1">Chapter Summary</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{currentChapterData.summary}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Chapter Content */}
             <Card className="card-sacred">
               <CardHeader>
-                <CardTitle className="text-2xl">
-                  {currentChapterData?.title}
-                </CardTitle>
-                <CardDescription>
-                  {currentChapterData?.verse_count} verses
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl">
+                      {currentChapterData?.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {currentChapterData?.verse_count} verses
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    ~{estimatedReadingTime} min read
+                  </Badge>
+                </div>
               </CardHeader>
               
               <CardContent>
@@ -406,7 +478,6 @@ const ScriptureReader = () => {
                 >
                   <div className="space-y-4 text-foreground">
                     {currentChapterData?.content.split('\n').filter(l => l.trim()).map((line, index) => {
-                      // Detect verse numbers (e.g. "1." or "॥1॥" patterns)
                       const verseMatch = line.match(/^(\d+[\.\):]|\|{1,2}\d+\|{1,2}|॥\d+॥)\s*/);
                       if (verseMatch) {
                         return (
@@ -418,7 +489,14 @@ const ScriptureReader = () => {
                           </div>
                         );
                       }
-                      return <p key={index} className="leading-8">{line}</p>;
+                      return (
+                        <div key={index} className="flex gap-3 group">
+                          <span className="text-muted-foreground/40 font-mono text-xs mt-1 min-w-[2rem] text-right select-none">
+                            {index + 1}
+                          </span>
+                          <p className="leading-8 flex-1">{line}</p>
+                        </div>
+                      );
                     })}
                   </div>
                 </div>
@@ -451,6 +529,8 @@ const ScriptureReader = () => {
           </div>
         </div>
       </div>
+
+      <MobileBottomNav />
     </div>
   );
 };
