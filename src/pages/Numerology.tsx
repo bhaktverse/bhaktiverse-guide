@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +81,7 @@ const Numerology = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 pt-24 pb-20 relative z-10">
+        <Breadcrumbs className="mb-6" />
         {/* Premium Hero Header */}
         <div className="text-center mb-16 animate-fade-in">
           <div className="inline-flex items-center gap-3 mb-6 px-8 py-3 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 rounded-full border border-primary/30 backdrop-blur-xl shadow-divine">

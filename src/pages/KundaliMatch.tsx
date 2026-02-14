@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,6 +160,7 @@ const KundaliMatch = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 pt-24 pb-24 relative z-10">
+        <Breadcrumbs className="mb-6" />
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 mb-4 px-6 py-2 bg-gradient-to-r from-pink-500/20 via-red-500/20 to-pink-500/20 rounded-full border border-pink-500/30 backdrop-blur-xl">

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import PlaylistManager from '@/components/PlaylistManager';
 import { useDownload } from '@/hooks/useDownload';
@@ -258,20 +259,16 @@ const AudioLibrary = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-6 pb-24 md:pb-6">
+        <Breadcrumbs className="mb-6" />
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
-                Spiritual Audio Library 🎵
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Immerse yourself in divine sounds and sacred chanting
-              </p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
+              Spiritual Audio Library 🎵
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Immerse yourself in divine sounds and sacred chanting
+            </p>
           </div>
 
           {/* Search and Filters */}
