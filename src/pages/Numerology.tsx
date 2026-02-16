@@ -323,6 +323,92 @@ const Numerology = () => {
                       </Card>
                     )}
 
+                    {/* Detailed Report Text */}
+                    {report.report_text && (
+                      <Card className="bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine overflow-hidden">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            <Brain className="h-5 w-5 text-accent" />
+                            विस्तृत विश्लेषण / Detailed Analysis
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-line">
+                            {report.report_text}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* 2026 Personal Year */}
+                    {report.dob && (() => {
+                      const dobDate = new Date(report.dob);
+                      const birthDay = dobDate.getDate();
+                      const birthMonth = dobDate.getMonth() + 1;
+                      let personalYear = birthDay + birthMonth + 2 + 0 + 2 + 6;
+                      while (personalYear > 9 && personalYear !== 11 && personalYear !== 22) {
+                        personalYear = String(personalYear).split('').reduce((s, d) => s + Number(d), 0);
+                      }
+                      const personalYearMeanings: Record<number, string> = {
+                        1: 'New beginnings, leadership, fresh starts. An excellent year to launch new ventures.',
+                        2: 'Partnerships, patience, diplomacy. Focus on relationships and cooperation.',
+                        3: 'Creativity, self-expression, joy. A year of artistic growth and social expansion.',
+                        4: 'Foundation building, hard work, discipline. Lay groundwork for future success.',
+                        5: 'Change, freedom, adventure. Expect exciting transitions and travel opportunities.',
+                        6: 'Home, family, responsibility. A nurturing year focused on domestic harmony.',
+                        7: 'Spirituality, introspection, wisdom. Deep inner growth and self-discovery.',
+                        8: 'Abundance, power, achievement. A prosperous year for material and career gains.',
+                        9: 'Completion, release, humanitarianism. Wrap up cycles and prepare for renewal.',
+                        11: 'Spiritual awakening, intuition, illumination. A master number year of heightened awareness.',
+                        22: 'Master builder, legacy, grand vision. Build something lasting and meaningful.',
+                      };
+                      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      const monthEnergies = months.map((m, i) => {
+                        let energy = (personalYear + (i + 1)) % 9 || 9;
+                        return { month: m, energy };
+                      });
+
+                      return (
+                        <Card className="bg-gradient-to-br from-primary/5 via-background to-accent/5 border-primary/30 shadow-divine overflow-hidden">
+                          <CardHeader className="pb-3 border-b border-border/50">
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                              <TrendingUp className="h-5 w-5 text-primary" />
+                              2026 Personal Year Forecast
+                            </CardTitle>
+                            <CardDescription>Your cosmic energy blueprint for 2026</CardDescription>
+                          </CardHeader>
+                          <CardContent className="pt-6 space-y-6">
+                            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border border-primary/20">
+                              <div className="text-5xl font-bold bg-gradient-temple bg-clip-text text-transparent">{personalYear}</div>
+                              <div>
+                                <div className="font-semibold text-primary text-lg">Personal Year {personalYear}</div>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {personalYearMeanings[personalYear] || 'A transformative year of growth.'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wider">Monthly Energy Grid - 2026</h4>
+                              <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                {monthEnergies.map((me) => (
+                                  <div key={me.month} className="text-center p-3 bg-card/80 rounded-lg border border-border/50 hover:border-primary/30 transition-all">
+                                    <div className="text-xs text-muted-foreground font-medium">{me.month}</div>
+                                    <div className={`text-xl font-bold mt-1 ${me.energy >= 7 ? 'text-green-500' : me.energy >= 4 ? 'text-amber-500' : 'text-red-500'}`}>
+                                      {me.energy}
+                                    </div>
+                                    <div className="h-1 mt-1 rounded-full bg-muted overflow-hidden">
+                                      <div className={`h-full rounded-full ${me.energy >= 7 ? 'bg-green-500' : me.energy >= 4 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${(me.energy / 9) * 100}%` }} />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+
                     {/* Lucky Elements */}
                     <div className="grid md:grid-cols-3 gap-4">
                       {[
