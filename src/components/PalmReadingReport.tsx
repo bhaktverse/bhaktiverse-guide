@@ -553,7 +553,7 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 overflow-hidden">
                       {/* Key Observation Highlight */}
                       {category.planetaryInfluence && (
                         <div className="mb-3 p-3 bg-secondary/5 rounded-lg border border-secondary/10">
@@ -564,7 +564,9 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
                         </div>
                       )}
                       
-                      <p className="text-foreground leading-relaxed mb-4">{category.prediction}</p>
+                      <div className="text-foreground leading-relaxed mb-4 whitespace-pre-line break-words min-h-[120px]">
+                        {category.prediction || (showHindi ? 'विश्लेषण उपलब्ध नहीं है।' : 'Analysis not available for this category.')}
+                      </div>
                       
                       {category.observedFeatures && category.observedFeatures.length > 0 && (
                         <div className="mb-3">

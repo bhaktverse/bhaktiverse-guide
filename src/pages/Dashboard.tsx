@@ -252,6 +252,7 @@ const Dashboard = () => {
 
   // Quick action grid
   const quickActions = [
+    { emoji: '🃏', label: 'Tarot', path: '/palm-reading', description: 'Card reading' },
     { emoji: '🧘‍♂️', label: 'Saints', path: '/saints', description: 'Chat with saints' },
     { emoji: '🙏', label: 'Daily Puja', path: '/daily-devotion', description: 'Today\'s rituals' },
     { emoji: '🎵', label: 'Mantras', path: '/audio-library', description: 'Listen & chant' },

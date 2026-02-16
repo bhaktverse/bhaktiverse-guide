@@ -358,7 +358,7 @@ const Temples = () => {
                   <div className="flex items-center space-x-1">
                     <Star className="h-4 w-4 fill-gold-light text-gold-light" />
                     <span className="text-sm font-medium">{temple.rating}</span>
-                    <span className="text-xs text-muted-foreground">(4.2k reviews)</span>
+                    <span className="text-xs text-muted-foreground">rating</span>
                   </div>
                   
                   <Badge variant="outline" className="text-xs">
