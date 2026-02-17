@@ -501,7 +501,9 @@ const Profile = () => {
                             <Activity className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium">{reading.palm_type || 'Palm Reading'}</p>
+                            <p className="text-sm font-medium">
+                              {reading.palm_type === 'left' ? 'Left Palm' : reading.palm_type === 'right' ? 'Right Palm' : reading.palm_type || 'Palm Reading'}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(reading.created_at).toLocaleDateString('en-IN', { 
                                 day: 'numeric', 
@@ -511,7 +513,9 @@ const Profile = () => {
                             </p>
                           </div>
                         </div>
-                        <Badge variant="outline">{reading.language?.toUpperCase()}</Badge>
+                        <Badge variant="outline">
+                          {reading.language === 'hi' ? 'Hindi' : reading.language === 'en' ? 'English' : reading.language === 'sa' ? 'Sanskrit' : reading.language?.toUpperCase()}
+                        </Badge>
                       </div>
                     ))}
                     <Button 

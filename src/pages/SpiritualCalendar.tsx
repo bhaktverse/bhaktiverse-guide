@@ -120,38 +120,7 @@ const SpiritualCalendar = () => {
         rituals: Array.isArray(event.rituals) ? event.rituals.map((r: any) => r.toString()) : []
       })) || [];
 
-      // Add daily recurring events
-      const today = new Date();
-      const dailyEvents: SpiritualEvent[] = [
-        {
-          id: "morning-aarti",
-          name: "Morning Aarti",
-          date: today,
-          type: "aarti",
-          description: "Daily morning prayer to welcome the divine light",
-          significance: "Start the day with gratitude",
-          duration: 30,
-          isRecurring: true,
-          reminderSet: true,
-          traditions: ["Hinduism"],
-          rituals: ["Lamp lighting", "Bhajan singing"]
-        },
-        {
-          id: "evening-meditation",
-          name: "Evening Meditation",
-          date: today,
-          type: "meditation",
-          description: "Daily group meditation session",
-          significance: "End the day with inner peace",
-          duration: 45,
-          isRecurring: true,
-          reminderSet: true,
-          traditions: ["Universal"],
-          rituals: ["Guided meditation", "Chanting"]
-        }
-      ];
-
-      setEvents([...dbEvents, ...dailyEvents]);
+      setEvents(dbEvents);
     } catch (error) {
       console.error('Error loading events:', error);
       setEvents([]);
@@ -203,9 +172,7 @@ const SpiritualCalendar = () => {
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => 
-      event.date.toDateString() === date.toDateString() ||
-      (event.isRecurring && event.type === 'aarti') ||
-      (event.isRecurring && event.type === 'meditation')
+      event.date.toDateString() === date.toDateString()
     );
   };
 

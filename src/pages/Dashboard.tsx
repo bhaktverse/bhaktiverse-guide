@@ -201,17 +201,25 @@ const Dashboard = () => {
         setBhaktiShorts(shorts);
       }
 
-      // Set daily quote
-      const quotes = [
-        "The mind is everything. What you think you become. — Buddha",
-        "The best way to find yourself is to lose yourself in service. — Gandhi", 
-        "You are not the drop in the ocean, but the ocean in a drop. — Rumi",
-        "The goal of life is to realize the Self. — Ramana Maharshi",
-        "Where there is love there is life. — Mahatma Gandhi",
-        "Truth is one, paths are many. — Hindu Proverb",
-        "Be the change you wish to see in the world. — Gandhi"
-      ];
-      setTodayQuote(quotes[new Date().getDate() % quotes.length]);
+      // Load daily quote from spiritual_content
+      const { data: quoteData } = await supabase
+        .from('spiritual_content')
+        .select('content, title')
+        .eq('category', 'teaching')
+        .limit(20);
+
+      if (quoteData && quoteData.length > 0) {
+        const randomQuote = quoteData[new Date().getDate() % quoteData.length];
+        setTodayQuote(randomQuote.title ? `${randomQuote.content} — ${randomQuote.title}` : randomQuote.content);
+      } else {
+        // Fallback universal quotes only if DB has no content
+        const fallbackQuotes = [
+          "The mind is everything. What you think you become. — Buddha",
+          "The best way to find yourself is to lose yourself in service. — Gandhi",
+          "Truth is one, paths are many. — Hindu Proverb",
+        ];
+        setTodayQuote(fallbackQuotes[new Date().getDate() % fallbackQuotes.length]);
+      }
       
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -274,6 +282,8 @@ const Dashboard = () => {
     { emoji: '🏛️', label: 'Temples', path: '/temples', description: 'Find nearby' },
     { emoji: '📖', label: 'Scriptures', path: '/scriptures', description: 'Read & learn' },
     { emoji: '📅', label: 'Calendar', path: '/spiritual-calendar', description: 'Festivals' },
+    { emoji: '🌟', label: 'Horoscope', path: '/horoscope', description: 'Daily prediction' },
+    { emoji: '💑', label: 'Kundali', path: '/kundali-match', description: 'Match making' },
   ];
 
   return (
@@ -388,7 +398,7 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   {quickActions.map((action) => (
                     <Button
                       key={action.path}
