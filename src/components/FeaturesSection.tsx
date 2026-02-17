@@ -95,9 +95,9 @@ const FeaturesSection = () => {
 
   const quickFeatures = [
     { icon: Heart, title: "Daily Devotion", emoji: "🙏", description: "Personalized daily rituals", link: "/daily-devotion" },
-    { icon: Search, title: "AI Search", emoji: "🔍", description: "Search across all content" },
-    { icon: Globe, title: "Multi-Language", emoji: "🌍", description: "15+ regional languages" },
-    { icon: Smartphone, title: "Offline Mode", emoji: "📱", description: "Access without internet" }
+    { icon: Trophy, title: "Gamification", emoji: "🏆", description: "Track spiritual progress", link: "/profile" },
+    { icon: Globe, title: "Multi-Language", emoji: "🌍", description: "Regional language support" },
+    { icon: Smartphone, title: "Mobile Ready", emoji: "📱", description: "Optimized for all devices" }
   ];
 
   return (

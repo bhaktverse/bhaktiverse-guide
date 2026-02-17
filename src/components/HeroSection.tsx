@@ -1,11 +1,46 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, BookOpen, ArrowRight, Play, Star, Zap } from "lucide-react";
+import { Sparkles, BookOpen, ArrowRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [dbStats, setDbStats] = useState({ saints: 0, temples: 0, scriptures: 0, audio: 0 });
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const [saintsRes, templesRes, scripturesRes, audioRes] = await Promise.all([
+        supabase.from('saints').select('id', { count: 'exact', head: true }),
+        supabase.from('temples').select('id', { count: 'exact', head: true }),
+        supabase.from('scriptures').select('id', { count: 'exact', head: true }),
+        supabase.from('audio_library').select('id', { count: 'exact', head: true }),
+      ]);
+      setDbStats({
+        saints: saintsRes.count || 0,
+        temples: templesRes.count || 0,
+        scriptures: scripturesRes.count || 0,
+        audio: audioRes.count || 0,
+      });
+    } catch (e) {
+      console.error('Stats load error:', e);
+    }
+  };
+
+  const statsDisplay = [
+    { value: `${dbStats.saints}+`, label: 'Saint Personalities', icon: '🧘' },
+    { value: `${dbStats.scriptures}+`, label: 'Sacred Texts', icon: '📚' },
+    { value: `${dbStats.temples}+`, label: 'Temples Connected', icon: '🏛️' },
+    { value: `${dbStats.audio}+`, label: 'Audio Tracks', icon: '🎵' },
+  ];
 
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
@@ -27,8 +62,6 @@ const HeroSection = () => {
         <div className="absolute top-40 right-[15%] text-4xl animate-sacred-float opacity-10" style={{ animationDelay: '1s' }}>🪷</div>
         <div className="absolute bottom-40 left-[15%] text-5xl animate-sacred-float opacity-10" style={{ animationDelay: '2s' }}>✨</div>
         <div className="absolute bottom-32 right-[10%] text-4xl animate-sacred-float opacity-10" style={{ animationDelay: '0.5s' }}>🙏</div>
-        <div className="absolute top-1/2 left-[5%] text-3xl animate-sacred-float opacity-5" style={{ animationDelay: '1.5s' }}>📿</div>
-        <div className="absolute top-1/3 right-[8%] text-3xl animate-sacred-float opacity-5" style={{ animationDelay: '2.5s' }}>🔔</div>
       </div>
 
       {/* Gradient Orbs */}
@@ -71,11 +104,11 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button 
                 size="lg" 
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate(user ? '/dashboard' : '/auth')}
                 className="group bg-gradient-temple text-white shadow-divine hover:shadow-glow transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 px-8 py-6 text-lg"
               >
                 <Sparkles className="h-5 w-5 mr-2 group-hover:animate-spin" />
-                Begin Sacred Journey
+                {user ? 'Go to Dashboard' : 'Begin Sacred Journey'}
                 <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               
@@ -113,15 +146,10 @@ const HeroSection = () => {
             ))}
           </div>
 
-          {/* Trust Stats */}
+          {/* Trust Stats - Dynamic from DB */}
           <div className="mt-16 p-8 bg-gradient-to-r from-card via-card-sacred to-card rounded-3xl shadow-lotus border border-border/50 backdrop-blur-sm">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              {[
-                { value: '10K+', label: 'Spiritual Seekers', icon: '🙏' },
-                { value: '50+', label: 'Saint Personalities', icon: '🧘' },
-                { value: '1000+', label: 'Sacred Texts', icon: '📚' },
-                { value: '500+', label: 'Temples Connected', icon: '🏛️' },
-              ].map((stat) => (
+              {statsDisplay.map((stat) => (
                 <div key={stat.label} className="group">
                   <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
                   <div className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-1">{stat.value}</div>

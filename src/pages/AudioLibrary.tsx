@@ -283,7 +283,7 @@ const AudioLibrary = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                   {filteredTracks.map((track) => (
                     <div
                       key={track.id}
@@ -361,8 +361,14 @@ const AudioLibrary = () => {
                   {filteredTracks.length === 0 && (
                     <div className="text-center py-12">
                       <Music className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                      <h3 className="text-lg font-semibold mb-2">No tracks found</h3>
-                      <p className="text-muted-foreground">Try adjusting your search or filters</p>
+                      <h3 className="text-lg font-semibold mb-2">
+                        {tracks.length === 0 ? 'No audio tracks available yet' : 'No tracks found'}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {tracks.length === 0 
+                          ? 'Audio will appear once uploaded via the admin panel.' 
+                          : 'Try adjusting your search or filters'}
+                      </p>
                     </div>
                   )}
                 </div>

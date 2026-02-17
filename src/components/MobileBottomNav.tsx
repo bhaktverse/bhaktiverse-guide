@@ -10,12 +10,14 @@ import {
   Hand,
   Compass,
   BookOpen,
-  Users,
   Building,
   Menu,
   Sun,
   User,
-  LogOut
+  LogOut,
+  Star,
+  Heart,
+  MessageCircle
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,12 +42,12 @@ const MobileBottomNav = () => {
   const secondaryNavItems = [
     { icon: Calendar, label: 'Spiritual Calendar', path: '/spiritual-calendar' },
     { icon: BookOpen, label: 'Scriptures', path: '/scriptures' },
-    { icon: Users, label: 'Saints', path: '/saints' },
+    { icon: User, label: 'Saints', path: '/saints' },
     { icon: Building, label: 'Temples', path: '/temples' },
     { icon: Sun, label: 'Daily Devotion', path: '/daily-devotion' },
-    { icon: Sun, label: 'Horoscope', path: '/horoscope' },
-    { icon: Users, label: 'Kundali Match', path: '/kundali-match' },
-    { icon: Users, label: 'Community', path: '/community' },
+    { icon: Star, label: 'Horoscope', path: '/horoscope' },
+    { icon: Heart, label: 'Kundali Match', path: '/kundali-match' },
+    { icon: MessageCircle, label: 'Community', path: '/community' },
     { icon: Crown, label: 'Premium', path: '/premium' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];

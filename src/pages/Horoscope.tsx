@@ -84,21 +84,8 @@ const Horoscope = () => {
       }
     } catch (error) {
       console.error('Horoscope error:', error);
-      // Generate fallback prediction
-      setPrediction({
-        overall: `आज ${rashi.hindiName} राशि के लिए शुभ दिन है। ${rashi.ruler} ग्रह का प्रभाव आपको ऊर्जा प्रदान करेगा। ${rashi.element.includes('Fire') ? 'आग तत्व आपको साहस देगा।' : rashi.element.includes('Water') ? 'जल तत्व भावनात्मक स्थिरता लाएगा।' : rashi.element.includes('Air') ? 'वायु तत्व बौद्धिक विकास में सहायक होगा।' : 'पृथ्वी तत्व स्थिरता प्रदान करेगा।'}`,
-        love: { score: 75, prediction: "प्रेम जीवन में सकारात्मक बदलाव आएंगे।", tip: "पार्टनर के साथ quality time बिताएं।" },
-        career: { score: 80, prediction: "करियर में नई opportunities आ सकती हैं।", tip: "नई skills सीखने पर focus करें।" },
-        health: { score: 70, prediction: "स्वास्थ्य सामान्य रहेगा।", tip: "नियमित व्यायाम करें।" },
-        finance: { score: 72, prediction: "आर्थिक स्थिति स्थिर रहेगी।", tip: "अनावश्यक खर्चों से बचें।" },
-        luckyColor: rashi.luckyColor,
-        luckyNumber: rashi.luckyNumber[0],
-        luckyTime: "सुबह 9-11 बजे",
-        mantraOfDay: rashi.mantra,
-        doToday: ["ध्यान करें", "परिवार के साथ समय बिताएं", rashi.deity + " की पूजा करें"],
-        avoidToday: ["जल्दबाजी में निर्णय न लें", "नकारात्मक लोगों से दूर रहें"],
-        cosmicMessage: "ब्रह्मांडीय ऊर्जा आपके साथ है। आत्मविश्वास बनाए रखें।"
-      });
+      setPrediction(null);
+      toast.error('राशिफल लोड करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
     } finally {
       setLoading(false);
     }
@@ -209,6 +196,23 @@ const Horoscope = () => {
             <p className="text-muted-foreground animate-pulse">
               ग्रहों की स्थिति का विश्लेषण हो रहा है...
             </p>
+          </div>
+        )}
+
+        {/* Error/Retry State */}
+        {selectedRashi && !prediction && !loading && (
+          <div className="max-w-md mx-auto text-center py-16">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-bold mb-2">राशिफल उपलब्ध नहीं</h3>
+            <p className="text-muted-foreground mb-6">Could not generate prediction. Please try again.</p>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={() => generatePrediction(selectedRashi)} className="bg-gradient-temple text-white">
+                <RefreshCw className="h-4 w-4 mr-2" /> Retry
+              </Button>
+              <Button variant="outline" onClick={() => { setSelectedRashi(null); setPrediction(null); }}>
+                Change Rashi
+              </Button>
+            </div>
           </div>
         )}
 

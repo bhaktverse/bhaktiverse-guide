@@ -21,10 +21,21 @@ import {
   Star,
   Infinity
 } from "lucide-react";
+import { usePremium } from "@/hooks/usePremium";
+import { useToast } from "@/hooks/use-toast";
 
 const Premium = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { isPremium } = usePremium();
+  const { toast } = useToast();
+
+  const handleUpgrade = () => {
+    toast({
+      title: "🚀 Coming Soon!",
+      description: "Premium subscriptions launching soon! Contact support for early access.",
+    });
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -110,7 +121,7 @@ const Premium = () => {
         "Audio library access",
         "Community posts"
       ],
-      current: true
+      current: !isPremium
     },
     {
       name: "Devotee",
@@ -321,6 +332,7 @@ const Premium = () => {
                     }`}
                     variant={plan.current ? 'outline' : 'default'}
                     disabled={plan.current}
+                    onClick={() => !plan.current && handleUpgrade()}
                   >
                     {plan.current ? 'Current Plan' : plan.price === 'Free' ? 'Get Started' : 'Upgrade Now'}
                   </Button>
@@ -342,7 +354,7 @@ const Premium = () => {
                 Join thousands of devotees who have elevated their spiritual journey with BhaktVerse Premium. 
                 Experience unlimited divine guidance and exclusive features.
               </p>
-              <Button size="lg" className="bg-gradient-saffron hover:opacity-90">
+              <Button size="lg" className="bg-gradient-saffron hover:opacity-90" onClick={handleUpgrade}>
                 <Crown className="h-5 w-5 mr-2" />
                 Upgrade to Premium
               </Button>

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Breadcrumbs from '@/components/Breadcrumbs';
@@ -144,13 +145,22 @@ const Community = () => {
 
   const likePost = async (postId: string) => {
     try {
-      // In a real app, you'd track user likes and update accordingly
       const postIndex = posts.findIndex(p => p.id === postId);
-      if (postIndex !== -1) {
-        const updatedPosts = [...posts];
-        updatedPosts[postIndex].likes_count += 1;
-        setPosts(updatedPosts);
-      }
+      if (postIndex === -1) return;
+
+      const newCount = posts[postIndex].likes_count + 1;
+
+      // Persist to database
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ likes_count: newCount })
+        .eq('id', postId);
+
+      if (error) throw error;
+
+      const updatedPosts = [...posts];
+      updatedPosts[postIndex].likes_count = newCount;
+      setPosts(updatedPosts);
       
       toast({
         title: "🙏 Blessed!",
@@ -159,6 +169,31 @@ const Community = () => {
       
     } catch (error) {
       console.error('Error liking post:', error);
+    }
+  };
+
+  const deletePost = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', postId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setPosts(posts.filter(p => p.id !== postId));
+      toast({
+        title: "Post Deleted",
+        description: "Your post has been removed."
+      });
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Error",
+        description: "Could not delete post.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -301,16 +336,17 @@ const Community = () => {
                       className="pl-10"
                     />
                   </div>
-                  <select
-                    value={filterTag}
-                    onChange={(e) => setFilterTag(e.target.value)}
-                    className="px-3 py-2 border border-border rounded-md bg-background"
-                  >
-                    <option value="">All Topics</option>
-                    {availableTags.map(tag => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
+                  <Select value={filterTag || 'all'} onValueChange={(v) => setFilterTag(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="All Topics" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Topics</SelectItem>
+                      {availableTags.map(tag => (
+                        <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -323,14 +359,13 @@ const Community = () => {
                     {/* User Info */}
                     <div className="flex items-center space-x-3 mb-4">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src="/placeholder.svg" />
                         <AvatarFallback className="bg-primary text-primary-foreground">
-                          U
+                          {post.user_id === user?.id ? (user?.email?.charAt(0).toUpperCase() || 'Y') : '🙏'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <p className="font-semibold text-foreground">
-                          Anonymous Devotee
+                          {post.user_id === user?.id ? 'You' : 'Devotee'}
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center space-x-2">
                           {getPostTypeIcon(post.post_type)}
@@ -394,6 +429,16 @@ const Community = () => {
                           <span>{post.shares_count}</span>
                         </Button>
                       </div>
+                      {post.user_id === user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deletePost(post.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
