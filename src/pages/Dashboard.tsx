@@ -37,6 +37,7 @@ import {
   Play
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface DashboardStats {
   currentStreak: number;
@@ -73,6 +74,7 @@ const Dashboard = () => {
   });
   const [todayQuote, setTodayQuote] = useState("");
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [bhaktiShorts, setBhaktiShorts] = useState<any[]>([]);
   const [greeting, setGreeting] = useState({ text: "Namaste", icon: "🙏" });
   const [userName, setUserName] = useState("");
   const [animateIn, setAnimateIn] = useState(false);
@@ -184,6 +186,19 @@ const Dashboard = () => {
           date: new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
           type: event.event_type
         })));
+      }
+
+      // Load Bhakti Shorts
+      const { data: shorts } = await supabase
+        .from('bhakti_shorts')
+        .select('*')
+        .eq('approved', true)
+        .eq('featured', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (shorts) {
+        setBhaktiShorts(shorts);
       }
 
       // Set daily quote
@@ -390,7 +405,64 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Today's Goals */}
+            {/* Bhakti Shorts */}
+            {bhaktiShorts.length > 0 && (
+              <Card className="card-sacred">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Play className="h-5 w-5 text-primary" />
+                      Bhakti Shorts 🎬
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                    {bhaktiShorts.map((short) => {
+                      const extractVideoId = (url: string) => {
+                        const match = url.match(/(?:shorts\/|v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                        return match ? match[1] : null;
+                      };
+                      const videoId = extractVideoId(short.video_url);
+                      const thumbnail = short.thumbnail_url || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null);
+
+                      return (
+                        <a
+                          key={short.id}
+                          href={short.video_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 w-36 group cursor-pointer"
+                        >
+                          <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-sm group-hover:shadow-divine transition-all duration-300 group-hover:-translate-y-1">
+                            <AspectRatio ratio={9 / 16}>
+                              {thumbnail ? (
+                                <img
+                                  src={thumbnail}
+                                  alt={short.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-4xl">🎬</div>
+                              )}
+                            </AspectRatio>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
+                              <p className="text-white text-xs font-medium line-clamp-2">{short.title}</p>
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="bg-primary/90 rounded-full p-2">
+                                <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                              </div>
+                            </div>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="card-sacred">
               <CardHeader>
                 <div className="flex items-center justify-between">

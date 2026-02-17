@@ -116,56 +116,8 @@ const AudioLibrary = () => {
       
     } catch (error) {
       console.error('❌ Error loading tracks:', error);
-      
-      // Provide fallback demo tracks with working public URLs
-      const demoTracks: AudioTrack[] = [
-        {
-          id: 'demo-1',
-          title: '🕉️ Om Chanting (Demo)',
-          artist: 'BhaktVerse Demo',
-          category: 'mantra',
-          duration: 180,
-          audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', // Demo audio
-          lyrics: 'ॐ ॐ ॐ\nOm Om Om',
-          meaning: 'The sacred sound of the universe. Chanting Om brings peace and spiritual alignment.',
-          language: 'sanskrit',
-          difficulty_level: 'beginner',
-          download_count: 1234,
-          rating: 4.8
-        },
-        {
-          id: 'demo-2',
-          title: '🎵 Meditation Music (Demo)',
-          artist: 'BhaktVerse Demo',
-          category: 'meditation',
-          duration: 300,
-          audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', // Demo audio
-          meaning: 'Peaceful meditation music for spiritual practice and inner calm.',
-          language: 'instrumental',
-          difficulty_level: 'beginner',
-          download_count: 2345,
-          rating: 4.7
-        },
-        {
-          id: 'demo-3',
-          title: '🪔 Devotional Bhajan (Demo)',
-          artist: 'BhaktVerse Demo',
-          category: 'bhajan',
-          duration: 240,
-          audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', // Demo audio
-          lyrics: 'राधे राधे राधे श्याम\nRadhe Radhe Radhe Shyam',
-          meaning: 'A devotional song praising Radha and Krishna, expressing divine love.',
-          language: 'hindi',
-          difficulty_level: 'intermediate',
-          download_count: 3456,
-          rating: 4.9
-        }
-      ];
-      
-      setTracks(demoTracks);
-      setPlaylist(demoTracks);
-      
-      console.log('📣 Using demo tracks. To add real spiritual audio, upload files to Supabase storage.');
+      setTracks([]);
+      setPlaylist([]);
     } finally {
       setLoading(false);
     }
