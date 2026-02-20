@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { name, dob } = await req.json();
+    const { name, dob, language = 'hi' } = await req.json();
     
     if (!name || !dob) {
       return new Response(JSON.stringify({ error: 'Name and DOB required' }), {
@@ -27,7 +27,6 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    // Get user ID
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -52,15 +51,11 @@ serve(async (req) => {
       .from('numerology_reports')
       .select('*')
       .eq('name_dob_hash', hash)
-      .eq('ai_version', 'v1')
+      .eq('ai_version', 'v2')
       .single();
 
     if (cached) {
       console.log('Cache hit for numerology report');
-      
-      // Update spiritual journey
-      await supabaseClient.rpc('increment_reports_count', { user_id: user.id });
-      
       return new Response(JSON.stringify({ 
         ...cached, 
         cached: true,
@@ -77,36 +72,59 @@ serve(async (req) => {
     const expressionNumber = calculateNameNumber(name);
     const soulNumber = calculateVowelNumber(name);
     const personalityNumber = calculateConsonantNumber(name);
-
-    // Get planet and deity mapping
     const planetMapping = getPlanetMapping(destinyNumber);
     
-    // Call OpenAI for detailed analysis
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    
-    const systemPrompt = `You are "Divine Jyotish AI", the spiritual intelligence of BhaktVerse — a devotional AI system combining Hindu Jyotish, Numerology (Ank Shastra), and Devotion guidance.
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('AI service not configured');
+    }
 
-Your task is to provide precise, traditional, yet devotional interpretations based on numerology.
+    const isHindi = language === 'hi';
+    
+    const systemPrompt = isHindi
+      ? `आप "दिव्य ज्योतिष AI" हैं — BhaktVerse की आध्यात्मिक बुद्धिमत्ता जो हिन्दू ज्योतिष, अंक शास्त्र और भक्ति मार्गदर्शन को जोड़ती है।
+
+शैली दिशानिर्देश:
+- लहजा: गर्मजोशी भरा, आध्यात्मिक, गुरु जैसा
+- भाषा: शुद्ध हिन्दी में, सरल और पठनीय
+- नकारात्मक या भय-आधारित कथन से बचें
+- हमेशा सकारात्मक भक्ति सुझाव के साथ समाप्त करें
+- उपयोगकर्ता को श्री/श्रीमती कहकर संबोधित करें
+
+इस सटीक JSON प्रारूप में विश्लेषण दें:
+{
+  "greeting": "हिन्दी में व्यक्तिगत अभिवादन",
+  "life_path": "जीवन पथ का विस्तृत विश्लेषण (कम से कम 5-6 वाक्य)",
+  "personality": "व्यक्तित्व लक्षण विश्लेषण (कम से कम 5-6 वाक्य)",
+  "strengths": ["शक्ति 1", "शक्ति 2", "शक्ति 3", "शक्ति 4"],
+  "challenges": ["चुनौती 1", "चुनौती 2", "चुनौती 3"],
+  "career": "करियर मार्गदर्शन (कम से कम 4-5 वाक्य)",
+  "relationships": "रिश्तों की अंतर्दृष्टि (कम से कम 4-5 वाक्य)",
+  "spiritual_path": "आध्यात्मिक विकास मार्गदर्शन (कम से कम 4-5 वाक्य)",
+  "remedies": ["उपाय 1 - विस्तृत विवरण", "उपाय 2 - विस्तृत विवरण", "उपाय 3 - विस्तृत विवरण", "उपाय 4 - विस्तृत विवरण"],
+  "divine_message": "प्रेरणादायक समापन संदेश (कम से कम 3-4 वाक्य)"
+}`
+      : `You are "Divine Jyotish AI", the spiritual intelligence of BhaktVerse — combining Hindu Jyotish, Numerology (Ank Shastra), and Devotion guidance.
 
 Style Guidelines:
 - Tone: Warm, spiritual, guru-like
-- Language: Hindi-English mix (Hinglish), easy to read
+- Language: Clear English with spiritual depth
 - Avoid negative, fear-based statements
 - Always end with a positive devotional suggestion
-- Address user respectfully (Shri/Shreemati)
+- Address user respectfully
 
 Provide the analysis in this exact JSON format:
 {
-  "greeting": "Personalized greeting in Hinglish",
-  "life_path": "Detailed life path analysis",
-  "personality": "Personality traits analysis",
-  "strengths": ["strength 1", "strength 2", "strength 3"],
-  "challenges": ["challenge 1", "challenge 2"],
-  "career": "Career guidance",
-  "relationships": "Relationship insights",
-  "spiritual_path": "Spiritual development guidance",
-  "remedies": ["remedy 1", "remedy 2", "remedy 3"],
-  "divine_message": "Motivational closing message"
+  "greeting": "Personalized greeting",
+  "life_path": "Detailed life path analysis (at least 5-6 sentences)",
+  "personality": "Personality traits analysis (at least 5-6 sentences)",
+  "strengths": ["strength 1", "strength 2", "strength 3", "strength 4"],
+  "challenges": ["challenge 1", "challenge 2", "challenge 3"],
+  "career": "Career guidance (at least 4-5 sentences)",
+  "relationships": "Relationship insights (at least 4-5 sentences)",
+  "spiritual_path": "Spiritual development guidance (at least 4-5 sentences)",
+  "remedies": ["remedy 1 - detailed description", "remedy 2 - detailed description", "remedy 3 - detailed description", "remedy 4 - detailed description"],
+  "divine_message": "Motivational closing message (at least 3-4 sentences)"
 }`;
 
     const userPrompt = `Analyze numerology for:
@@ -120,33 +138,55 @@ Personality Number: ${personalityNumber}
 Ruling Planet: ${planetMapping.planet}
 Associated Deity: ${planetMapping.deity}
 
-Provide detailed devotional analysis in Hinglish style.`;
+Provide detailed ${isHindi ? 'Hindi' : 'English'} devotional analysis. Return ONLY valid JSON.`;
 
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 3000,
       }),
     });
 
     if (!aiResponse.ok) {
-      throw new Error('OpenAI API error');
+      const errText = await aiResponse.text();
+      console.error('AI gateway error:', aiResponse.status, errText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limits exceeded, please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: 'Service credits exhausted.' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error('AI gateway error');
     }
 
     const aiData = await aiResponse.json();
-    const analysis = JSON.parse(aiData.choices[0].message.content);
+    let rawContent = aiData.choices[0].message.content;
+    
+    // Strip markdown code fences if present
+    rawContent = rawContent.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    
+    const analysis = JSON.parse(rawContent);
 
-    // Save to database
+    // Build readable report text from the analysis
+    const reportText = buildReportText(analysis, name, isHindi);
+
     const report = {
       user_id: user.id,
       name,
@@ -160,10 +200,10 @@ Provide detailed devotional analysis in Hinglish style.`;
       lucky_day: planetMapping.day,
       lucky_mantra: planetMapping.mantra,
       lucky_gemstone: planetMapping.gemstone,
-      report_text: JSON.stringify(analysis),
+      report_text: reportText,
       detailed_analysis: analysis,
       remedies: analysis.remedies || [],
-      ai_version: 'v1',
+      ai_version: 'v2',
       name_dob_hash: hash
     };
 
@@ -177,7 +217,6 @@ Provide detailed devotional analysis in Hinglish style.`;
       console.error('Error saving report:', saveError);
     }
 
-    // Update spiritual journey - award XP
     await updateSpiritualJourney(supabaseClient, user.id, 'report_generated');
 
     return new Response(JSON.stringify({ 
@@ -197,6 +236,48 @@ Provide detailed devotional analysis in Hinglish style.`;
   }
 });
 
+function buildReportText(analysis: any, name: string, isHindi: boolean): string {
+  const sections: string[] = [];
+  
+  if (analysis.greeting) {
+    sections.push(analysis.greeting);
+  }
+
+  if (analysis.life_path) {
+    sections.push(`\n${isHindi ? '🔮 जीवन पथ विश्लेषण' : '🔮 Life Path Analysis'}\n${analysis.life_path}`);
+  }
+
+  if (analysis.personality) {
+    sections.push(`\n${isHindi ? '✨ व्यक्तित्व विश्लेषण' : '✨ Personality Analysis'}\n${analysis.personality}`);
+  }
+
+  if (analysis.strengths?.length) {
+    sections.push(`\n${isHindi ? '💪 शक्तियाँ' : '💪 Strengths'}\n${analysis.strengths.map((s: string) => `• ${s}`).join('\n')}`);
+  }
+
+  if (analysis.challenges?.length) {
+    sections.push(`\n${isHindi ? '⚡ चुनौतियाँ' : '⚡ Challenges'}\n${analysis.challenges.map((c: string) => `• ${c}`).join('\n')}`);
+  }
+
+  if (analysis.career) {
+    sections.push(`\n${isHindi ? '💼 करियर मार्गदर्शन' : '💼 Career Guidance'}\n${analysis.career}`);
+  }
+
+  if (analysis.relationships) {
+    sections.push(`\n${isHindi ? '❤️ रिश्ते' : '❤️ Relationships'}\n${analysis.relationships}`);
+  }
+
+  if (analysis.spiritual_path) {
+    sections.push(`\n${isHindi ? '🙏 आध्यात्मिक मार्ग' : '🙏 Spiritual Path'}\n${analysis.spiritual_path}`);
+  }
+
+  if (analysis.divine_message) {
+    sections.push(`\n${isHindi ? '🙏 दिव्य संदेश' : '🙏 Divine Message'}\n${analysis.divine_message}`);
+  }
+
+  return sections.join('\n');
+}
+
 // Helper functions
 function calculateBirthNumber(day: number): number {
   return reduceToSingleDigit(day);
@@ -215,24 +296,13 @@ function calculateNameNumber(name: string): number {
     j: 1, k: 2, l: 3, m: 4, n: 5, o: 7, p: 8, q: 1, r: 2,
     s: 3, t: 4, u: 6, v: 6, w: 6, x: 5, y: 1, z: 7
   };
-  
-  const sum = name.toLowerCase().split('').reduce((acc, char) => {
-    return acc + (values[char] || 0);
-  }, 0);
-  
+  const sum = name.toLowerCase().split('').reduce((acc, char) => acc + (values[char] || 0), 0);
   return reduceToSingleDigit(sum);
 }
 
 function calculateVowelNumber(name: string): number {
-  const vowels = 'aeiou';
-  const values: { [key: string]: number } = {
-    a: 1, e: 5, i: 1, o: 7, u: 6
-  };
-  
-  const sum = name.toLowerCase().split('').reduce((acc, char) => {
-    return vowels.includes(char) ? acc + values[char] : acc;
-  }, 0);
-  
+  const values: { [key: string]: number } = { a: 1, e: 5, i: 1, o: 7, u: 6 };
+  const sum = name.toLowerCase().split('').reduce((acc, char) => acc + (values[char] || 0), 0);
   return reduceToSingleDigit(sum);
 }
 
@@ -243,11 +313,7 @@ function calculateConsonantNumber(name: string): number {
     m: 4, n: 5, p: 8, q: 1, r: 2, s: 3, t: 4, v: 6, w: 6,
     x: 5, y: 1, z: 7
   };
-  
-  const sum = name.toLowerCase().split('').reduce((acc, char) => {
-    return !vowels.includes(char) && values[char] ? acc + values[char] : acc;
-  }, 0);
-  
+  const sum = name.toLowerCase().split('').reduce((acc, char) => !vowels.includes(char) && values[char] ? acc + values[char] : acc, 0);
   return reduceToSingleDigit(sum);
 }
 
@@ -270,20 +336,11 @@ function getPlanetMapping(number: number) {
     8: { planet: 'Saturn', deity: 'Shani Dev', color: 'Black/Blue', day: 'Saturday', mantra: 'Om Shanaye Namah', gemstone: 'Blue Sapphire' },
     9: { planet: 'Mars', deity: 'Mangal Dev', color: 'Red', day: 'Tuesday', mantra: 'Om Mangalaya Namah', gemstone: 'Red Coral' }
   };
-  
   return mappings[number] || mappings[1];
 }
 
 async function updateSpiritualJourney(supabase: any, userId: string, action: string) {
-  const xpMap: { [key: string]: number } = {
-    report_generated: 25,
-    mantra_chanted: 5,
-    consultation_done: 50
-  };
-
-  const xp = xpMap[action] || 10;
-
-  // Upsert spiritual journey
+  const xp = 25;
   const { data: journey } = await supabase
     .from('spiritual_journey')
     .select('*')
@@ -293,24 +350,18 @@ async function updateSpiritualJourney(supabase: any, userId: string, action: str
   if (journey) {
     const newXP = journey.experience_points + xp;
     const newLevel = Math.floor(newXP / 100) + 1;
-    
-    await supabase
-      .from('spiritual_journey')
-      .update({
-        experience_points: newXP,
-        level: newLevel,
-        reports_generated: journey.reports_generated + 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId);
+    await supabase.from('spiritual_journey').update({
+      experience_points: newXP,
+      level: newLevel,
+      reports_generated: journey.reports_generated + 1,
+      updated_at: new Date().toISOString()
+    }).eq('user_id', userId);
   } else {
-    await supabase
-      .from('spiritual_journey')
-      .insert({
-        user_id: userId,
-        experience_points: xp,
-        level: 1,
-        reports_generated: 1
-      });
+    await supabase.from('spiritual_journey').insert({
+      user_id: userId,
+      experience_points: xp,
+      level: 1,
+      reports_generated: 1
+    });
   }
 }

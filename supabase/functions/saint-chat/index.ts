@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
@@ -7,7 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Input validation helpers
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function validateUUID(id: string): boolean {
@@ -33,7 +31,6 @@ serve(async (req) => {
   }
 
   try {
-    // Validate request body size (max 100KB)
     const contentLength = req.headers.get('content-length');
     if (contentLength && parseInt(contentLength) > 100000) {
       return new Response(
@@ -44,7 +41,6 @@ serve(async (req) => {
 
     const { message, saintId, conversationHistory = [], userPreferences = {} } = await req.json();
 
-    // Validate required fields
     if (!message || typeof message !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Message is required' }),
@@ -59,7 +55,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate saintId format if it's a UUID (allow 'general' for fallback)
     if (saintId !== 'general' && !validateUUID(saintId)) {
       return new Response(
         JSON.stringify({ error: 'Invalid saint ID format' }),
@@ -67,7 +62,6 @@ serve(async (req) => {
       );
     }
 
-    // Sanitize message content
     const sanitizedMessage = sanitizeInput(message, 2000);
     if (!sanitizedMessage) {
       return new Response(
@@ -76,39 +70,34 @@ serve(async (req) => {
       );
     }
 
-    // Get environment variables
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-
-    if (!openaiApiKey) {
-      console.error('OPENAI_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'Service temporarily unavailable' }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Extract user from JWT for authenticated sessions (optional - chat works without auth)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
     let userId: string | null = null;
     const authHeader = req.headers.get('Authorization');
     
     if (authHeader?.startsWith('Bearer ') && supabaseUrl && supabaseAnonKey) {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } }
       });
-      
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseAuth.auth.getUser();
       userId = user?.id || null;
     }
 
-    // Create service client for database operations
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     console.log('Processing chat request for saint:', saintId, userId ? `(user: ${userId})` : '(anonymous)');
 
-    // Fetch saint information
     const { data: saint, error: saintError } = await supabase
       .from('saints')
       .select('*')
@@ -123,13 +112,9 @@ serve(async (req) => {
       );
     }
 
-    // Get saint's personality and teachings
     const saintPersonality = getSaintPersonality(saint);
-    
-    // Build conversation context
     const systemPrompt = buildSystemPrompt(saint, saintPersonality, userPreferences);
     
-    // Validate and prepare messages for OpenAI
     const validatedHistory = validateConversationHistory(conversationHistory);
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -137,33 +122,37 @@ serve(async (req) => {
       { role: 'user', content: sanitizedMessage }
     ];
 
-    console.log('Calling OpenAI with', messages.length, 'messages');
+    console.log('Calling Lovable AI gateway with', messages.length, 'messages');
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'google/gemini-3-flash-preview',
         messages: messages,
         max_tokens: 800,
         temperature: 0.8,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('Lovable AI gateway error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Service is busy. Please try again in a moment.' }),
+          JSON.stringify({ error: 'Rate limits exceeded, please try again later.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Service credits exhausted. Please try again later.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
@@ -178,7 +167,6 @@ serve(async (req) => {
 
     console.log('Generated response length:', aiResponse.length);
 
-    // Save conversation to database only if user is authenticated
     if (userId) {
       try {
         await supabase
@@ -208,26 +196,19 @@ serve(async (req) => {
           image_url: saint.image_url
         }
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in saint-chat function:', error);
     return new Response(
       JSON.stringify({ error: 'Service temporarily unavailable' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
 
 function getSaintPersonality(saint: any) {
-  const baseTraits = saint.personality_traits || {};
-  
   const saintProfiles: { [key: string]: any } = {
     'Swami Vivekananda': {
       speaking_style: 'Powerful, inspirational, direct, with Western philosophical references',
