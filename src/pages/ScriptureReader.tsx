@@ -369,7 +369,7 @@ const ScriptureReader = () => {
                   </div>
 
                   {/* Reading Tools */}
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <Button
                       variant="outline"
                       size="sm"

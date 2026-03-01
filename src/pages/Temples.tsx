@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -142,46 +143,7 @@ const Temples = () => {
     } catch (error) {
       console.error('Error loading temples:', error);
       
-      // Fallback to sample data if database query fails
-      const fallbackTemples: Temple[] = [
-        {
-          id: "1",
-          name: "Kedarnath Temple",
-          primary_deity: "Shiva",
-          tradition: "Shaivism",
-          location: {
-            address: "Kedarnath, Rudraprayag",
-            city: "Kedarnath",
-            state: "Uttarakhand",
-            country: "India",
-            coordinates: [30.7346, 79.0669]
-          },
-          description: "One of the twelve Jyotirlingas, situated at an altitude of 3,583m in the Himalayas.",
-          history: "Ancient temple believed to be built by Pandavas and later renovated by Adi Shankaracharya.",
-          visiting_hours: {
-            morning: "4:00 AM - 7:00 PM",
-            evening: "4:00 AM - 7:00 PM"
-          },
-          contact_info: {
-            phone: "+91-1364-233727"
-          },
-          live_darshan_url: "https://live.kedarnath.org",
-          darshan_schedule: {
-            morning_aarti: "4:00 AM",
-            evening_aarti: "7:00 PM"
-          },
-          facilities: ["Helicopter Service", "Medical Aid", "Guest House", "Prasadam"],
-          entrance_fee: {
-            general: 0
-          },
-          image_urls: ["/placeholder.svg"],
-          rating: 4.9,
-          verified: true,
-          distance: 5.2
-        }
-      ];
-      
-      setTemples(fallbackTemples);
+      setTemples([]);
     } finally {
       setLoading(false);
     }
@@ -278,27 +240,29 @@ const Temples = () => {
               </div>
             </div>
             
-            <div className="flex gap-2">
-              <select
-                value={selectedTradition}
-                onChange={(e) => setSelectedTradition(e.target.value)}
-                className="px-3 py-2 border border-border rounded-md bg-background"
-              >
-                <option value="all">All Traditions</option>
-                {traditions.map(tradition => (
-                  <option key={tradition} value={tradition}>{tradition}</option>
-                ))}
-              </select>
+            <div className="flex flex-wrap gap-2">
+              <Select value={selectedTradition} onValueChange={setSelectedTradition}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Traditions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Traditions</SelectItem>
+                  {traditions.map(tradition => (
+                    <SelectItem key={tradition} value={tradition}>{tradition}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'distance' | 'rating' | 'name')}
-                className="px-3 py-2 border border-border rounded-md bg-background"
-              >
-                <option value="distance">Sort by Distance</option>
-                <option value="rating">Sort by Rating</option>
-                <option value="name">Sort by Name</option>
-              </select>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'distance' | 'rating' | 'name')}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="distance">Sort by Distance</SelectItem>
+                  <SelectItem value="rating">Sort by Rating</SelectItem>
+                  <SelectItem value="name">Sort by Name</SelectItem>
+                </SelectContent>
+              </Select>
               
               <Button
                 variant="outline"

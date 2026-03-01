@@ -45,6 +45,12 @@ interface CommunityPost {
   updated_at: string;
 }
 
+interface UserProfile {
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+}
+
 const Community = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -56,6 +62,8 @@ const Community = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTag, setFilterTag] = useState<string>('');
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
+  const [totalDevotees, setTotalDevotees] = useState(0);
 
   const availableTags = [
     'devotion', 'experience', 'learning', 'ritual', 'festival', 'pilgrimage',
@@ -85,6 +93,22 @@ const Community = () => {
       })) || [];
 
       setPosts(transformedPosts);
+
+      // Batch query profiles for real user names
+      const uniqueUserIds = [...new Set(transformedPosts.map(p => p.user_id))];
+      if (uniqueUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, name, avatar_url')
+          .in('user_id', uniqueUserIds);
+
+        if (profiles) {
+          const profileMap: Record<string, UserProfile> = {};
+          profiles.forEach(p => { profileMap[p.user_id] = p; });
+          setUserProfiles(profileMap);
+        }
+        setTotalDevotees(uniqueUserIds.length);
+      }
       
     } catch (error) {
       console.error('Error loading community posts:', error);
@@ -150,7 +174,6 @@ const Community = () => {
 
       const newCount = posts[postIndex].likes_count + 1;
 
-      // Persist to database
       const { error } = await supabase
         .from('community_posts')
         .update({ likes_count: newCount })
@@ -217,6 +240,27 @@ const Community = () => {
     }
   };
 
+  const getDisplayName = (userId: string) => {
+    if (userId === user?.id) return 'You';
+    const profile = userProfiles[userId];
+    if (profile?.name) {
+      const parts = profile.name.trim().split(' ');
+      if (parts.length > 1) return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+      return parts[0];
+    }
+    return 'Devotee';
+  };
+
+  const getAvatarUrl = (userId: string) => {
+    return userProfiles[userId]?.avatar_url || undefined;
+  };
+
+  const getAvatarInitial = (userId: string) => {
+    if (userId === user?.id) return user?.email?.charAt(0).toUpperCase() || 'Y';
+    const profile = userProfiles[userId];
+    return profile?.name?.charAt(0).toUpperCase() || '🙏';
+  };
+
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.content.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTag = !filterTag || post.tags.includes(filterTag);
@@ -240,7 +284,6 @@ const Community = () => {
       
       <div className="container mx-auto px-4 py-6 pb-24 md:pb-6">
         <Breadcrumbs className="mb-4" />
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-2">
             Spiritual Community 👥
@@ -251,14 +294,13 @@ const Community = () => {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Create Post */}
             <Card className="card-sacred">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-3 mb-4">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarImage src={getAvatarUrl(user?.id || '')} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {user?.email?.charAt(0).toUpperCase() || 'G'}
                     </AvatarFallback>
@@ -337,7 +379,7 @@ const Community = () => {
                     />
                   </div>
                   <Select value={filterTag || 'all'} onValueChange={(v) => setFilterTag(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="w-[160px]">
+                    <SelectTrigger className="w-full md:w-[160px]">
                       <SelectValue placeholder="All Topics" />
                     </SelectTrigger>
                     <SelectContent>
@@ -356,16 +398,16 @@ const Community = () => {
               {filteredPosts.map((post) => (
                 <Card key={post.id} className="card-sacred hover:shadow-divine transition-all duration-300">
                   <CardContent className="p-6">
-                    {/* User Info */}
                     <div className="flex items-center space-x-3 mb-4">
                       <Avatar className="h-10 w-10">
+                        <AvatarImage src={getAvatarUrl(post.user_id)} />
                         <AvatarFallback className="bg-primary text-primary-foreground">
-                          {post.user_id === user?.id ? (user?.email?.charAt(0).toUpperCase() || 'Y') : '🙏'}
+                          {getAvatarInitial(post.user_id)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <p className="font-semibold text-foreground">
-                          {post.user_id === user?.id ? 'You' : 'Devotee'}
+                          {getDisplayName(post.user_id)}
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center space-x-2">
                           {getPostTypeIcon(post.post_type)}
@@ -380,14 +422,12 @@ const Community = () => {
                       </div>
                     </div>
 
-                    {/* Content */}
                     <div className="mb-4">
                       <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                         {post.content}
                       </p>
                     </div>
 
-                    {/* Tags */}
                     {post.tags && post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-4">
                         {post.tags.map((tag, index) => (
@@ -398,7 +438,6 @@ const Community = () => {
                       </div>
                     )}
 
-                    {/* Actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-border/50">
                       <div className="flex items-center space-x-4">
                         <Button
@@ -459,7 +498,6 @@ const Community = () => {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Community Stats */}
             <Card className="card-sacred">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -468,6 +506,11 @@ const Community = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">{totalDevotees}</div>
+                  <p className="text-sm text-muted-foreground">Active Devotees</p>
+                </div>
+                
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">{posts.length}</div>
                   <p className="text-sm text-muted-foreground">Community Posts</p>
@@ -489,7 +532,6 @@ const Community = () => {
               </CardContent>
             </Card>
 
-            {/* Popular Tags */}
             <Card className="card-sacred">
               <CardHeader>
                 <CardTitle>Popular Topics</CardTitle>
@@ -510,7 +552,6 @@ const Community = () => {
               </CardContent>
             </Card>
 
-            {/* Community Guidelines */}
             <Card className="card-sacred">
               <CardHeader>
                 <CardTitle>Community Guidelines</CardTitle>
