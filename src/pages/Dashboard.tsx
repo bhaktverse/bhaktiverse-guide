@@ -77,6 +77,7 @@ const Dashboard = () => {
   const [bhaktiShorts, setBhaktiShorts] = useState<any[]>([]);
   const [greeting, setGreeting] = useState({ text: "Namaste", icon: "🙏" });
   const [userName, setUserName] = useState("");
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
@@ -115,6 +116,7 @@ const Dashboard = () => {
 
       if (profile) {
         setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
+        setUserAvatarUrl(profile.avatar_url || null);
         
         if (profile.streak_data && typeof profile.streak_data === 'object') {
           const streakData = profile.streak_data as any;
@@ -306,7 +308,7 @@ const Dashboard = () => {
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16 md:h-20 md:w-20 shadow-divine border-4 border-primary/20 ring-4 ring-primary/10">
-                <AvatarImage src="/placeholder.svg" />
+                <AvatarImage src={userAvatarUrl || undefined} />
                 <AvatarFallback className="bg-gradient-temple text-white text-2xl font-bold">
                   {userName.charAt(0).toUpperCase()}
                 </AvatarFallback>
@@ -398,7 +400,7 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                   {quickActions.map((action) => (
                     <Button
                       key={action.path}

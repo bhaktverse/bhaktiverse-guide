@@ -121,13 +121,7 @@ const SaintChat = () => {
         variant: "destructive",
         action: <Button size="sm" variant="outline" onClick={() => sendMessage(msgText)}>Retry</Button>
       });
-      // Add fallback
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'saint',
-        content: `🙏 I'm having trouble connecting right now. Please try again in a moment. In the meantime, reflect on this: "${saint.famous_quotes?.[0] || 'The divine light within you guides all paths.'}"`,
-        timestamp: new Date()
-      }]);
+      // No fallback message — let the user retry via the toast action
     } finally {
       setLoading(false);
     }

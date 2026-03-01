@@ -99,6 +99,48 @@ const Profile = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [readingHistory, setReadingHistory] = useState<any[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Avatar upload handler
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `avatars/${user.id}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('community-media')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from('community-media')
+        .getPublicUrl(filePath);
+
+      const newUrl = publicData.publicUrl;
+
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: newUrl })
+        .eq('user_id', user.id);
+
+      setAvatarUrl(newUrl);
+      toast({
+        title: "Avatar Updated 📷",
+        description: "Your profile picture has been saved."
+      });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload avatar. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -136,6 +178,7 @@ const Profile = () => {
             reminders: true
           }
         });
+        setAvatarUrl(profile.avatar_url || null);
       }
 
       // Load journey
@@ -287,12 +330,24 @@ const Profile = () => {
         <Card className="mb-6 overflow-hidden">
           <div className="bg-gradient-temple h-24 relative">
             <div className="absolute -bottom-12 left-6">
-              <Avatar className="h-24 w-24 border-4 border-background shadow-divine">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback className="bg-gradient-temple text-white text-3xl font-bold">
-                  {profileData.name.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
+                <Avatar className="h-24 w-24 border-4 border-background shadow-divine">
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-gradient-temple text-white text-3xl font-bold">
+                    {profileData.name.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-white text-xs font-medium">📷 Change</span>
+                </div>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+              </div>
             </div>
           </div>
           <CardContent className="pt-16 pb-6">
