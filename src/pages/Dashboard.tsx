@@ -318,8 +318,8 @@ const Dashboard = () => {
                   <Clock className="h-4 w-4" />
                   {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </div>
-                <h1 className="text-2xl md:text-3xl font-bold">
-                  <span className="text-3xl mr-2">{greeting.icon}</span>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+                  <span className="text-2xl sm:text-3xl mr-2">{greeting.icon}</span>
                   <span className="bg-gradient-temple bg-clip-text text-transparent">{greeting.text}</span>
                   <span className="text-foreground">, {userName}!</span>
                 </h1>
@@ -337,14 +337,14 @@ const Dashboard = () => {
             </div>
             
             {/* Quick Stats Card */}
-            <div className="flex items-center gap-6 bg-card/80 backdrop-blur-sm rounded-2xl p-4 shadow-lotus border border-border/50">
-              <div className="text-center px-4 border-r border-border/50">
-                <div className="text-2xl font-bold text-primary">{stats.currentStreak}</div>
-                <div className="text-xs text-muted-foreground">Day Streak 🔥</div>
+            <div className="flex items-center gap-4 sm:gap-6 bg-card/80 backdrop-blur-sm rounded-2xl p-3 sm:p-4 shadow-lotus border border-border/50 w-full md:w-auto">
+              <div className="text-center flex-1 md:flex-none px-2 sm:px-4 border-r border-border/50">
+                <div className="text-xl sm:text-2xl font-bold text-primary">{stats.currentStreak}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Day Streak 🔥</div>
               </div>
-              <div className="text-center px-4">
-                <div className="text-2xl font-bold text-secondary">{overallProgress}%</div>
-                <div className="text-xs text-muted-foreground">Today's Goal</div>
+              <div className="text-center flex-1 md:flex-none px-2 sm:px-4">
+                <div className="text-xl sm:text-2xl font-bold text-secondary">{overallProgress}%</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Today's Goal</div>
               </div>
             </div>
           </div>

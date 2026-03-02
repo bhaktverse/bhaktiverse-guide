@@ -201,13 +201,13 @@ const SpiritualCalendar = () => {
         <Breadcrumbs className="mb-6" />
         {/* Premium Header with Panchang Info */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-4 mb-6 p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-2xl backdrop-blur-sm border border-primary/20">
-            <div className="text-5xl">📅</div>
+          <div className="inline-flex items-center gap-3 sm:gap-4 mb-6 p-4 sm:p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-2xl backdrop-blur-sm border border-primary/20">
+            <div className="text-3xl sm:text-5xl">📅</div>
             <div className="text-left">
-              <h1 className="text-4xl font-bold bg-gradient-temple bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-temple bg-clip-text text-transparent">
                 Hindu Panchang & Calendar
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
