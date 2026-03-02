@@ -175,7 +175,7 @@ const Premium = () => {
           <div className="inline-block">
             <Crown className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-temple bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-temple bg-clip-text text-transparent">
             Elevate Your Spiritual Journey
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">

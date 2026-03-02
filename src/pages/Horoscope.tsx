@@ -127,7 +127,7 @@ const Horoscope = () => {
               दैनिक राशिफल 2026
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-4">
             आज का राशिफल
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">

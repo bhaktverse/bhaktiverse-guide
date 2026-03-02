@@ -237,7 +237,7 @@ const AudioLibrary = () => {
             
             <div className="flex gap-2 flex-wrap">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[140px] bg-background/70">
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[160px] bg-background/70">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -251,7 +251,7 @@ const AudioLibrary = () => {
               </Select>
               
               <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger className="w-[120px] bg-background/70">
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] bg-background/70">
                   <SelectValue placeholder="Language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -287,7 +287,7 @@ const AudioLibrary = () => {
                   {filteredTracks.map((track) => (
                     <div
                       key={track.id}
-                      className={`group flex items-center space-x-4 p-4 rounded-xl hover:bg-background/50 transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/20 hover:shadow-lotus ${
+                      className={`group flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl hover:bg-background/50 transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/20 hover:shadow-lotus ${
                         currentTrack?.id === track.id ? 'bg-primary/10 border-primary/30 shadow-divine' : ''
                       }`}
                       onClick={() => handlePlay(track)}
@@ -322,7 +322,7 @@ const AudioLibrary = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
+                      <div className="hidden sm:flex items-center space-x-3">
                         <Badge 
                           variant="outline" 
                           className={`text-xs ${getCategoryColor(track.category)} transition-colors`}
