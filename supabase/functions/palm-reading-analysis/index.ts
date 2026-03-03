@@ -343,13 +343,45 @@ Return ONLY valid JSON (no markdown, no code blocks):
       "rating": number
     }
   },
+  "handTypeAnalysis": {
+    "classification": "Earth/Air/Water/Fire",
+    "tatvaElement": "Prithvi/Vayu/Jal/Agni",
+    "palmShape": "Square/Rectangle/Conic/Spatulate",
+    "fingerToPalmRatio": "short/equal/long",
+    "personalityProfile": "3-4 sentence Tatva-based personality description",
+    "strengths": ["3-4 key strengths based on hand type"],
+    "challenges": ["2-3 challenges based on hand type"]
+  },
+  "secondaryLines": {
+    "marriageLines": { "count": number, "depth": "deep/medium/faint", "position": "high/middle/low on Mercury mount edge", "interpretation": "Detailed marriage line reading" },
+    "childrenLines": { "count": number, "interpretation": "Children lines reading based on vertical lines on Mercury mount" },
+    "healthLine": { "present": true/false, "description": "Line appearance and path", "interpretation": "Health line reading - Swasthya Rekha analysis" },
+    "travelLines": { "count": number, "description": "Lines on Moon mount edge", "interpretation": "Travel and foreign journey predictions" },
+    "intuitionLine": { "present": true/false, "description": "Semicircular line from Moon to Mercury mount", "interpretation": "Intuitive ability and psychic potential" },
+    "girdleOfVenus": { "present": true/false, "description": "Semicircular line between Heart line and fingers", "interpretation": "Emotional sensitivity and artistic nature" }
+  },
+  "fingerAnalysis": {
+    "thumbFlexibility": { "type": "rigid/flexible/supple", "meaning": "Willpower and adaptability interpretation" },
+    "fingerGaps": { "observed": "Description of gaps between fingers when relaxed", "financialControl": "Financial habits and spending pattern analysis" },
+    "ringVsIndex": { "dominant": "ring/index/equal", "confidenceLevel": "Confidence and leadership vs creativity balance" },
+    "nailShape": { "type": "square/round/almond/fan/narrow", "healthIndicator": "Health tendencies based on nail shape" },
+    "fingerProportions": { "details": "Relative lengths of fingers", "personality": "Personality traits from finger proportions" }
+  },
+  "lineQualityDetails": {
+    "breaks": ["List each observed break with location and meaning, e.g. 'Break in Fate line at age 30-35 area indicates career change'"],
+    "islands": ["List islands observed with meanings, e.g. 'Island on Heart line under Saturn mount suggests emotional stress period'"],
+    "forks": ["List forks with interpretations, e.g. 'Fork at end of Head line indicates dual career potential'"],
+    "crosses": ["List crosses/stars with meanings, e.g. 'Star on Jupiter mount indicates sudden fortune'"],
+    "chains": ["List chained sections, e.g. 'Chain pattern on Heart line beginning suggests early emotional instability'"]
+  },
   "mountAnalysis": {
-    "jupiter": {"strength": "strong/moderate/weak", "observed": "Description", "meaning": "Leadership", "rating": number},
+    "jupiter": {"strength": "strong/moderate/weak", "observed": "Description", "meaning": "Leadership", "rating": number 1-10},
     "saturn": {"strength": "string", "observed": "Description", "meaning": "Responsibility", "rating": number},
     "apollo": {"strength": "string", "observed": "Description", "meaning": "Creativity", "rating": number},
     "mercury": {"strength": "string", "observed": "Description", "meaning": "Communication", "rating": number},
     "venus": {"strength": "string", "observed": "Description", "meaning": "Love", "rating": number},
-    "mars": {"strength": "string", "observed": "Description", "meaning": "Courage", "rating": number},
+    "marsUpper": {"strength": "string", "observed": "Description", "meaning": "Resistance and endurance", "rating": number},
+    "marsLower": {"strength": "string", "observed": "Description", "meaning": "Aggression and courage", "rating": number},
     "moon": {"strength": "string", "observed": "Description", "meaning": "Intuition", "rating": number}
   },
   "specialMarks": ["List of specific marks observed with locations"],
@@ -370,7 +402,6 @@ Return ONLY valid JSON (no markdown, no code blocks):
   "accuracyNotes": "Note about analysis being based on visible features",
   "blessings": "Warm closing blessing with specific encouragement"
 }`;
-
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -405,8 +436,8 @@ Return valid JSON only.`
             ]
           }
         ],
-        max_tokens: 12000,
-        temperature: 0.8, // Slightly higher for more varied responses
+        max_tokens: 16000,
+        temperature: 0.8,
       }),
     });
 

@@ -26,6 +26,37 @@ interface PalmAnalysis {
   categories?: Record<string, any>;
   lineAnalysis?: Record<string, any>;
   mountAnalysis?: Record<string, any>;
+  handTypeAnalysis?: {
+    classification?: string;
+    tatvaElement?: string;
+    palmShape?: string;
+    fingerToPalmRatio?: string;
+    personalityProfile?: string;
+    strengths?: string[];
+    challenges?: string[];
+  };
+  secondaryLines?: {
+    marriageLines?: { count?: number; depth?: string; position?: string; interpretation?: string };
+    childrenLines?: { count?: number; interpretation?: string };
+    healthLine?: { present?: boolean; description?: string; interpretation?: string };
+    travelLines?: { count?: number; description?: string; interpretation?: string };
+    intuitionLine?: { present?: boolean; description?: string; interpretation?: string };
+    girdleOfVenus?: { present?: boolean; description?: string; interpretation?: string };
+  };
+  fingerAnalysis?: {
+    thumbFlexibility?: { type?: string; meaning?: string };
+    fingerGaps?: { observed?: string; financialControl?: string };
+    ringVsIndex?: { dominant?: string; confidenceLevel?: string };
+    nailShape?: { type?: string; healthIndicator?: string };
+    fingerProportions?: { details?: string; personality?: string };
+  };
+  lineQualityDetails?: {
+    breaks?: string[];
+    islands?: string[];
+    forks?: string[];
+    crosses?: string[];
+    chains?: string[];
+  };
   luckyElements?: {
     colors?: string[];
     gemstones?: string[];
@@ -103,8 +134,13 @@ const PLANET_SYMBOLS: Record<string, string> = {
 
 const TOC_SECTIONS = [
   { id: 'summary', label: 'Quick Summary', icon: '📊' },
+  { id: 'reading-score', label: 'Reading Depth Score', icon: '🎯' },
+  { id: 'hand-type', label: 'Hand Type Profile', icon: '🖐️' },
   { id: 'destiny', label: 'Life Path & Destiny', icon: '🧭' },
   { id: 'lines', label: 'Palm Line Analysis', icon: '✋' },
+  { id: 'secondary-lines', label: 'Secondary Lines', icon: '🔍' },
+  { id: 'finger-analysis', label: 'Finger & Nail Analysis', icon: '👆' },
+  { id: 'line-quality', label: 'Line Quality Details', icon: '🔬' },
   { id: 'mounts', label: 'Mount Analysis', icon: '☉' },
   { id: 'predictions', label: 'Category Predictions', icon: '🔮' },
   { id: 'lucky', label: 'Lucky Elements', icon: '💎' },
@@ -338,6 +374,137 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
           </CardContent>
         </Card>
 
+        {/* ===== READING DEPTH SCORE ===== */}
+        <div id="reading-score" className="mb-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            🎯 {showHindi ? 'रीडिंग गहराई स्कोर' : 'Reading Depth Score'}
+          </h2>
+          {(() => {
+            const handTypeScore = analysis.handTypeAnalysis?.classification ? 5 : 0;
+            const majorLineKeys = ['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'];
+            const majorLinesScore = analysis.lineAnalysis 
+              ? majorLineKeys.filter(k => analysis.lineAnalysis?.[k]?.observed).length * 3 
+              : 0;
+            const secLines = analysis.secondaryLines || {};
+            const secondaryScore = [
+              secLines.marriageLines?.interpretation,
+              secLines.childrenLines?.interpretation,
+              secLines.healthLine?.interpretation,
+              secLines.travelLines?.interpretation,
+              secLines.intuitionLine?.interpretation,
+              secLines.girdleOfVenus?.interpretation
+            ].filter(Boolean).length * 3;
+            const mountKeys = analysis.mountAnalysis ? Object.keys(analysis.mountAnalysis).length : 0;
+            const mountScore = Math.min(mountKeys * 1.25, 10);
+            const fingerKeys = analysis.fingerAnalysis || {};
+            const fingerScore = [
+              fingerKeys.thumbFlexibility?.meaning,
+              fingerKeys.fingerGaps?.financialControl,
+              fingerKeys.ringVsIndex?.confidenceLevel,
+              fingerKeys.nailShape?.healthIndicator,
+              fingerKeys.fingerProportions?.personality
+            ].filter(Boolean).length * 2;
+            const total = Math.round(handTypeScore + majorLinesScore + secondaryScore + mountScore + fingerScore);
+            const maxTotal = 60;
+
+            const sections = [
+              { label: showHindi ? 'हस्त प्रकार' : 'Hand Type', score: handTypeScore, max: 5 },
+              { label: showHindi ? 'मुख्य रेखाएं' : 'Major Lines', score: majorLinesScore, max: 15 },
+              { label: showHindi ? 'द्वितीयक रेखाएं' : 'Secondary Lines', score: secondaryScore, max: 18 },
+              { label: showHindi ? 'पर्वत' : 'Mounts', score: Math.round(mountScore), max: 10 },
+              { label: showHindi ? 'उंगलियां' : 'Fingers', score: fingerScore, max: 10 },
+            ];
+
+            return (
+              <Card className="card-sacred overflow-hidden">
+                <div className="h-1 bg-gradient-temple" />
+                <CardContent className="p-6">
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-primary">{total}<span className="text-lg text-muted-foreground">/{maxTotal}</span></div>
+                    <p className="text-sm text-muted-foreground mt-1">{showHindi ? 'रीडिंग फैक्टर्स का पता चला' : 'Reading Factors Detected'}</p>
+                  </div>
+                  <div className="space-y-3">
+                    {sections.map((s, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="text-sm w-32 shrink-0">{s.label}</span>
+                        <div className="flex-1">
+                          <Progress value={(s.score / s.max) * 100} className="h-3" />
+                        </div>
+                        <span className="text-sm font-semibold w-12 text-right">{s.score}/{s.max}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+        </div>
+
+        {/* ===== HAND TYPE PROFILE ===== */}
+        {analysis.handTypeAnalysis && (
+          <Card id="hand-type" className="mb-8 card-sacred overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🖐️ {showHindi ? 'हस्त प्रकार विश्लेषण' : 'Hand Type Profile'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-3xl">
+                      {analysis.handTypeAnalysis.classification === 'Earth' ? '🌍' :
+                       analysis.handTypeAnalysis.classification === 'Air' ? '💨' :
+                       analysis.handTypeAnalysis.classification === 'Water' ? '💧' :
+                       analysis.handTypeAnalysis.classification === 'Fire' ? '🔥' : '🖐️'}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-primary">{analysis.handTypeAnalysis.classification || 'Mixed'} {showHindi ? 'हस्त' : 'Hand'}</h3>
+                      <p className="text-sm text-muted-foreground">{showHindi ? 'तत्व' : 'Tatva'}: {analysis.handTypeAnalysis.tatvaElement || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-muted/30 rounded-lg">
+                      <p className="text-xs text-muted-foreground">{showHindi ? 'हथेली आकार' : 'Palm Shape'}</p>
+                      <p className="font-semibold text-sm">{analysis.handTypeAnalysis.palmShape || 'N/A'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/30 rounded-lg">
+                      <p className="text-xs text-muted-foreground">{showHindi ? 'उंगली अनुपात' : 'Finger Ratio'}</p>
+                      <p className="font-semibold text-sm">{analysis.handTypeAnalysis.fingerToPalmRatio || 'N/A'}</p>
+                    </div>
+                  </div>
+                  {analysis.handTypeAnalysis.personalityProfile && (
+                    <p className="text-sm leading-relaxed">{analysis.handTypeAnalysis.personalityProfile}</p>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {analysis.handTypeAnalysis.strengths && analysis.handTypeAnalysis.strengths.length > 0 && (
+                    <div className="p-4 bg-green-500/5 rounded-xl border border-green-500/20">
+                      <h4 className="font-semibold text-sm text-green-600 dark:text-green-400 mb-2">💪 {showHindi ? 'ताकत' : 'Strengths'}</h4>
+                      <ul className="space-y-1">
+                        {analysis.handTypeAnalysis.strengths.map((s, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {analysis.handTypeAnalysis.challenges && analysis.handTypeAnalysis.challenges.length > 0 && (
+                    <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20">
+                      <h4 className="font-semibold text-sm text-amber-600 dark:text-amber-400 mb-2">⚡ {showHindi ? 'चुनौतियाँ' : 'Challenges'}</h4>
+                      <ul className="space-y-1">
+                        {analysis.handTypeAnalysis.challenges.map((c, i) => (
+                          <li key={i} className="text-sm flex items-start gap-2"><span className="text-amber-500 mt-0.5">!</span>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* AI Guru Greeting */}
         {analysis.greeting && (
           <Card className="mb-8 bg-gradient-to-r from-primary/5 via-card to-secondary/5 border-2 border-primary/20 shadow-divine overflow-hidden">
@@ -471,6 +638,187 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
                     </div>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ===== SECONDARY LINES ===== */}
+        {analysis.secondaryLines && (
+          <Card id="secondary-lines" className="mb-8 card-sacred overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🔍 {showHindi ? 'द्वितीयक रेखा विश्लेषण' : 'Secondary Lines Analysis'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
+                {analysis.secondaryLines.marriageLines && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Heart className="h-4 w-4 text-pink-500" />
+                      <h4 className="font-semibold text-sm">{showHindi ? 'विवाह रेखा' : 'Marriage Lines'}</h4>
+                      <Badge variant="outline" className="ml-auto">{showHindi ? 'संख्या' : 'Count'}: {analysis.secondaryLines.marriageLines.count || 0}</Badge>
+                    </div>
+                    {analysis.secondaryLines.marriageLines.depth && <p className="text-xs text-muted-foreground mb-1">{showHindi ? 'गहराई' : 'Depth'}: {analysis.secondaryLines.marriageLines.depth}</p>}
+                    {analysis.secondaryLines.marriageLines.interpretation && <p className="text-sm">{analysis.secondaryLines.marriageLines.interpretation}</p>}
+                  </div>
+                )}
+                {analysis.secondaryLines.childrenLines && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-4 w-4 text-blue-500" />
+                      <h4 className="font-semibold text-sm">{showHindi ? 'संतान रेखा' : 'Children Lines'}</h4>
+                      <Badge variant="outline" className="ml-auto">{showHindi ? 'संख्या' : 'Count'}: {analysis.secondaryLines.childrenLines.count || 0}</Badge>
+                    </div>
+                    {analysis.secondaryLines.childrenLines.interpretation && <p className="text-sm">{analysis.secondaryLines.childrenLines.interpretation}</p>}
+                  </div>
+                )}
+                {analysis.secondaryLines.healthLine && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className="h-4 w-4 text-green-500" />
+                      <h4 className="font-semibold text-sm">{showHindi ? 'स्वास्थ्य रेखा' : 'Health Line'}</h4>
+                      <Badge variant="outline" className={`ml-auto ${analysis.secondaryLines.healthLine.present ? 'bg-green-500/10 text-green-500' : 'bg-muted'}`}>
+                        {analysis.secondaryLines.healthLine.present ? (showHindi ? 'उपस्थित' : 'Present') : (showHindi ? 'अनुपस्थित' : 'Absent')}
+                      </Badge>
+                    </div>
+                    {analysis.secondaryLines.healthLine.description && <p className="text-xs text-muted-foreground mb-1">{analysis.secondaryLines.healthLine.description}</p>}
+                    {analysis.secondaryLines.healthLine.interpretation && <p className="text-sm">{analysis.secondaryLines.healthLine.interpretation}</p>}
+                  </div>
+                )}
+                {analysis.secondaryLines.travelLines && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Plane className="h-4 w-4 text-teal-500" />
+                      <h4 className="font-semibold text-sm">{showHindi ? 'यात्रा रेखा' : 'Travel Lines'}</h4>
+                      <Badge variant="outline" className="ml-auto">{showHindi ? 'संख्या' : 'Count'}: {analysis.secondaryLines.travelLines.count || 0}</Badge>
+                    </div>
+                    {analysis.secondaryLines.travelLines.interpretation && <p className="text-sm">{analysis.secondaryLines.travelLines.interpretation}</p>}
+                  </div>
+                )}
+                {analysis.secondaryLines.intuitionLine && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Eye className="h-4 w-4 text-indigo-500" />
+                      <h4 className="font-semibold text-sm">{showHindi ? 'अंतर्ज्ञान रेखा' : 'Intuition Line'}</h4>
+                      <Badge variant="outline" className={`ml-auto ${analysis.secondaryLines.intuitionLine.present ? 'bg-indigo-500/10 text-indigo-500' : 'bg-muted'}`}>
+                        {analysis.secondaryLines.intuitionLine.present ? (showHindi ? 'उपस्थित' : 'Present') : (showHindi ? 'अनुपस्थित' : 'Absent')}
+                      </Badge>
+                    </div>
+                    {analysis.secondaryLines.intuitionLine.interpretation && <p className="text-sm">{analysis.secondaryLines.intuitionLine.interpretation}</p>}
+                  </div>
+                )}
+                {analysis.secondaryLines.girdleOfVenus && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="h-4 w-4 text-pink-400" />
+                      <h4 className="font-semibold text-sm">{showHindi ? 'शुक्र मेखला' : 'Girdle of Venus'}</h4>
+                      <Badge variant="outline" className={`ml-auto ${analysis.secondaryLines.girdleOfVenus.present ? 'bg-pink-500/10 text-pink-500' : 'bg-muted'}`}>
+                        {analysis.secondaryLines.girdleOfVenus.present ? (showHindi ? 'उपस्थित' : 'Present') : (showHindi ? 'अनुपस्थित' : 'Absent')}
+                      </Badge>
+                    </div>
+                    {analysis.secondaryLines.girdleOfVenus.interpretation && <p className="text-sm">{analysis.secondaryLines.girdleOfVenus.interpretation}</p>}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ===== FINGER & NAIL ANALYSIS ===== */}
+        {analysis.fingerAnalysis && (
+          <Card id="finger-analysis" className="mb-8 card-sacred overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                👆 {showHindi ? 'अंगुली एवं नख विश्लेषण' : 'Finger & Nail Analysis'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {analysis.fingerAnalysis.thumbFlexibility && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <h4 className="font-semibold text-sm mb-1">👍 {showHindi ? 'अंगूठे का लचीलापन' : 'Thumb Flexibility'}</h4>
+                    <Badge variant="secondary" className="mb-2">{analysis.fingerAnalysis.thumbFlexibility.type}</Badge>
+                    {analysis.fingerAnalysis.thumbFlexibility.meaning && <p className="text-sm text-muted-foreground">{analysis.fingerAnalysis.thumbFlexibility.meaning}</p>}
+                  </div>
+                )}
+                {analysis.fingerAnalysis.fingerGaps && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <h4 className="font-semibold text-sm mb-1">🤚 {showHindi ? 'उंगलियों के बीच दूरी' : 'Finger Gaps'}</h4>
+                    {analysis.fingerAnalysis.fingerGaps.observed && <p className="text-xs text-muted-foreground mb-1">{analysis.fingerAnalysis.fingerGaps.observed}</p>}
+                    {analysis.fingerAnalysis.fingerGaps.financialControl && <p className="text-sm">{analysis.fingerAnalysis.fingerGaps.financialControl}</p>}
+                  </div>
+                )}
+                {analysis.fingerAnalysis.ringVsIndex && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <h4 className="font-semibold text-sm mb-1">💪 {showHindi ? 'अनामिका vs तर्जनी' : 'Ring vs Index Finger'}</h4>
+                    <Badge variant="secondary" className="mb-2">{showHindi ? 'प्रमुख' : 'Dominant'}: {analysis.fingerAnalysis.ringVsIndex.dominant}</Badge>
+                    {analysis.fingerAnalysis.ringVsIndex.confidenceLevel && <p className="text-sm text-muted-foreground">{analysis.fingerAnalysis.ringVsIndex.confidenceLevel}</p>}
+                  </div>
+                )}
+                {analysis.fingerAnalysis.nailShape && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50">
+                    <h4 className="font-semibold text-sm mb-1">💅 {showHindi ? 'नख आकार' : 'Nail Shape'}</h4>
+                    <Badge variant="secondary" className="mb-2">{analysis.fingerAnalysis.nailShape.type}</Badge>
+                    {analysis.fingerAnalysis.nailShape.healthIndicator && <p className="text-sm text-muted-foreground">{analysis.fingerAnalysis.nailShape.healthIndicator}</p>}
+                  </div>
+                )}
+                {analysis.fingerAnalysis.fingerProportions && (
+                  <div className="p-4 bg-card/50 rounded-xl border border-border/50 md:col-span-2">
+                    <h4 className="font-semibold text-sm mb-1">📏 {showHindi ? 'उंगली अनुपात' : 'Finger Proportions'}</h4>
+                    {analysis.fingerAnalysis.fingerProportions.details && <p className="text-xs text-muted-foreground mb-1">{analysis.fingerAnalysis.fingerProportions.details}</p>}
+                    {analysis.fingerAnalysis.fingerProportions.personality && <p className="text-sm">{analysis.fingerAnalysis.fingerProportions.personality}</p>}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ===== LINE QUALITY DETAILS ===== */}
+        {analysis.lineQualityDetails && (
+          <Card id="line-quality" className="mb-8 card-sacred overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-rose-500 to-violet-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🔬 {showHindi ? 'रेखा गुणवत्ता विवरण' : 'Line Quality Details'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {analysis.lineQualityDetails.breaks && analysis.lineQualityDetails.breaks.length > 0 && (
+                  <div className="p-4 bg-red-500/5 rounded-xl border border-red-500/20">
+                    <h4 className="font-semibold text-sm text-red-600 dark:text-red-400 mb-2">⚡ {showHindi ? 'टूट (Breaks)' : 'Line Breaks'}</h4>
+                    <ul className="space-y-1">{analysis.lineQualityDetails.breaks.map((b, i) => <li key={i} className="text-sm flex items-start gap-2"><span className="text-red-400 mt-0.5">•</span>{b}</li>)}</ul>
+                  </div>
+                )}
+                {analysis.lineQualityDetails.islands && analysis.lineQualityDetails.islands.length > 0 && (
+                  <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20">
+                    <h4 className="font-semibold text-sm text-amber-600 dark:text-amber-400 mb-2">🏝️ {showHindi ? 'द्वीप (Islands)' : 'Islands'}</h4>
+                    <ul className="space-y-1">{analysis.lineQualityDetails.islands.map((b, i) => <li key={i} className="text-sm flex items-start gap-2"><span className="text-amber-400 mt-0.5">•</span>{b}</li>)}</ul>
+                  </div>
+                )}
+                {analysis.lineQualityDetails.forks && analysis.lineQualityDetails.forks.length > 0 && (
+                  <div className="p-4 bg-green-500/5 rounded-xl border border-green-500/20">
+                    <h4 className="font-semibold text-sm text-green-600 dark:text-green-400 mb-2">🍴 {showHindi ? 'कांटे (Forks)' : 'Forks'}</h4>
+                    <ul className="space-y-1">{analysis.lineQualityDetails.forks.map((b, i) => <li key={i} className="text-sm flex items-start gap-2"><span className="text-green-400 mt-0.5">•</span>{b}</li>)}</ul>
+                  </div>
+                )}
+                {analysis.lineQualityDetails.crosses && analysis.lineQualityDetails.crosses.length > 0 && (
+                  <div className="p-4 bg-purple-500/5 rounded-xl border border-purple-500/20">
+                    <h4 className="font-semibold text-sm text-purple-600 dark:text-purple-400 mb-2">✚ {showHindi ? 'क्रॉस/तारे' : 'Crosses & Stars'}</h4>
+                    <ul className="space-y-1">{analysis.lineQualityDetails.crosses.map((b, i) => <li key={i} className="text-sm flex items-start gap-2"><span className="text-purple-400 mt-0.5">•</span>{b}</li>)}</ul>
+                  </div>
+                )}
+                {analysis.lineQualityDetails.chains && analysis.lineQualityDetails.chains.length > 0 && (
+                  <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                    <h4 className="font-semibold text-sm text-blue-600 dark:text-blue-400 mb-2">🔗 {showHindi ? 'श्रृंखला (Chains)' : 'Chains'}</h4>
+                    <ul className="space-y-1">{analysis.lineQualityDetails.chains.map((b, i) => <li key={i} className="text-sm flex items-start gap-2"><span className="text-blue-400 mt-0.5">•</span>{b}</li>)}</ul>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
