@@ -166,12 +166,12 @@ const FreePalmReadingSummary = ({
                 className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
               >
                 <Crown className="h-4 w-4" />
-                Get Full Premium Reading
+                Unlock Detailed Destiny Mapping
                 <ChevronRight className="h-4 w-4" />
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Includes 7 category deep-dives, voice narration, PDF report & more
+                Your palm reveals deeper karmic patterns — unlock 60-point expert analysis, voice narration, PDF report & more
               </p>
             </div>
           )}

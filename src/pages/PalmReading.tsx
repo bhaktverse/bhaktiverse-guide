@@ -262,8 +262,38 @@ const PalmReading = () => {
   const saveToHistory = async (palmAnalysis: PalmAnalysis, imageData: string) => {
     if (!user) return;
     try {
+      let palmImageUrl: string | null = null;
+
+      // Upload full image to community-media bucket
+      try {
+        const base64Data = imageData.split(',')[1];
+        if (base64Data) {
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+          const filePath = `palm-readings/${user.id}/${Date.now()}.jpg`;
+
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('community-media')
+            .upload(filePath, blob, { contentType: 'image/jpeg', upsert: false });
+
+          if (uploadError) {
+            console.error('Image upload error:', uploadError);
+          } else {
+            const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(filePath);
+            palmImageUrl = urlData?.publicUrl || null;
+          }
+        }
+      } catch (uploadErr) {
+        console.error('Image upload failed, saving without image:', uploadErr);
+      }
+
       const { error } = await supabase.from('palm_reading_history' as never).insert({
-        user_id: user.id, palm_image_url: imageData.substring(0, 500),
+        user_id: user.id, palm_image_url: palmImageUrl,
         language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis
       } as never);
       if (error) console.error('Save error:', error);
