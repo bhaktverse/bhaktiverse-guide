@@ -434,6 +434,9 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
                       </div>
                     ))}
                   </div>
+                  <p className="text-xs text-muted-foreground text-center mt-4 italic">
+                    {showHindi ? 'रीडिंग गहराई विश्लेषणात्मक कवरेज को मापती है — अच्छे या बुरे भाग्य को नहीं।' : 'Reading depth measures analytical coverage — not good or bad fortune.'}
+                  </p>
                 </CardContent>
               </Card>
             );
