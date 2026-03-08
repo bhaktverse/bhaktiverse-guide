@@ -414,7 +414,7 @@ const Dashboard = () => {
             <CardContent className="p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-3xl shadow-divine">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-2xl sm:text-3xl shadow-divine flex-shrink-0">
                     🙏
                   </div>
                   <div>
