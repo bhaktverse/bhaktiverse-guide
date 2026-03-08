@@ -68,7 +68,7 @@ const NotificationCenter = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = async (id: string) => {
-    await (supabase as any).from('notifications').update({ read: true }).eq('id', id);
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
