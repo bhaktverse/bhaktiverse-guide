@@ -514,7 +514,7 @@ const PalmReading = () => {
     setGeneratingPdf(true);
     try {
       await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob, undefined, lastSavedReadingId || undefined);
-      toast({ title: "📄 Report Downloaded", description: "Your beautiful PDF report has been saved" });
+      toast.success("📄 Report Downloaded — Your beautiful PDF report has been saved");
     } catch (error) {
       console.error('PDF generation error:', error);
       toast({ title: "Download failed", description: "Could not generate report. Please try again.", variant: "destructive" });
