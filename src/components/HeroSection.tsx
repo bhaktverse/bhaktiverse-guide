@@ -86,7 +86,7 @@ const HeroSection = () => {
           {/* Main Hero Content */}
           <div className="animate-lotus-bloom">
             <div className="relative inline-block mb-8">
-              <div className="text-7xl md:text-8xl animate-om-pulse">🕉️</div>
+              <div className="text-5xl md:text-7xl lg:text-8xl animate-om-pulse">🕉️</div>
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl -z-10" />
             </div>
             
