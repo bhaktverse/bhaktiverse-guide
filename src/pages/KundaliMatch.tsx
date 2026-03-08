@@ -93,15 +93,16 @@ const KundaliMatch = () => {
     setLoading(true);
     setResult(null);
     setAiAnalysis('');
+    setUsedFallback(false);
 
     try {
-      // Call edge function for detailed analysis
       const { data, error } = await supabase.functions.invoke('kundali-match', {
         body: {
           partner1: {
             name: partner1.name,
             dob: partner1.dob,
             timeOfBirth: partner1.timeOfBirth,
+            placeOfBirth: partner1.placeOfBirth,
             rashi: partner1.rashi.name,
             rashiHindi: partner1.rashi.hindiName
           },
@@ -109,6 +110,7 @@ const KundaliMatch = () => {
             name: partner2.name,
             dob: partner2.dob,
             timeOfBirth: partner2.timeOfBirth,
+            placeOfBirth: partner2.placeOfBirth,
             rashi: partner2.rashi.name,
             rashiHindi: partner2.rashi.hindiName
           }
@@ -119,19 +121,25 @@ const KundaliMatch = () => {
 
       if (data?.gunMilan) {
         setResult(data.gunMilan);
-        setAiAnalysis(data.analysis || '');
-        toast.success("🎉 कुंडली मिलान पूर्ण! / Kundali Match Complete!");
+        if (data.analysis) {
+          setAiAnalysis(data.analysis);
+          toast.success("🎉 कुंडली मिलान पूर्ण! AI विश्लेषण सहित");
+        } else {
+          setUsedFallback(true);
+          toast.success("कुंडली मिलान पूर्ण! (बेसिक गणना)");
+        }
       } else {
-        // Fallback to local calculation
         const gunMilan = calculateGunMilan(partner1.rashi, partner2.rashi);
         setResult(gunMilan);
+        setUsedFallback(true);
+        toast.info("बेसिक गुण मिलान गणना दिखाई जा रही है।");
       }
     } catch (error) {
       console.error('Kundali match error:', error);
-      // Fallback to local calculation
       const gunMilan = calculateGunMilan(partner1.rashi!, partner2.rashi!);
       setResult(gunMilan);
-      toast.success("कुंडली मिलान पूर्ण!");
+      setUsedFallback(true);
+      toast.info("⚠️ AI अनुपलब्ध — बेसिक गुण मिलान गणना दिखाई जा रही है।");
     } finally {
       setLoading(false);
     }
