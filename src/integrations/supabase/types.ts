@@ -691,6 +691,7 @@ export type Database = {
           analysis: Json
           created_at: string | null
           id: string
+          is_shared: boolean | null
           language: string | null
           palm_image_url: string | null
           palm_type: string | null
@@ -702,6 +703,7 @@ export type Database = {
           analysis: Json
           created_at?: string | null
           id?: string
+          is_shared?: boolean | null
           language?: string | null
           palm_image_url?: string | null
           palm_type?: string | null
@@ -713,6 +715,7 @@ export type Database = {
           analysis?: Json
           created_at?: string | null
           id?: string
+          is_shared?: boolean | null
           language?: string | null
           palm_image_url?: string | null
           palm_type?: string | null

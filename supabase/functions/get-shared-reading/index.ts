@@ -21,15 +21,26 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(readingId)) {
+      return new Response(JSON.stringify({ error: 'Invalid reading ID' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Only return readings that are explicitly shared — omit palm_image_url to protect biometrics
     const { data, error } = await supabase
       .from('palm_reading_history')
-      .select('id, analysis, language, palm_type, palm_image_url, created_at')
+      .select('id, analysis, language, palm_type, created_at')
       .eq('id', readingId)
+      .eq('is_shared', true)
       .single()
 
     if (error || !data) {
