@@ -517,7 +517,7 @@ const PalmReading = () => {
       toast.success("📄 Report Downloaded — Your beautiful PDF report has been saved");
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast({ title: "Download failed", description: "Could not generate report. Please try again.", variant: "destructive" });
+      toast.error("Could not generate report. Please try again.");
     } finally { setGeneratingPdf(false); }
   };
 
