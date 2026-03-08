@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import ScrollToTop from '@/components/ScrollToTop';
@@ -20,17 +19,15 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { toast } from 'sonner';
 import { 
   Play, 
-  Pause, 
   Search, 
-  Filter,
   Heart,
   Download,
   Music,
-  ArrowLeft,
   Clock,
   Users,
   Star,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 
 interface AudioTrack {
@@ -64,18 +61,14 @@ const AudioLibrary = () => {
   const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
   const { isFavorited, toggleFavorite } = useFavorites('audio');
 
-  useEffect(() => {
-    loadTracks();
-  }, []);
+  useEffect(() => { loadTracks(); }, []);
 
   const loadTracks = async () => {
     try {
       setLoading(true);
-
       const normalizeUrl = (url: string): string => {
         if (!url) return url;
         if (/^https?:\/\//i.test(url)) return url;
-        // Treat bare paths as coming from the public storage buckets
         let bucket = 'audio-library';
         let path = url;
         const parts = url.split('/');
@@ -86,17 +79,14 @@ const AudioLibrary = () => {
         const { data } = supabase.storage.from(bucket).getPublicUrl(path);
         return data.publicUrl;
       };
-      
-      // Load audio tracks from audio_library table
+
       const { data: audioTracks, error } = await supabase
         .from('audio_library')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
 
-      // Transform database data to AudioTrack format
-      const tracks: AudioTrack[] = audioTracks?.map(track => ({
+      const mapped: AudioTrack[] = audioTracks?.map(track => ({
         id: track.id,
         title: track.title,
         artist: track.artist || 'Unknown Artist',
@@ -111,16 +101,10 @@ const AudioLibrary = () => {
         rating: track.rating || 0
       })) || [];
 
-      setTracks(tracks);
-      setPlaylist(tracks);
-      
-      // Show helpful message if no audio files are working
-      if (tracks.length > 0) {
-        console.log(`✅ Loaded ${tracks.length} audio tracks`);
-      }
-      
+      setTracks(mapped);
+      setPlaylist(mapped);
     } catch (error) {
-      console.error('❌ Error loading tracks:', error);
+      console.error('Error loading tracks:', error);
       setTracks([]);
       setPlaylist([]);
     } finally {
@@ -129,9 +113,9 @@ const AudioLibrary = () => {
   };
 
   const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   const getCategoryIcon = (category: string) => {
@@ -160,17 +144,11 @@ const AudioLibrary = () => {
     }
   };
 
-  const handlePlay = (track: AudioTrack) => {
-    setCurrentTrack(track);
-  };
-
-  const handleTrackChange = (track: AudioTrack) => {
-    setCurrentTrack(track);
-  };
+  const handlePlay = (track: AudioTrack) => setCurrentTrack(track);
+  const handleTrackChange = (track: AudioTrack) => setCurrentTrack(track);
 
   const handlePlaylistShuffle = () => {
-    const shuffled = [...playlist].sort(() => Math.random() - 0.5);
-    setPlaylist(shuffled);
+    setPlaylist(prev => [...prev].sort(() => Math.random() - 0.5));
   };
 
   const handleDownload = async (track: AudioTrack, e: React.MouseEvent) => {
@@ -182,18 +160,20 @@ const AudioLibrary = () => {
 
   const handlePlayPlaylist = (playlistTracks: AudioTrack[]) => {
     setPlaylist(playlistTracks);
-    if (playlistTracks.length > 0) {
-      setCurrentTrack(playlistTracks[0]);
-    }
+    if (playlistTracks.length > 0) setCurrentTrack(playlistTracks[0]);
+  };
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSelectedLanguage('all');
   };
 
   const filteredTracks = tracks.filter(track => {
     const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (track.artist && track.artist.toLowerCase().includes(searchQuery.toLowerCase()));
-    
     const matchesCategory = !selectedCategory || selectedCategory === 'all' || track.category === selectedCategory;
     const matchesLanguage = !selectedLanguage || selectedLanguage === 'all' || track.language === selectedLanguage;
-    
     return matchesSearch && matchesCategory && matchesLanguage;
   });
 
@@ -215,21 +195,23 @@ const AudioLibrary = () => {
     <div className="min-h-screen bg-gradient-peace">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-6 pb-24 md:pb-6">
-        <Breadcrumbs className="mb-6" />
+      {/* Extra bottom padding on mobile for mini-player + bottom nav */}
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-36 sm:pb-6">
+        <Breadcrumbs className="mb-4 sm:mb-6" />
+
         {/* Header */}
-        <div className="mb-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
+        <div className="mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent">
               Spiritual Audio Library 🎵
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Immerse yourself in divine sounds and sacred chanting
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          {/* Search */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -239,117 +221,142 @@ const AudioLibrary = () => {
                 className="pl-10 bg-background/70 border-border/50"
               />
             </div>
-            
-            <div className="flex gap-2 flex-wrap">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[160px] bg-background/70">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {getCategoryIcon(category)} {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
+            <div className="flex gap-2">
               <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                 <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] bg-background/70">
                   <SelectValue placeholder="Language" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Languages</SelectItem>
-                  {languages.map((language) => (
-                    <SelectItem key={language} value={language}>
-                      {language === 'hindi' ? 'Hindi' : 
-                       language === 'sanskrit' ? 'Sanskrit' : 
-                       language === 'english' ? 'English' : language}
+                  {languages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang === 'hindi' ? 'Hindi' : lang === 'sanskrit' ? 'Sanskrit' : lang === 'english' ? 'English' : lang}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Category Chips - horizontal scroll */}
+          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-thin snap-x -mx-1 px-1">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors ${
+                selectedCategory === 'all'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
+              }`}
+            >
+              All
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap ${
+                  selectedCategory === cat
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
+                }`}
+              >
+                {getCategoryIcon(cat)} {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Track List */}
           <div className="lg:col-span-2">
             <Card className="bg-card-sacred/80 backdrop-blur-md border-border/50 shadow-divine">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+              <CardHeader className="p-3 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Music className="h-5 w-5 text-primary" />
                   <span>Audio Tracks ({filteredTracks.length})</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs sm:text-sm">
                   Discover sacred sounds and spiritual teachings
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
-                  {filteredTracks.map((track) => (
-                    <div
-                      key={track.id}
-                      className={`group flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-xl hover:bg-background/50 transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/20 hover:shadow-lotus ${
-                        currentTrack?.id === track.id ? 'bg-primary/10 border-primary/30 shadow-divine' : ''
-                      }`}
-                      onClick={() => handlePlay(track)}
-                    >
-                      <Button
-                        size="sm"
-                        variant={currentTrack?.id === track.id ? "default" : "outline"}
-                        className="flex-shrink-0 shadow-divine group-hover:shadow-glow transition-all duration-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlay(track);
-                        }}
+              <CardContent className="p-2 sm:p-6 pt-0">
+                <div className="space-y-2 sm:space-y-3 max-h-[calc(100vh-340px)] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                  {filteredTracks.map((track) => {
+                    const isActive = currentTrack?.id === track.id;
+                    return (
+                      <div
+                        key={track.id}
+                        className={`group flex items-center gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-xl hover:bg-background/50 transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/20 hover:shadow-lotus ${
+                          isActive ? 'bg-primary/10 border-primary/30 shadow-divine' : ''
+                        }`}
+                        onClick={() => handlePlay(track)}
                       >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-2xl">{getCategoryIcon(track.category)}</span>
-                          <h4 className="font-semibold truncate text-foreground group-hover:text-primary transition-colors">
-                            {track.title}
-                          </h4>
+                        {/* Play / Equalizer */}
+                        <div className="flex-shrink-0 relative">
+                          {isActive ? (
+                            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-primary/20 flex items-center justify-center gap-[2px]">
+                              <span className="equalizer-bar" style={{ height: 10 }} />
+                              <span className="equalizer-bar" style={{ height: 14 }} />
+                              <span className="equalizer-bar" style={{ height: 8 }} />
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 sm:h-9 sm:w-9 p-0 shadow-divine group-hover:shadow-glow"
+                              onClick={(e) => { e.stopPropagation(); handlePlay(track); }}
+                            >
+                              <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </Button>
+                          )}
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          <span>{track.artist}</span>
-                          <span>•</span>
-                          <Clock className="h-3 w-3" />
-                          <span>{formatDuration(track.duration)}</span>
-                          <span>•</span>
-                          <Users className="h-3 w-3" />
-                          <span>{track.download_count || 0}</span>
-                        </div>
-                      </div>
-
-                      <div className="hidden sm:flex items-center space-x-3">
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${getCategoryColor(track.category)} transition-colors`}
-                        >
-                          {track.category}
-                        </Badge>
                         
-                        {track.rating && (
-                          <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                            <Star className="h-3 w-3 fill-current text-yellow-500" />
-                            <span>{track.rating}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-lg sm:text-2xl leading-none">{getCategoryIcon(track.category)}</span>
+                            <h4 className="font-semibold truncate text-sm sm:text-base text-foreground group-hover:text-primary transition-colors">
+                              {track.title}
+                            </h4>
                           </div>
-                        )}
-                        
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); toggleFavorite(track.id, 'audio'); }}
-                            className={isFavorited(track.id) ? 'text-destructive' : ''}>
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground flex-wrap">
+                            <span className="truncate max-w-[100px] sm:max-w-none">{track.artist}</span>
+                            <span>•</span>
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            <span>{formatDuration(track.duration)}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <Users className="h-3 w-3 hidden sm:block flex-shrink-0" />
+                            <span className="hidden sm:inline">{track.download_count || 0}</span>
+                          </div>
+                        </div>
+
+                        {/* Actions - always visible */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] sm:text-xs hidden sm:inline-flex ${getCategoryColor(track.category)}`}
+                          >
+                            {track.category}
+                          </Badge>
+                          
+                          {track.rating !== undefined && track.rating > 0 && (
+                            <div className="hidden sm:flex items-center gap-0.5 text-sm text-muted-foreground">
+                              <Star className="h-3 w-3 fill-current text-yellow-500" />
+                              <span>{track.rating}</span>
+                            </div>
+                          )}
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className={`h-8 w-8 ${isFavorited(track.id) ? 'text-destructive' : 'text-muted-foreground'}`}
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(track.id, 'audio'); }}
+                          >
                             <Heart className={`h-4 w-4 ${isFavorited(track.id) ? 'fill-current' : ''}`} />
                           </Button>
                           <Button 
                             variant="ghost" 
-                            size="sm"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground"
                             onClick={(e) => handleDownload(track, e)}
                             disabled={downloadingTrackId === track.id}
                           >
@@ -361,8 +368,8 @@ const AudioLibrary = () => {
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   
                   {filteredTracks.length === 0 && (
                     <div className="text-center py-12">
@@ -370,11 +377,17 @@ const AudioLibrary = () => {
                       <h3 className="text-lg font-semibold mb-2">
                         {tracks.length === 0 ? 'No audio tracks available yet' : 'No tracks found'}
                       </h3>
-                      <p className="text-muted-foreground">
+                      <p className="text-muted-foreground mb-4">
                         {tracks.length === 0 
                           ? 'Audio will appear once uploaded via the admin panel.' 
                           : 'Try adjusting your search or filters'}
                       </p>
+                      {tracks.length > 0 && (
+                        <Button variant="outline" onClick={resetFilters} className="gap-2">
+                          <X className="h-4 w-4" />
+                          Reset Filters
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -382,13 +395,15 @@ const AudioLibrary = () => {
             </Card>
           </div>
 
-          {/* Audio Player & Playlist Manager */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Audio Player & Playlist Manager - on desktop only, mobile uses fixed mini-player */}
+          <div className="hidden lg:block lg:col-span-1 space-y-6">
             <EnhancedAudioPlayer
               track={currentTrack}
               playlist={playlist}
               onTrackChange={handleTrackChange}
               onPlaylistShuffle={handlePlaylistShuffle}
+              isFavorited={isFavorited}
+              toggleFavorite={toggleFavorite}
             />
             
             <PlaylistManager 
@@ -397,8 +412,28 @@ const AudioLibrary = () => {
             />
           </div>
         </div>
+
+        {/* Mobile-only PlaylistManager below track list */}
+        <div className="lg:hidden mt-6">
+          <PlaylistManager 
+            allTracks={tracks}
+            onPlayPlaylist={handlePlayPlaylist}
+          />
+        </div>
       </div>
       
+      {/* Mobile mini-player (rendered outside grid) */}
+      <div className="lg:hidden">
+        <EnhancedAudioPlayer
+          track={currentTrack}
+          playlist={playlist}
+          onTrackChange={handleTrackChange}
+          onPlaylistShuffle={handlePlaylistShuffle}
+          isFavorited={isFavorited}
+          toggleFavorite={toggleFavorite}
+        />
+      </div>
+
       <ScrollToTop />
       <MobileBottomNav />
     </div>
