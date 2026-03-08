@@ -734,9 +734,9 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
-                <div className="text-center p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
-                  <div className="text-4xl font-bold text-amber-500">{stats.currentStreak}</div>
-                  <div className="text-sm text-muted-foreground">Day Streak 🔥</div>
+                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
+                  <div className="text-2xl sm:text-4xl font-bold text-amber-500">{stats.currentStreak}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Day Streak 🔥</div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
