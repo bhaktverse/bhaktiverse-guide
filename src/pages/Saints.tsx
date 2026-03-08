@@ -34,6 +34,7 @@ const Saints = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTradition, setSelectedTradition] = useState<string>('');
+  const { isFavorited, toggleFavorite } = useFavorites('saint');
 
   useEffect(() => { loadSaints(); }, []);
 
