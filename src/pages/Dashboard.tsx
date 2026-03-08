@@ -292,6 +292,10 @@ const Dashboard = () => {
     );
   }
 
+  if (showOnboarding) {
+    return <OnboardingWizard onComplete={() => setShowOnboarding(false)} />;
+  }
+
   const mantrasProgress = Math.min((stats.totalMantras / stats.dailyGoals.mantras) * 100, 100);
   const readingProgress = Math.min((stats.readingMinutes / stats.dailyGoals.reading_minutes) * 100, 100);
   const meditationProgress = Math.min((stats.meditationMinutes / stats.dailyGoals.meditation_minutes) * 100, 100);
