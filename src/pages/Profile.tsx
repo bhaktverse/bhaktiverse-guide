@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +72,19 @@ const SPIRITUAL_LEVELS = [
   { value: 'devotee', label: 'Devotee (भक्त)' },
   { value: 'sage', label: 'Sage (ऋषि)' },
 ];
+
+const DarkModeSwitch = () => {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return (
+    <Switch
+      checked={theme === 'dark'}
+      onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+    />
+  );
+};
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
@@ -490,6 +504,19 @@ const Profile = () => {
                       notification_preferences: { ...prev.notification_preferences, reminders: checked }
                     }))}
                   />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <Label className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Appearance
+                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="dark-mode" className="text-sm font-normal">Dark Mode</Label>
+                    <DarkModeSwitch />
+                  </div>
                 </div>
               </div>
 

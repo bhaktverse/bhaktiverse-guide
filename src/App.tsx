@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PremiumProvider } from "@/hooks/usePremium";
+import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -47,12 +48,13 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <PremiumProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <PremiumProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
           <BrowserRouter>
             <Suspense fallback={<SpiritualLoader />}>
               <Routes>
@@ -87,11 +89,12 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </PremiumProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </PremiumProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

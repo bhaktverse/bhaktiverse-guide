@@ -29,6 +29,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import NotificationCenter from '@/components/NotificationCenter';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -156,6 +157,7 @@ const Navigation = () => {
 
                 {/* Desktop User Menu */}
                 <div className="hidden md:flex items-center space-x-2">
+                  <ThemeToggle />
                   <NotificationCenter />
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/profile" className={`hover:text-primary ${isActive('/profile') ? 'text-primary' : ''}`}>
