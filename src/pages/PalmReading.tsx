@@ -388,6 +388,28 @@ const PalmReading = () => {
     if (palmImages.length === 0) { toast({ title: "No palm scan", description: "Please complete the biometric scan first", variant: "destructive" }); return; }
     setAnalyzing(true); setAnalysis(null); setAudioUrl(null); setShowReportView(false);
     try {
+      // Check for existing recent reading with same name (dedup to save AI credits)
+      if (userName && user) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const { data: existingReadings } = await supabase
+          .from('palm_reading_history' as never)
+          .select('*')
+          .eq('user_id', user.id)
+          .ilike('user_name' as never, userName)
+          .gte('created_at', thirtyDaysAgo.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (existingReadings && existingReadings.length > 0) {
+          const existing = existingReadings[0] as PalmReadingRecord;
+          setAnalysis(existing.analysis);
+          setLastSavedReadingId(existing.id);
+          toast({ title: "📋 पिछली रीडिंग मिली", description: `${userName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!` });
+          setAnalyzing(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
         body: { imageData: palmImages[0], language: selectedLanguage, userName: userName || undefined, userDob: userDob || undefined, userTimeOfBirth: userTimeOfBirth || undefined }
       });
