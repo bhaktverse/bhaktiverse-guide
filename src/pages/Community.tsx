@@ -45,6 +45,7 @@ interface CommunityPost {
   featured: boolean;
   created_at: string;
   updated_at: string;
+  media_urls: string[];
 }
 
 interface UserProfile {
@@ -67,7 +68,9 @@ const Community = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTag, setFilterTag] = useState<string>('');
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
-  const [totalDevotees, setTotalDevotees] = useState(0);
+  const [totalMembers, setTotalMembers] = useState(0);
+  const [activeDevotees, setActiveDevotees] = useState(0);
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
   const PAGE_SIZE = 20;
 
   const availableTags = [
@@ -77,8 +80,8 @@ const Community = () => {
 
   useEffect(() => {
     loadPosts();
+    loadTotalMembers();
 
-    // Real-time subscription for new posts
     const channel = supabase
       .channel('community_posts_realtime')
       .on(
@@ -87,16 +90,15 @@ const Community = () => {
         async (payload) => {
           const newPost = payload.new as any;
           if (newPost.visibility !== 'public') return;
-          // Don't duplicate if it's our own post (already added optimistically)
           if (newPost.user_id === user?.id) return;
           
           const transformed = {
             ...newPost,
-            tags: Array.isArray(newPost.tags) ? newPost.tags.map((t: any) => String(t)) : []
+            tags: Array.isArray(newPost.tags) ? newPost.tags.map((t: any) => String(t)) : [],
+            media_urls: Array.isArray(newPost.media_urls) ? newPost.media_urls.map((u: any) => String(u)) : []
           };
           setPosts(prev => [transformed, ...prev]);
 
-          // Fetch profile for new post author
           if (!userProfiles[newPost.user_id]) {
             const { data: profile } = await supabase
               .from('profiles')
@@ -123,7 +125,8 @@ const Community = () => {
           const updated = payload.new as any;
           setPosts(prev => prev.map(p => p.id === updated.id ? {
             ...updated,
-            tags: Array.isArray(updated.tags) ? updated.tags.map((t: any) => String(t)) : []
+            tags: Array.isArray(updated.tags) ? updated.tags.map((t: any) => String(t)) : [],
+            media_urls: Array.isArray(updated.media_urls) ? updated.media_urls.map((u: any) => String(u)) : []
           } : p));
         }
       )
@@ -133,6 +136,13 @@ const Community = () => {
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
+
+  const loadTotalMembers = async () => {
+    const { count } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true });
+    if (count !== null) setTotalMembers(count);
+  };
 
   const loadPosts = async (append = false) => {
     try {
@@ -151,7 +161,8 @@ const Community = () => {
 
       const transformedPosts = communityPosts?.map(post => ({
         ...post,
-        tags: Array.isArray(post.tags) ? post.tags.map(tag => String(tag)) : []
+        tags: Array.isArray(post.tags) ? post.tags.map(tag => String(tag)) : [],
+        media_urls: Array.isArray(post.media_urls) ? post.media_urls.map(u => String(u)) : []
       })) || [];
 
       if (append) {
@@ -162,7 +173,7 @@ const Community = () => {
       
       setHasMore(transformedPosts.length >= PAGE_SIZE);
 
-      // Batch query profiles for real user names
+      // Batch query profiles
       const uniqueUserIds = [...new Set(transformedPosts.map(p => p.user_id))];
       if (uniqueUserIds.length > 0) {
         const { data: profiles } = await supabase
@@ -173,9 +184,32 @@ const Community = () => {
         if (profiles) {
           const profileMap: Record<string, UserProfile> = {};
           profiles.forEach(p => { profileMap[p.user_id] = p; });
-          setUserProfiles(profileMap);
+          setUserProfiles(prev => ({ ...prev, ...profileMap }));
         }
-        setTotalDevotees(uniqueUserIds.length);
+        setActiveDevotees(uniqueUserIds.length);
+      }
+
+      // Load user's likes
+      if (user) {
+        const allPostIds = append 
+          ? [...posts, ...transformedPosts].map(p => p.id) 
+          : transformedPosts.map(p => p.id);
+        
+        if (allPostIds.length > 0) {
+          const { data: likes } = await supabase
+            .from('post_likes' as any)
+            .select('post_id')
+            .eq('user_id', user.id)
+            .in('post_id', allPostIds);
+          
+          if (likes) {
+            setUserLikes(prev => {
+              const newSet = new Set(prev);
+              (likes as any[]).forEach(l => newSet.add(l.post_id));
+              return newSet;
+            });
+          }
+        }
       }
       
     } catch (error) {
@@ -212,7 +246,8 @@ const Community = () => {
 
       const transformedPost = {
         ...newPostData,
-        tags: Array.isArray(newPostData.tags) ? newPostData.tags.map(tag => String(tag)) : []
+        tags: Array.isArray(newPostData.tags) ? newPostData.tags.map(tag => String(tag)) : [],
+        media_urls: Array.isArray(newPostData.media_urls) ? newPostData.media_urls.map(u => String(u)) : []
       };
 
       setPosts([transformedPost, ...posts]);
@@ -235,31 +270,84 @@ const Community = () => {
     }
   };
 
-  const likePost = async (postId: string) => {
+  const toggleLike = async (postId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    const isLiked = userLikes.has(postId);
+    
+    // Optimistic update
+    setUserLikes(prev => {
+      const newSet = new Set(prev);
+      if (isLiked) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
+    setPosts(prev => prev.map(p => p.id === postId 
+      ? { ...p, likes_count: p.likes_count + (isLiked ? -1 : 1) } 
+      : p
+    ));
+
     try {
-      const postIndex = posts.findIndex(p => p.id === postId);
-      if (postIndex === -1) return;
-
-      const newCount = posts[postIndex].likes_count + 1;
-
-      const { error } = await supabase
-        .from('community_posts')
-        .update({ likes_count: newCount })
-        .eq('id', postId);
-
-      if (error) throw error;
-
-      const updatedPosts = [...posts];
-      updatedPosts[postIndex].likes_count = newCount;
-      setPosts(updatedPosts);
-      
-      toast({
-        title: "🙏 Blessed!",
-        description: "Your appreciation has been shared."
-      });
-      
+      if (isLiked) {
+        const { error } = await supabase
+          .from('post_likes' as any)
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', postId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('post_likes' as any)
+          .insert({ user_id: user.id, post_id: postId });
+        if (error) throw error;
+      }
     } catch (error) {
-      console.error('Error liking post:', error);
+      console.error('Error toggling like:', error);
+      // Revert optimistic update
+      setUserLikes(prev => {
+        const newSet = new Set(prev);
+        if (isLiked) newSet.add(postId);
+        else newSet.delete(postId);
+        return newSet;
+      });
+      setPosts(prev => prev.map(p => p.id === postId 
+        ? { ...p, likes_count: p.likes_count + (isLiked ? 1 : -1) } 
+        : p
+      ));
+    }
+  };
+
+  const sharePost = async (post: CommunityPost) => {
+    const shareData = {
+      title: 'BhaktVerse Community',
+      text: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
+      url: `${window.location.origin}/community`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
+        toast({ title: "Link Copied! 📋", description: "Post link copied to clipboard." });
+      }
+      // Increment shares_count
+      await supabase
+        .from('community_posts')
+        .update({ shares_count: post.shares_count + 1 })
+        .eq('id', post.id);
+      
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, shares_count: p.shares_count + 1 } : p));
+    } catch (error) {
+      if ((error as any)?.name !== 'AbortError') {
+        console.error('Share error:', error);
+      }
     }
   };
 
@@ -496,6 +584,21 @@ const Community = () => {
                       </p>
                     </div>
 
+                    {/* Media Gallery */}
+                    {post.media_urls && post.media_urls.length > 0 && (
+                      <div className={`grid gap-2 mb-4 ${post.media_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {post.media_urls.map((url, idx) => (
+                          <img 
+                            key={idx} 
+                            src={url} 
+                            alt={`Post media ${idx + 1}`} 
+                            className="rounded-lg w-full h-48 object-cover border border-border/50"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                    )}
+
                     {post.tags && post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-4">
                         {post.tags.map((tag, index) => (
@@ -511,10 +614,10 @@ const Community = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => likePost(post.id)}
-                          className="text-muted-foreground hover:text-primary"
+                          onClick={() => toggleLike(post.id)}
+                          className={`hover:text-primary ${userLikes.has(post.id) ? 'text-destructive' : 'text-muted-foreground'}`}
                         >
-                          <Heart className="h-4 w-4 mr-1" />
+                          <Heart className={`h-4 w-4 mr-1 ${userLikes.has(post.id) ? 'fill-current' : ''}`} />
                           <span>{post.likes_count}</span>
                         </Button>
                         
@@ -527,6 +630,7 @@ const Community = () => {
                           variant="ghost"
                           size="sm"
                           className="text-muted-foreground hover:text-primary"
+                          onClick={() => sharePost(post)}
                         >
                           <Share className="h-4 w-4 mr-1" />
                           <span>{post.shares_count}</span>
@@ -591,17 +695,17 @@ const Community = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">{totalDevotees}</div>
-                  <p className="text-sm text-muted-foreground">Active Devotees</p>
+                  <div className="text-2xl font-bold text-primary">{totalMembers}</div>
+                  <p className="text-sm text-muted-foreground">Total Members</p>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">{posts.length}</div>
-                  <p className="text-sm text-muted-foreground">Community Posts</p>
+                  <div className="text-2xl font-bold text-secondary">{activeDevotees}</div>
+                  <p className="text-sm text-muted-foreground">Active This Week</p>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-secondary">
+                  <div className="text-2xl font-bold text-primary">
                     {posts.reduce((sum, p) => sum + (p.likes_count || 0), 0)}
                   </div>
                   <p className="text-sm text-muted-foreground">Blessings Shared</p>

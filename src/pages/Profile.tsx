@@ -17,6 +17,8 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   User,
   Mail,
@@ -34,7 +36,9 @@ import {
   History,
   Loader2,
   Settings,
-  Heart
+  Heart,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 interface ProfileData {
@@ -93,6 +97,7 @@ const Profile = () => {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     phone: '',
@@ -331,8 +336,9 @@ const Profile = () => {
     );
   }
 
-  const xpToNextLevel = (journeyData.level * 200);
-  const xpProgress = Math.min((journeyData.experience_points % 200) / 200 * 100, 100);
+  const xpInCurrentLevel = journeyData.experience_points % 200;
+  const xpToNextLevel = 200;
+  const xpProgress = Math.min((xpInCurrentLevel / xpToNextLevel) * 100, 100);
 
   return (
     <div className="min-h-screen bg-background">
@@ -540,9 +546,18 @@ const Profile = () => {
                 <div className="text-center p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
                   <div className="text-4xl font-bold text-amber-500">Level {journeyData.level}</div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    {journeyData.experience_points} / {xpToNextLevel} XP
+                    {xpInCurrentLevel} / {xpToNextLevel} XP
                   </div>
-                  <Progress value={xpProgress} className="mt-2 h-2" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div><Progress value={xpProgress} className="mt-2 h-2 cursor-help" /></div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{xpInCurrentLevel}/{xpToNextLevel} XP to Level {journeyData.level + 1}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -635,6 +650,72 @@ const Profile = () => {
                   <h3 className="font-semibold">My Favorites</h3>
                   <p className="text-sm text-muted-foreground">View all bookmarked saints, scriptures, temples & audio</p>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone - Delete Account */}
+            <Card className="border-destructive/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+                <CardDescription>
+                  Permanently delete your account and all associated data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full gap-2" disabled={deleting}>
+                      {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      Delete My Account & Data
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account, 
+                        all your spiritual journey data, readings, posts, comments, chat sessions, 
+                        and remove all your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={async () => {
+                          setDeleting(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('delete-user-data');
+                            if (error) throw error;
+                            toast({
+                              title: "Account Deleted",
+                              description: "Your account and all data have been permanently removed. 🙏",
+                            });
+                            await supabase.auth.signOut();
+                            navigate('/');
+                          } catch (error) {
+                            console.error('Delete account error:', error);
+                            toast({
+                              title: "Error",
+                              description: "Could not delete account. Please try again or contact support.",
+                              variant: "destructive"
+                            });
+                          } finally {
+                            setDeleting(false);
+                          }
+                        }}
+                      >
+                        Yes, Delete Everything
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           </div>

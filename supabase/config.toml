@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.festival-notifications]
 verify_jwt = false
+
+[functions.delete-user-data]
+verify_jwt = false

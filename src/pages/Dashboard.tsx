@@ -96,6 +96,7 @@ const Dashboard = () => {
   const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [aiCreditsUsed, setAiCreditsUsed] = useState(0);
+  const [continueItems, setContinueItems] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -263,6 +264,70 @@ const Dashboard = () => {
         setTodayDevotion(devotion as DailyDevotion);
       }
 
+      // Load "Continue Your Journey" items
+      const items: any[] = [];
+      
+      // Recent saint chat sessions
+      const { data: chatSessions } = await supabase
+        .from('ai_chat_sessions')
+        .select('id, context_data, last_activity')
+        .eq('user_id', user?.id)
+        .eq('session_type', 'saint_specific')
+        .order('last_activity', { ascending: false })
+        .limit(2);
+      
+      if (chatSessions) {
+        for (const session of chatSessions) {
+          const saintId = (session.context_data as any)?.saint_id;
+          if (saintId) {
+            const { data: saint } = await supabase
+              .from('saints')
+              .select('name')
+              .eq('id', saintId)
+              .maybeSingle();
+            if (saint) {
+              const diff = Math.floor((Date.now() - new Date(session.last_activity || '').getTime()) / 60000);
+              const timeAgo = diff < 60 ? `${diff}m ago` : diff < 1440 ? `${Math.floor(diff / 60)}h ago` : `${Math.floor(diff / 1440)}d ago`;
+              items.push({
+                icon: '🧘',
+                title: `Chat with ${saint.name}`,
+                subtitle: timeAgo,
+                path: `/saints/${saintId}/chat`
+              });
+            }
+          }
+        }
+      }
+
+      // Recent scripture progress
+      const { data: scriptureProgress } = await supabase
+        .from('user_progress')
+        .select('content_id, progress_percentage, last_accessed')
+        .eq('user_id', user?.id)
+        .eq('content_type', 'scripture')
+        .eq('completed', false)
+        .order('last_accessed', { ascending: false })
+        .limit(1);
+      
+      if (scriptureProgress && scriptureProgress.length > 0) {
+        const sp = scriptureProgress[0];
+        const { data: scripture } = await supabase
+          .from('scriptures')
+          .select('title')
+          .eq('id', sp.content_id)
+          .maybeSingle();
+        if (scripture) {
+          items.push({
+            icon: '📖',
+            title: scripture.title,
+            subtitle: `${sp.progress_percentage}% done`,
+            path: `/scriptures/${sp.content_id}`
+          });
+        }
+      }
+
+      setContinueItems(items.slice(0, 3));
+
       // Load daily quote from spiritual_content
       const { data: quoteData } = await supabase
         .from('spiritual_content')
@@ -340,7 +405,7 @@ const Dashboard = () => {
 
   // Quick action grid
   const quickActions = [
-    { emoji: '🃏', label: 'Tarot', path: '/palm-reading', description: 'Card reading' },
+    { emoji: '❤️', label: 'Favorites', path: '/favorites', description: 'Saved items' },
     { emoji: '🧘‍♂️', label: 'Saints', path: '/saints', description: 'Chat with saints' },
     { emoji: '🙏', label: 'Daily Puja', path: '/daily-devotion', description: 'Today\'s rituals' },
     { emoji: '🎵', label: 'Mantras', path: '/audio-library', description: 'Listen & chant' },
@@ -495,7 +560,37 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Main Content Grid */}
+        {/* Continue Your Journey */}
+        {continueItems.length > 0 && (
+          <Card className="card-sacred">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Continue Your Journey
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {continueItems.map((item, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    className="flex-shrink-0 h-auto py-3 px-4 gap-3 hover:shadow-divine transition-all hover:-translate-y-0.5"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <span className="text-2xl">{item.icon}</span>
+                    <div className="text-left">
+                      <div className="text-sm font-semibold">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">{item.subtitle}</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
