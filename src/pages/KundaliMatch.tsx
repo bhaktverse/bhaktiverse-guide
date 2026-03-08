@@ -121,18 +121,22 @@ const KundaliMatch = () => {
 
       if (data?.gunMilan) {
         setResult(data.gunMilan);
-        if (data.analysis) {
+        const hasAI = !!data.analysis;
+        if (hasAI) {
           setAiAnalysis(data.analysis);
           toast.success("🎉 कुंडली मिलान पूर्ण! AI विश्लेषण सहित");
         } else {
           setUsedFallback(true);
           toast.success("कुंडली मिलान पूर्ण! (बेसिक गणना)");
         }
+        // Save to history
+        saveToHistory(data.gunMilan, hasAI ? data.analysis : null);
       } else {
         const gunMilan = calculateGunMilan(partner1.rashi, partner2.rashi);
         setResult(gunMilan);
         setUsedFallback(true);
         toast.info("बेसिक गुण मिलान गणना दिखाई जा रही है।");
+        saveToHistory(gunMilan, null);
       }
     } catch (error) {
       console.error('Kundali match error:', error);
@@ -140,6 +144,7 @@ const KundaliMatch = () => {
       setResult(gunMilan);
       setUsedFallback(true);
       toast.info("⚠️ AI अनुपलब्ध — बेसिक गुण मिलान गणना दिखाई जा रही है।");
+      saveToHistory(gunMilan, null);
     } finally {
       setLoading(false);
     }
