@@ -53,18 +53,18 @@ export const PremiumProvider = ({ children }: PremiumProviderProps) => {
         return;
       }
 
-      // For demo purposes, check if user has been active for a while (simulate premium)
-      // In production, this would check a subscriptions table
-      const { data: journey } = await supabase
-        .from('spiritual_journey')
-        .select('level, experience_points')
+      // Check subscriptions table (admin-only writable, secure)
+      const { data: sub } = await supabase
+        .from('subscriptions' as any)
+        .select('tier, status, expires_at')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      // Demo: users with level 3+ or 500+ XP get premium features
-      if (journey && (journey.level >= 3 || journey.experience_points >= 500)) {
+      if (sub && (sub as any).status === 'active' && (!(sub as any).expires_at || new Date((sub as any).expires_at) > new Date())) {
         setIsPremium(true);
-        setSubscriptionTier('basic');
+        const tier = (sub as any).tier as 'free' | 'basic' | 'premium' | 'divine';
+        setSubscriptionTier(tier);
+        if ((sub as any).expires_at) setExpiresAt(new Date((sub as any).expires_at));
       } else {
         setIsPremium(false);
         setSubscriptionTier('free');

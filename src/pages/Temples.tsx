@@ -389,21 +389,7 @@ const Temples = () => {
                   
                   <Button variant="ghost" size="sm" onClick={(e) => {
                     e.stopPropagation();
-                    // Handle share
-                  }}>
-                    <Share className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button variant="ghost" size="sm" onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle photo gallery
-                  }}>
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button variant="ghost" size="sm" onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle event calendar
+                    navigate(`/temples/${temple.id}`);
                   }}>
                     <Calendar className="h-4 w-4" />
                   </Button>

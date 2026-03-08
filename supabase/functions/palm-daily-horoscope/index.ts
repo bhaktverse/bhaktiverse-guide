@@ -163,7 +163,7 @@ Generate JSON with these fields:
 
   } catch (error) {
     console.error("Horoscope error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+    return new Response(JSON.stringify({ error: "Service temporarily unavailable" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

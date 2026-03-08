@@ -70,7 +70,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in spiritual-audio-tts:', error);
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'Service temporarily unavailable' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

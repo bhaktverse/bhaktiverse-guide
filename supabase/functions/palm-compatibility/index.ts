@@ -300,7 +300,7 @@ Provide comprehensive compatibility analysis with deep insights, honest assessme
   } catch (error) {
     console.error("Compatibility error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Service temporarily unavailable" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
