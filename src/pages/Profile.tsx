@@ -32,7 +32,8 @@ import {
   Activity,
   History,
   Loader2,
-  Settings
+  Settings,
+  Heart
 } from 'lucide-react';
 
 interface ProfileData {
