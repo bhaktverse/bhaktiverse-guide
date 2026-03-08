@@ -65,6 +65,7 @@ const Navigation = () => {
               <>
                 {/* Desktop Navigation Links */}
                 <div className="hidden md:flex items-center space-x-1">
+                  <GlobalSearch />
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/dashboard" className={navLinkClass('/dashboard')}>
                       <Home className="h-4 w-4" />
