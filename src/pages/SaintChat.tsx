@@ -173,11 +173,8 @@ const SaintChat = () => {
       persistSession(allMessages);
     } catch (error) {
       console.error('Chat error:', error);
-      toast({ 
-        title: "Response failed", 
-        description: "Could not get a response. Try again.",
-        variant: "destructive",
-        action: <Button size="sm" variant="outline" onClick={() => sendMessage(msgText)}>Retry</Button>
+      toast.error("Could not get a response. Try again.", {
+        action: { label: 'Retry', onClick: () => sendMessage(msgText) }
       });
       // No fallback message — let the user retry via the toast action
     } finally {
