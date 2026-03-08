@@ -714,7 +714,7 @@ const Dashboard = () => {
                       <Sparkles className="h-4 w-4" />
                       Today's Spiritual Wisdom
                     </h3>
-                    <p className="text-foreground italic text-lg leading-relaxed">{todayQuote}</p>
+                    <p className="text-foreground italic text-base sm:text-lg leading-relaxed">{todayQuote}</p>
                   </div>
                 </div>
               </CardContent>
