@@ -440,7 +440,7 @@ const PalmReading = () => {
 
       // Use browser SpeechSynthesis API
       if (!('speechSynthesis' in window)) {
-        toast({ title: "Not supported", description: "Voice narration is not supported in this browser", variant: "destructive" });
+        toast.error("Voice narration is not supported in this browser");
         setNarrationLoading(false);
         return;
       }
