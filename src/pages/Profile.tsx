@@ -73,6 +73,19 @@ const SPIRITUAL_LEVELS = [
   { value: 'sage', label: 'Sage (ऋषि)' },
 ];
 
+const DarkModeSwitch = () => {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return (
+    <Switch
+      checked={theme === 'dark'}
+      onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+    />
+  );
+};
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
