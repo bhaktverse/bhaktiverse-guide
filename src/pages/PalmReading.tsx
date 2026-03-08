@@ -406,7 +406,7 @@ const PalmReading = () => {
           const existing = existingReadings[0] as PalmReadingRecord;
           setAnalysis(existing.analysis);
           setLastSavedReadingId(existing.id);
-          toast({ title: "📋 पिछली रीडिंग मिली", description: `${userName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!` });
+          toast.success(`📋 पिछली रीडिंग मिली — ${userName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!`);
           setAnalyzing(false);
           return;
         }
