@@ -109,7 +109,7 @@ const SharedPalmReading = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      toast({ title: '🔗 Link Copied!', description: 'Share this link with friends and family.' });
+      toast.success('🔗 Link Copied! Share this link with friends and family.');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast({ title: 'Copy failed', description: 'Please copy the URL manually.', variant: 'destructive' });
