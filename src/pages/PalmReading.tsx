@@ -464,7 +464,7 @@ const PalmReading = () => {
       setIsNarrating(true);
     } catch (error) {
       console.error('TTS error:', error);
-      toast({ title: "Voice generation failed", description: "Could not generate audio narration", variant: "destructive" });
+      toast.error("Could not generate audio narration");
     } finally { setNarrationLoading(false); }
   };
 
