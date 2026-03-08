@@ -275,7 +275,7 @@ function getZodiacFromDob(dob: string): { sign: string; hindiSign: string } {
   return { sign: 'Aries', hindiSign: 'मेष' };
 }
 
-export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: string, language?: string, userDob?: string, readingUrl?: string): Promise<void> => {
+export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: string, language?: string, userDob?: string, readingUrl?: string, dbReadingId?: string): Promise<void> => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
