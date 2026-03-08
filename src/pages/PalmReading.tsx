@@ -121,6 +121,8 @@ interface PalmReadingRecord {
   palm_type: string | null;
   analysis: PalmAnalysis;
   created_at: string;
+  user_name?: string | null;
+  user_dob?: string | null;
 }
 
 interface CompatibilityResult {
