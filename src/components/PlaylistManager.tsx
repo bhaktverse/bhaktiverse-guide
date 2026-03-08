@@ -154,10 +154,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
       if (error) throw error;
 
       setPlaylists(prev => prev.filter(p => p.id !== playlistId));
-      toast({
-        title: "Playlist Deleted",
-        description: "The playlist has been removed.",
-      });
+      toast.success("Playlist has been removed.");
     } catch (error) {
       console.error('Error deleting playlist:', error);
       toast({
