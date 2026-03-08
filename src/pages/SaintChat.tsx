@@ -73,6 +73,29 @@ const SaintChat = () => {
       const { data, error } = await supabase.from('saints').select('*').eq('id', saintId).single();
       if (error) throw error;
       setSaint(data);
+      
+      // Try to load existing session
+      if (user) {
+        const { data: session } = await supabase
+          .from('ai_chat_sessions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('session_type', 'saint_specific')
+          .eq('context_data->>saint_id', saintId)
+          .order('last_activity', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (session?.messages && Array.isArray(session.messages) && (session.messages as any[]).length > 0) {
+          setMessages((session.messages as any[]).map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          })));
+          return;
+        }
+      }
+      
+      // No existing session — show welcome message
       setMessages([{
         id: 'welcome',
         role: 'saint',
@@ -83,6 +106,37 @@ const SaintChat = () => {
       console.error('Error loading saint:', error);
       setLoadError(true);
       toast({ title: "Error", description: "Failed to load saint info", variant: "destructive" });
+    }
+  };
+
+  const persistSession = async (msgs: Message[]) => {
+    if (!user || !saintId) return;
+    try {
+      const serializedMsgs = msgs.map(m => ({ ...m, timestamp: m.timestamp.toISOString() }));
+      const { data: existing } = await supabase
+        .from('ai_chat_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_type', 'saint_specific')
+        .eq('context_data->>saint_id', saintId)
+        .maybeSingle();
+      
+      if (existing) {
+        await supabase.from('ai_chat_sessions').update({
+          messages: serializedMsgs as any,
+          last_activity: new Date().toISOString()
+        }).eq('id', existing.id);
+      } else {
+        await supabase.from('ai_chat_sessions').insert({
+          user_id: user.id,
+          session_type: 'saint_specific',
+          messages: serializedMsgs as any,
+          context_data: { saint_id: saintId } as any,
+          last_activity: new Date().toISOString()
+        });
+      }
+    } catch (e) {
+      console.error('Session persist error:', e);
     }
   };
 
