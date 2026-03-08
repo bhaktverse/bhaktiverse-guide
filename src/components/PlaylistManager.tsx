@@ -140,11 +140,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
       toast.success("✨ Playlist Updated! Your changes have been saved.");
     } catch (error) {
       console.error('Error updating playlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update playlist.",
-        variant: "destructive",
-      });
+      toast.error("Failed to update playlist.");
     }
   };
 
