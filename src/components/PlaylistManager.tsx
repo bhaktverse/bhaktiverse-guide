@@ -111,11 +111,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
       toast.success(`🎵 Playlist "${newPlaylistName}" has been created!`);
     } catch (error) {
       console.error('Error creating playlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create playlist. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to create playlist. Please try again.");
     }
   };
 
