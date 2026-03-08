@@ -61,7 +61,7 @@ const SharedPalmReading = () => {
     setMeta('og:description', description);
     setMeta('og:type', 'article');
     setMeta('og:url', pageUrl);
-    setMeta('og:image', 'https://bhaktverse.lovable.app/favicon.ico');
+    setMeta('og:image', 'https://bhaktverse.lovable.app/og-palm-reading.jpg');
     setMeta('og:site_name', 'BhaktVerse');
 
     setMetaName('twitter:card', 'summary');
