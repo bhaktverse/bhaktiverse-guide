@@ -1484,6 +1484,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_community_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

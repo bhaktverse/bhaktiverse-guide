@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Play, 
   Pause, 
@@ -49,7 +49,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   onTrackChange,
   onPlaylistShuffle 
 }) => {
-  const { toast } = useToast();
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -90,10 +90,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       setTimeout(() => {
         const currentIndex = playlist.findIndex(t => t.id === track?.id);
         if (currentIndex < playlist.length - 1) {
-          toast({
-            title: "Skipping unavailable track",
-            description: `"${track.title}" could not be played.`,
-          });
+          toast.info(`Skipping unavailable track: "${track.title}"`);
           onTrackChange(playlist[currentIndex + 1]);
         }
       }, 500);
@@ -120,7 +117,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [repeatMode, track, toast, playlist, onTrackChange]);
+  }, [repeatMode, track, playlist, onTrackChange]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -156,11 +153,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     } catch (error) {
       console.error('Playback error:', error);
       setIsPlaying(false);
-      toast({
-        title: "Playback Error",
-        description: "Unable to play this audio. The file may be unavailable.",
-        variant: "destructive",
-      });
+      toast.error("Unable to play this audio. The file may be unavailable.");
     }
   };
 

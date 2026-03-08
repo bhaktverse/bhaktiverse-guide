@@ -30,7 +30,8 @@ import {
   Image,
   Video,
   Mic,
-  Loader2
+  Loader2,
+  Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -78,6 +79,10 @@ const Community = () => {
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
   const [totalBlessings, setTotalBlessings] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const [editingPost, setEditingPost] = useState<CommunityPost | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const POST_MAX_LENGTH = 2000;
   const PAGE_SIZE = 20;
 
   // Centralized helper for untyped post_likes table
@@ -170,13 +175,22 @@ const Community = () => {
   };
 
   const loadCommunityStats = async () => {
-    const { data } = await supabase
-      .from('community_posts')
-      .select('likes_count, comments_count')
-      .eq('visibility', 'public');
-    if (data) {
-      setTotalBlessings(data.reduce((sum, p) => sum + (p.likes_count || 0), 0));
-      setTotalComments(data.reduce((sum, p) => sum + (p.comments_count || 0), 0));
+    try {
+      const { data } = await supabase.rpc('get_community_stats');
+      if (data) {
+        setTotalBlessings(Number((data as any).total_likes) || 0);
+        setTotalComments(Number((data as any).total_comments) || 0);
+      }
+    } catch {
+      // Fallback: query limited rows client-side
+      const { data } = await supabase
+        .from('community_posts')
+        .select('likes_count, comments_count')
+        .eq('visibility', 'public');
+      if (data) {
+        setTotalBlessings(data.reduce((sum, p) => sum + (p.likes_count || 0), 0));
+        setTotalComments(data.reduce((sum, p) => sum + (p.comments_count || 0), 0));
+      }
     }
   };
 
@@ -273,7 +287,8 @@ const Community = () => {
   };
 
   const createPost = async () => {
-    if (!newPost.trim() && pendingImages.length === 0) return;
+    const sanitizedContent = newPost.replace(/<[^>]*>/g, '').trim();
+    if (!sanitizedContent && pendingImages.length === 0) return;
 
     try {
       let mediaUrls: string[] = [];
@@ -301,7 +316,7 @@ const Community = () => {
         .insert([
           {
             user_id: user?.id,
-            content: newPost,
+            content: sanitizedContent,
             post_type: postType,
             tags: selectedTags,
             visibility: 'public',
@@ -445,6 +460,25 @@ const Community = () => {
     }
   };
 
+  const updatePost = async () => {
+    if (!editingPost || !editContent.trim()) return;
+    const sanitizedContent = editContent.replace(/<[^>]*>/g, '').trim();
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ content: sanitizedContent, tags: editTags, updated_at: new Date().toISOString() })
+        .eq('id', editingPost.id)
+        .eq('user_id', user?.id);
+      if (error) throw error;
+      setPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, content: sanitizedContent, tags: editTags } : p));
+      setEditingPost(null);
+      toast.success("Post updated!");
+    } catch (error) {
+      console.error('Error updating post:', error);
+      toast.error("Could not update post.");
+    }
+  };
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -545,12 +579,18 @@ const Community = () => {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
-                          <Textarea
-                            placeholder="What's on your spiritual mind today?"
-                            value={newPost}
-                            onChange={(e) => setNewPost(e.target.value)}
-                            className="min-h-[100px]"
-                          />
+                          <div>
+                            <Textarea
+                              placeholder="What's on your spiritual mind today?"
+                              value={newPost}
+                              onChange={(e) => setNewPost(e.target.value.slice(0, POST_MAX_LENGTH))}
+                              className="min-h-[100px]"
+                              maxLength={POST_MAX_LENGTH}
+                            />
+                            <p className={`text-xs mt-1 text-right ${newPost.length > POST_MAX_LENGTH * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {newPost.length}/{POST_MAX_LENGTH}
+                            </p>
+                          </div>
                           
                           <div>
                             <p className="text-sm font-medium mb-2">Add tags:</p>
@@ -750,6 +790,20 @@ const Community = () => {
                         </Button>
                       </div>
                       {post.user_id === user?.id && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label="Edit post"
+                            className="text-muted-foreground hover:text-primary"
+                            onClick={() => {
+                              setEditingPost(post);
+                              setEditContent(post.content);
+                              setEditTags([...post.tags]);
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -776,6 +830,7 @@ const Community = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                       )}
                     </div>
                     
@@ -883,6 +938,54 @@ const Community = () => {
         </div>
       </div>
       
+      {/* Edit Post Dialog */}
+      <Dialog open={!!editingPost} onOpenChange={(open) => { if (!open) setEditingPost(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Post</DialogTitle>
+            <DialogDescription>Update your post content or tags</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value.slice(0, POST_MAX_LENGTH))}
+                className="min-h-[100px]"
+                maxLength={POST_MAX_LENGTH}
+              />
+              <p className={`text-xs mt-1 text-right ${editContent.length > POST_MAX_LENGTH * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {editContent.length}/{POST_MAX_LENGTH}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">Tags:</p>
+              <div className="flex flex-wrap gap-1">
+                {availableTags.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={editTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer text-xs"
+                    onClick={() => {
+                      if (editTags.includes(tag)) {
+                        setEditTags(editTags.filter(t => t !== tag));
+                      } else {
+                        setEditTags([...editTags, tag]);
+                      }
+                    }}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <Button onClick={updatePost} className="w-full" disabled={!editContent.trim()}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Update Post
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <MobileBottomNav />
     </div>
   );

@@ -32,7 +32,7 @@ import {
   ImagePlus,
   X
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface UserMetadata {
   name?: string;
@@ -57,7 +57,7 @@ const PalmScannerBiometric = ({
   analyzing,
   languages
 }: PalmScannerProps) => {
-  const { toast } = useToast();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [showLanguageSelector, setShowLanguageSelector] = useState(true);
@@ -83,11 +83,7 @@ const PalmScannerBiometric = ({
     if (!file) return;
 
     if (!selectedLanguage) {
-      toast({
-        title: "Select Language",
-        description: "Please choose your preferred language first",
-        variant: "destructive"
-      });
+      toast.error("Please choose your preferred language first");
       return;
     }
 
@@ -98,10 +94,7 @@ const PalmScannerBiometric = ({
       setShowLanguageSelector(false);
       setImageSource('upload');
       
-      toast({
-        title: "✓ Image Uploaded",
-        description: "Click 'Start Analysis' to get your palm reading",
-      });
+      toast.success("✓ Image Uploaded — Click 'Start Analysis' to get your palm reading");
     };
     reader.readAsDataURL(file);
     
@@ -114,11 +107,7 @@ const PalmScannerBiometric = ({
   // Start biometric camera scan
   const startBiometricScan = () => {
     if (!selectedLanguage) {
-      toast({
-        title: "Select Language",
-        description: "Please choose your preferred language first",
-        variant: "destructive"
-      });
+      toast.error("Please choose your preferred language first");
       return;
     }
     setShowLanguageSelector(false);
@@ -134,10 +123,7 @@ const PalmScannerBiometric = ({
     setShowLanguageSelector(false);
     setImageSource('camera');
     
-    toast({
-      title: "✓ Palm Captured",
-      description: "Click 'Start Analysis' to get your divine reading",
-    });
+    toast.success("✓ Palm Captured — Click 'Start Analysis' to get your divine reading");
   };
 
   const handleCameraClose = () => {
@@ -159,11 +145,7 @@ const PalmScannerBiometric = ({
   // Start analysis - ONLY when user clicks this button
   const handleStartAnalysis = () => {
     if (palmImages.length === 0) {
-      toast({
-        title: "No Image",
-        description: "Please upload or capture a palm image first",
-        variant: "destructive"
-      });
+      toast.error("Please upload or capture a palm image first");
       return;
     }
     

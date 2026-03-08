@@ -173,11 +173,18 @@ const SaintChat = () => {
       const allMessages = [...updatedMessages, saintResponse];
       setMessages(allMessages);
       persistSession(allMessages);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error);
-      toast.error("Could not get a response. Try again.", {
-        action: { label: 'Retry', onClick: () => sendMessage(msgText) }
-      });
+      const statusCode = error?.status || error?.code;
+      if (statusCode === 429 || error?.message?.includes('429')) {
+        toast.error("Daily limit reached! Upgrade to Premium for unlimited access.", {
+          action: { label: 'Upgrade', onClick: () => navigate('/premium') }
+        });
+      } else {
+        toast.error("Could not get a response. Try again.", {
+          action: { label: 'Retry', onClick: () => sendMessage(msgText) }
+        });
+      }
       // No fallback message — let the user retry via the toast action
     } finally {
       setLoading(false);

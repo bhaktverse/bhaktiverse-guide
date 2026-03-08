@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Sparkles, RotateCcw, Share2, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { MAJOR_ARCANA, type TarotCardData } from '@/data/tarotCards';
 
 interface TarotCard {
@@ -40,7 +40,7 @@ const CARD_GRADIENTS: Record<string, string> = {
 };
 
 const TarotPull = ({ palmAnalysis, language = 'en', onPullComplete }: TarotPullProps) => {
-  const { toast } = useToast();
+  
   const [cards, setCards] = useState<TarotCard[]>([]);
   const [interpretation, setInterpretation] = useState<string>('');
   const [isPulling, setIsPulling] = useState(false);
@@ -347,7 +347,7 @@ ${language === 'hi' ? 'Respond in Hindi/Hinglish.' : 'Respond in English.'}`,
                     return `${c.position}: ${c.name}${c.isReversed ? ' (Reversed)' : ''}${deity ? ` • ${deity}` : ''}`;
                   }).join('\n')}\n\nGet your reading at BhaktVerse!`;
                   navigator.share?.({ text }) || navigator.clipboard.writeText(text);
-                  toast({ title: "Copied to clipboard!" });
+                  toast.success("Copied to clipboard!");
                 }}
               >
                 <Share2 className="h-4 w-4" />
