@@ -245,10 +245,10 @@ Be warm, honest, and constructive. Even challenging aspects should be presented 
             content: `Analyze the compatibility between these two individuals based on their palm readings using complete Vedic Hasta Maitri methodology:
 
 PERSON 1 PALM ANALYSIS:
-${JSON.stringify(palmAnalysis1, null, 2)}
+${safeAnalysis1}
 
 PERSON 2 PALM ANALYSIS:
-${JSON.stringify(palmAnalysis2, null, 2)}
+${safeAnalysis2}
 
 Provide comprehensive compatibility analysis with deep insights, honest assessment, and constructive guidance for a harmonious relationship.`
           }

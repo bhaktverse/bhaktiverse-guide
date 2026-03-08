@@ -168,7 +168,7 @@ Provide the analysis in this exact JSON format:
 }`;
 
     const userPrompt = `Analyze numerology for:
-Name: ${name}
+Name: ${safeName}
 Date of Birth: ${dob}
 Birth Number: ${birthNumber}
 Destiny Number: ${destinyNumber}

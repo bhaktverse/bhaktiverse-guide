@@ -127,7 +127,7 @@ Generate JSON with these fields:
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Generate today's personalized Vedic horoscope for this person based on their palm reading:\n\nPALM ANALYSIS:\n${JSON.stringify(palmAnalysis, null, 2)}\n\nCreate deeply personalized predictions combining their palm destiny with today's cosmic energy.`
+            content: `Generate today's personalized Vedic horoscope for this person based on their palm reading:\n\nPALM ANALYSIS:\n${safeAnalysis}\n\nCreate deeply personalized predictions combining their palm destiny with today's cosmic energy.`
           }
         ],
         max_tokens: 3000,

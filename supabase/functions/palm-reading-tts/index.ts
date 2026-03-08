@@ -29,7 +29,7 @@ serve(async (req) => {
     if (!OPENAI_API_KEY) {
       console.error("OPENAI_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "OpenAI API key not configured" }),
+        JSON.stringify({ error: "Service temporarily unavailable" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
