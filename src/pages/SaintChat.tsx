@@ -73,6 +73,29 @@ const SaintChat = () => {
       const { data, error } = await supabase.from('saints').select('*').eq('id', saintId).single();
       if (error) throw error;
       setSaint(data);
+      
+      // Try to load existing session
+      if (user) {
+        const { data: session } = await supabase
+          .from('ai_chat_sessions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('session_type', 'saint_specific')
+          .eq('context_data->>saint_id', saintId)
+          .order('last_activity', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (session?.messages && Array.isArray(session.messages) && (session.messages as any[]).length > 0) {
+          setMessages((session.messages as any[]).map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          })));
+          return;
+        }
+      }
+      
+      // No existing session — show welcome message
       setMessages([{
         id: 'welcome',
         role: 'saint',
@@ -86,12 +109,44 @@ const SaintChat = () => {
     }
   };
 
+  const persistSession = async (msgs: Message[]) => {
+    if (!user || !saintId) return;
+    try {
+      const serializedMsgs = msgs.map(m => ({ ...m, timestamp: m.timestamp.toISOString() }));
+      const { data: existing } = await supabase
+        .from('ai_chat_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_type', 'saint_specific')
+        .eq('context_data->>saint_id', saintId)
+        .maybeSingle();
+      
+      if (existing) {
+        await supabase.from('ai_chat_sessions').update({
+          messages: serializedMsgs as any,
+          last_activity: new Date().toISOString()
+        }).eq('id', existing.id);
+      } else {
+        await supabase.from('ai_chat_sessions').insert({
+          user_id: user.id,
+          session_type: 'saint_specific',
+          messages: serializedMsgs as any,
+          context_data: { saint_id: saintId } as any,
+          last_activity: new Date().toISOString()
+        });
+      }
+    } catch (e) {
+      console.error('Session persist error:', e);
+    }
+  };
+
   const sendMessage = async (text?: string) => {
     const msgText = text || inputMessage.trim();
     if (!msgText || !saint) return;
 
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: msgText, timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputMessage('');
     setLoading(true);
 
@@ -100,19 +155,22 @@ const SaintChat = () => {
         body: {
           message: msgText,
           saintId: saint.id,
-          conversationHistory: messages.slice(-6),
+          conversationHistory: updatedMessages.slice(-6),
           userPreferences: { language: 'English' }
         }
       });
 
       if (error) throw error;
 
-      setMessages(prev => [...prev, {
+      const saintResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'saint',
         content: data?.response || "I'm experiencing some difficulty right now. Please try again.",
         timestamp: new Date()
-      }]);
+      };
+      const allMessages = [...updatedMessages, saintResponse];
+      setMessages(allMessages);
+      persistSession(allMessages);
     } catch (error) {
       console.error('Chat error:', error);
       toast({ 

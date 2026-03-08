@@ -306,6 +306,23 @@ const Horoscope = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    {/* Save as my Rashi button */}
+                    {user && (
+                      <Button variant="outline" size="sm" onClick={async () => {
+                        try {
+                          const rashiKey = selectedRashi.name.toLowerCase();
+                          const { data: existing } = await supabase.from('astro_profiles').select('id').eq('user_id', user.id).maybeSingle();
+                          if (existing) {
+                            await supabase.from('astro_profiles').update({ rashi: rashiKey as any }).eq('user_id', user.id);
+                          } else {
+                            await supabase.from('astro_profiles').insert({ user_id: user.id, name: user.email?.split('@')[0] || 'User', dob: '2000-01-01', rashi: rashiKey as any });
+                          }
+                          toast.success('✅ राशि सेव हो गई! अगली बार ऑटो-डिटेक्ट होगी।');
+                        } catch { toast.error('राशि सेव नहीं हो सकी'); }
+                      }}>
+                        ⭐ Save as my Rashi
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={handleShare}>
                       {copied ? <Check className="h-4 w-4 mr-1" /> : <Share2 className="h-4 w-4 mr-1" />}
                       {copied ? 'Copied!' : 'Share'}

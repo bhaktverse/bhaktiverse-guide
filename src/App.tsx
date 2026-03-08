@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Spiritual loading fallback
 const SpiritualLoader = () => (
@@ -56,6 +57,7 @@ const App = () => (
             <Toaster />
             <Sonner />
           <BrowserRouter>
+            <ErrorBoundary>
             <Suspense fallback={<SpiritualLoader />}>
               <Routes>
                 {/* Public Routes */}
@@ -89,6 +91,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </ErrorBoundary>
             </BrowserRouter>
           </TooltipProvider>
         </PremiumProvider>

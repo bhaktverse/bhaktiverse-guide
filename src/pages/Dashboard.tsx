@@ -95,6 +95,7 @@ const Dashboard = () => {
   const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
   const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [aiCreditsUsed, setAiCreditsUsed] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -246,6 +247,18 @@ const Dashboard = () => {
         setLastPalmReadingDate(lastPalm.created_at);
       }
 
+      // Load AI credits usage for today
+      const { data: usageData } = await supabase
+        .from('user_api_usage')
+        .select('call_count')
+        .eq('user_id', user?.id)
+        .eq('usage_date', today);
+      
+      if (usageData) {
+        const totalUsed = usageData.reduce((sum, row) => sum + row.call_count, 0);
+        setAiCreditsUsed(totalUsed);
+      }
+
       if (devotion) {
         setTodayDevotion(devotion as DailyDevotion);
       }
@@ -381,6 +394,10 @@ const Dashboard = () => {
                   <Badge variant="outline" className="bg-secondary/10 border-secondary/30">
                     <Sparkles className="h-3 w-3 mr-1" />
                     {stats.xp} XP
+                  </Badge>
+                  <Badge variant="outline" className={`${aiCreditsUsed >= 18 ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-primary/10 border-primary/30'}`}>
+                    <Zap className="h-3 w-3 mr-1" />
+                    AI: {aiCreditsUsed}/20
                   </Badge>
                 </div>
               </div>
