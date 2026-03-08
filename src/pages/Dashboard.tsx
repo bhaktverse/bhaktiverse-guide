@@ -727,13 +727,13 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
             {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-amber-500" />
+              <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                   Your Progress
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
                 <div className="text-center p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
                   <div className="text-4xl font-bold text-amber-500">{stats.currentStreak}</div>
                   <div className="text-sm text-muted-foreground">Day Streak 🔥</div>
