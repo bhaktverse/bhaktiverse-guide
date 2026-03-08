@@ -94,6 +94,7 @@ const DarkModeSwitch = () => {
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isPremium } = usePremium();
   const navigate = useNavigate();
   usePageTitle('My Profile');
   
@@ -120,7 +121,6 @@ const Profile = () => {
     karma_score: 0
   });
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
   const [readingHistory, setReadingHistory] = useState<any[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
