@@ -805,6 +805,7 @@ const Dashboard = () => {
                 )}
               </CardContent>
             </Card>
+            </div> {/* End Progress & Events grid */}
 
             {/* Palm Re-scan Reminder */}
             {lastPalmReadingDate && (() => {
