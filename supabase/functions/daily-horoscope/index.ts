@@ -41,6 +41,32 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit check for authenticated users
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: { user } } = await authClient.auth.getUser();
+      if (user) {
+        const { data: usageCheck } = await supabase.rpc('check_and_increment_api_usage', {
+          _user_id: user.id,
+          _function_name: 'daily-horoscope',
+          _daily_limit: 20
+        });
+        if (usageCheck && !usageCheck.allowed) {
+          return new Response(JSON.stringify({ 
+            error: `Daily limit reached (${usageCheck.daily_limit} calls/day). Please try again tomorrow or upgrade to Premium.`,
+            rate_limited: true
+          }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       const fallback = generateFallbackPrediction(rashiName, rashiHindi, ruler, element);

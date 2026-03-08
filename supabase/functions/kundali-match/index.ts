@@ -44,6 +44,38 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit check
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: { user } } = await authClient.auth.getUser();
+      
+      if (user) {
+        const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: usageCheck } = await serviceClient.rpc('check_and_increment_api_usage', {
+          _user_id: user.id,
+          _function_name: 'kundali-match',
+          _daily_limit: 20
+        });
+        if (usageCheck && !usageCheck.allowed) {
+          return new Response(JSON.stringify({ 
+            error: `Daily limit reached (${usageCheck.daily_limit} calls/day). Please try again tomorrow or upgrade to Premium.`,
+            rate_limited: true
+          }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+
     const gunMilan = calculateGunMilan(partner1, partner2);
     
     let analysis = '';
