@@ -328,12 +328,38 @@ const PalmReading = () => {
 
   const handleBiometricAnalyze = async (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
     setPalmImages(images);
-    setUserName(metadata.name || '');
-    setUserDob(metadata.dob || '');
+    const metaName = metadata.name || '';
+    const metaDob = metadata.dob || '';
+    setUserName(metaName);
+    setUserDob(metaDob);
     setUserTimeOfBirth(metadata.timeOfBirth || '');
     setAnalyzing(true); setAnalysis(null); setAudioUrl(null); setShowReportView(false);
 
     try {
+      // Check for existing recent reading with same name (dedup to save AI credits)
+      if (metaName && user) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const { data: existingReadings } = await supabase
+          .from('palm_reading_history' as never)
+          .select('*')
+          .eq('user_id', user.id)
+          .ilike('user_name' as never, metaName)
+          .gte('created_at', thirtyDaysAgo.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (existingReadings && existingReadings.length > 0) {
+          const existing = existingReadings[0] as PalmReadingRecord;
+          setAnalysis(existing.analysis);
+          setLastSavedReadingId(existing.id);
+          toast({ title: "📋 पिछली रीडिंग मिली", description: `${metaName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!` });
+          setAnalyzing(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
         body: { imageData: images[0], language: selectedLanguage, userName: metadata.name || undefined, userDob: metadata.dob || undefined, userTimeOfBirth: metadata.timeOfBirth || undefined }
       });
