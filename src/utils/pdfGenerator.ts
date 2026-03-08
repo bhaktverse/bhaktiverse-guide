@@ -910,7 +910,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
         doc.setTextColor(...textColor);
         doc.setFont('helvetica', 'normal');
         
-        const maxChars = 3000;
+        const maxChars = 1500;
         const safePrediction = getSafeText(category.prediction);
         const truncatedPrediction = safePrediction.length > maxChars 
           ? safePrediction.substring(0, maxChars) + '...' 

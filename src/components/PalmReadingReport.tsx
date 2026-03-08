@@ -1154,6 +1154,127 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
           </Card>
         )}
 
+        {/* ===== RE-SCAN COMPARISON ===== */}
+        {history && history.length >= 2 && (() => {
+          const currentReading = history[0];
+          const olderReadings = history.slice(1);
+          
+          const [compareIdx, setCompareIdx] = React.useState(0);
+          const previousReading = olderReadings[compareIdx];
+          
+          if (!previousReading) return null;
+          
+          const currentAnalysis = currentReading.analysis as any;
+          const prevAnalysis = previousReading.analysis as any;
+          
+          const getScore = (a: any) => a?.overallScore || 0;
+          const getCatRating = (a: any, cat: string) => a?.categories?.[cat]?.rating || 0;
+          
+          const scoreDiff = getScore(currentAnalysis) - getScore(prevAnalysis);
+          const daysBetween = Math.round((new Date(currentReading.created_at).getTime() - new Date(previousReading.created_at).getTime()) / (1000 * 60 * 60 * 24));
+          
+          const catComparisons = Object.keys(CATEGORY_CONFIG).map(key => {
+            const curr = getCatRating(currentAnalysis, key);
+            const prev = getCatRating(prevAnalysis, key);
+            return { key, curr, prev, diff: curr - prev, config: CATEGORY_CONFIG[key] };
+          }).filter(c => c.curr > 0 || c.prev > 0);
+          
+          const DiffIcon = ({ diff }: { diff: number }) => {
+            if (diff > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
+            if (diff < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
+            return <Minus className="h-4 w-4 text-muted-foreground" />;
+          };
+          
+          const DiffBadge = ({ diff }: { diff: number }) => (
+            <Badge variant="outline" className={diff > 0 ? 'bg-green-500/10 text-green-600 border-green-500/30' : diff < 0 ? 'bg-red-500/10 text-red-600 border-red-500/30' : 'bg-muted text-muted-foreground'}>
+              {diff > 0 ? '+' : ''}{diff}
+            </Badge>
+          );
+
+          return (
+            <Card id="comparison" className="mb-8 card-sacred overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GitCompare className="h-5 w-5 text-indigo-500" />
+                  {showHindi ? 'पिछली रीडिंग से तुलना' : 'Compare with Previous Reading'}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {showHindi ? 'आपकी आध्यात्मिक यात्रा आपकी हथेली में दिखती है' : 'Your spiritual growth reflected in your palm'}
+                </p>
+              </CardHeader>
+              <CardContent>
+                {olderReadings.length > 1 && (
+                  <div className="mb-4">
+                    <Select value={String(compareIdx)} onValueChange={(v) => setCompareIdx(Number(v))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select reading to compare" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {olderReadings.map((r, i) => (
+                          <SelectItem key={r.id} value={String(i)}>
+                            {new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} — {(r.analysis as any)?.palmType || 'Reading'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Overall Score Comparison */}
+                <div className="grid grid-cols-3 gap-4 mb-6 text-center">
+                  <div className="p-4 bg-muted/30 rounded-xl">
+                    <p className="text-xs text-muted-foreground mb-1">{showHindi ? 'पिछला' : 'Previous'}</p>
+                    <p className="text-2xl font-bold text-muted-foreground">{getScore(prevAnalysis)}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(previousReading.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                  </div>
+                  <div className="p-4 bg-primary/10 rounded-xl flex flex-col items-center justify-center">
+                    <DiffIcon diff={scoreDiff} />
+                    <DiffBadge diff={scoreDiff} />
+                    <p className="text-[10px] text-muted-foreground mt-1">{daysBetween} {showHindi ? 'दिन' : 'days'}</p>
+                  </div>
+                  <div className="p-4 bg-primary/5 rounded-xl border-2 border-primary/20">
+                    <p className="text-xs text-muted-foreground mb-1">{showHindi ? 'वर्तमान' : 'Current'}</p>
+                    <p className="text-2xl font-bold text-primary">{getScore(currentAnalysis)}</p>
+                    <p className="text-[10px] text-muted-foreground">{showHindi ? 'आज' : 'Today'}</p>
+                  </div>
+                </div>
+
+                {/* Category-wise Comparison */}
+                <div className="space-y-3">
+                  {catComparisons.map(({ key, curr, prev, diff, config }) => (
+                    <div key={key} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 transition-colors">
+                      <div className={`p-1.5 rounded-md bg-gradient-to-br ${config.gradient} text-white`}>
+                        {config.icon}
+                      </div>
+                      <span className="text-sm flex-1 truncate">{showHindi ? config.hindiTitle : key}</span>
+                      <span className="text-xs text-muted-foreground w-8 text-center">{prev}</span>
+                      <DiffIcon diff={diff} />
+                      <span className="text-sm font-semibold w-8 text-center">{curr}</span>
+                      <DiffBadge diff={diff} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Hand Type Consistency */}
+                {currentAnalysis?.handTypeAnalysis?.classification && prevAnalysis?.handTypeAnalysis?.classification && (
+                  <div className="mt-4 p-3 bg-muted/20 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">{showHindi ? 'हस्त प्रकार स्थिरता' : 'Hand Type Consistency'}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{prevAnalysis.handTypeAnalysis.classification}</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <Badge className="bg-primary/10 text-primary border-primary/30">{currentAnalysis.handTypeAnalysis.classification}</Badge>
+                      {currentAnalysis.handTypeAnalysis.classification === prevAnalysis.handTypeAnalysis.classification && (
+                        <span className="text-xs text-green-600 ml-2">✓ {showHindi ? 'स्थिर' : 'Consistent'}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* ===== CONTINUE YOUR JOURNEY ===== */}
         <div id="services" className="mb-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
