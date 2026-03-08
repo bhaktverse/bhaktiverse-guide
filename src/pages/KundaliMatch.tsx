@@ -109,7 +109,7 @@ const KundaliMatch = () => {
   };
 
   const performMatching = async () => {
-    if (!session) {
+    if (!user) {
       toast.error("कृपया पहले लॉगिन करें / Please login first");
       navigate("/auth");
       return;
