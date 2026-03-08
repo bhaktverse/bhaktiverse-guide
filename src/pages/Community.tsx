@@ -476,6 +476,8 @@ const Community = () => {
                         </Button>
                       )}
                     </div>
+                    
+                    <CommentThread postId={post.id} />
                   </CardContent>
                 </Card>
               ))}
