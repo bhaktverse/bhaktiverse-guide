@@ -521,7 +521,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Featured Services - Palm Reading & Numerology */}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {mainServices.map((service) => (
                 <Card 
                   key={service.path}
@@ -529,14 +529,14 @@ const Dashboard = () => {
                   onClick={() => navigate(service.path)}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
-                  <CardContent className="p-6 relative z-10">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                        <service.icon className="h-7 w-7" />
+                  <CardContent className="p-4 sm:p-6 relative z-10">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-lg group-hover:scale-110 transition-transform flex-shrink-0`}>
+                        <service.icon className="h-5 w-5 sm:h-7 sm:w-7" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{service.label}</h3>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h3 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors">{service.label}</h3>
                           {service.badge && (
                             <Badge className={`text-xs ${service.badge === 'Most Popular' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'bg-green-500/20 text-green-600'}`}>
                               {service.badge}
