@@ -158,6 +158,7 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
   onGenerateHoroscope, loadingHoroscope, horoscope, history, onDeleteHistory, selectedLanguage
 }) => {
   const [showHindi, setShowHindi] = useState(false);
+  const [compareIdx, setCompareIdx] = useState(0);
   const navigate = useNavigate();
   const readingId = `BV-${Date.now().toString(36).toUpperCase()}`;
   const readingDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
