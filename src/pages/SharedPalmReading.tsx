@@ -6,19 +6,72 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Hand, Star } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Hand, Star, Copy, Check, Share2 } from 'lucide-react';
 
 const SharedPalmReading = () => {
   const { readingId } = useParams<{ readingId: string }>();
   const [reading, setReading] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!readingId) return;
     fetchReading();
   }, [readingId]);
+
+  // Dynamic OG meta tags
+  useEffect(() => {
+    if (!reading) return;
+    const analysis = reading.analysis;
+    const score = analysis?.overallScore ? `Score: ${analysis.overallScore}/10` : '';
+    const title = `🤚 Palm Reading ${score} | BhaktVerse`;
+    const description = analysis?.overallDestiny
+      ? analysis.overallDestiny.substring(0, 155) + '...'
+      : 'AI-powered palm reading analysis on BhaktVerse - your spiritual companion.';
+
+    document.title = title;
+
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('property', property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    const setMetaName = (name: string, content: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('name', name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    const pageUrl = window.location.href;
+
+    setMeta('og:title', title);
+    setMeta('og:description', description);
+    setMeta('og:type', 'article');
+    setMeta('og:url', pageUrl);
+    setMeta('og:image', 'https://bhaktverse.lovable.app/favicon.ico');
+    setMeta('og:site_name', 'BhaktVerse');
+
+    setMetaName('twitter:card', 'summary');
+    setMetaName('twitter:title', title);
+    setMetaName('twitter:description', description);
+
+    return () => {
+      document.title = 'BhaktVerse - AI Spiritual Platform';
+    };
+  }, [reading]);
 
   const fetchReading = async () => {
     try {
@@ -47,6 +100,31 @@ const SharedPalmReading = () => {
       setError('Failed to load reading.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      toast({ title: '🔗 Link Copied!', description: 'Share this link with friends and family.' });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: 'Copy failed', description: 'Please copy the URL manually.', variant: 'destructive' });
+    }
+  };
+
+  const shareReading = async () => {
+    const analysis = reading?.analysis;
+    const shareData = {
+      title: 'My Palm Reading | BhaktVerse',
+      text: analysis?.overallDestiny?.substring(0, 100) || 'Check out my AI palm reading!',
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch {}
+    } else {
+      copyLink();
     }
   };
 
@@ -100,14 +178,25 @@ const SharedPalmReading = () => {
             </div>
             {analysis?.overallScore && (
               <div className="flex items-center justify-center gap-1 mt-3">
-                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                <Star className="h-5 w-5 fill-primary text-primary" />
                 <span className="text-lg font-semibold">{analysis.overallScore}/10</span>
               </div>
             )}
+            {/* Share buttons */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={copyLink} className="gap-1.5">
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? 'Copied!' : 'Copy Link'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={shareReading} className="gap-1.5">
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+            </div>
           </CardHeader>
         </Card>
 
-        {/* Greeting / Overall Destiny */}
+        {/* Overall Destiny */}
         {analysis?.overallDestiny && (
           <Card className="mb-6">
             <CardContent className="pt-6">
@@ -126,9 +215,7 @@ const SharedPalmReading = () => {
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold">{cat.title || key}</h3>
-                      {cat.rating && (
-                        <Badge variant="outline">{cat.rating}/10</Badge>
-                      )}
+                      {cat.rating && <Badge variant="outline">{cat.rating}/10</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{cat.prediction}</p>
                     {cat.guidance && (
