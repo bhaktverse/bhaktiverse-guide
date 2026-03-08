@@ -560,11 +560,18 @@ const Community = () => {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
-                          <Textarea
-                            placeholder="What's on your spiritual mind today?"
-                            value={newPost}
-                            onChange={(e) => setNewPost(e.target.value)}
-                            className="min-h-[100px]"
+                          <div>
+                            <Textarea
+                              placeholder="What's on your spiritual mind today?"
+                              value={newPost}
+                              onChange={(e) => setNewPost(e.target.value.slice(0, POST_MAX_LENGTH))}
+                              className="min-h-[100px]"
+                              maxLength={POST_MAX_LENGTH}
+                            />
+                            <p className={`text-xs mt-1 text-right ${newPost.length > POST_MAX_LENGTH * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {newPost.length}/{POST_MAX_LENGTH}
+                            </p>
+                          </div>
                           />
                           
                           <div>
