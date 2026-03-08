@@ -32,11 +32,12 @@ const KundaliMatch = () => {
   const navigate = useNavigate();
   
   const [partner1, setPartner1] = useState<PartnerDetails>({
-    name: '', dob: '', timeOfBirth: '', rashi: null
+    name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null
   });
   const [partner2, setPartner2] = useState<PartnerDetails>({
-    name: '', dob: '', timeOfBirth: '', rashi: null
+    name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null
   });
+  const [usedFallback, setUsedFallback] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GunMilanResult | null>(null);
