@@ -409,6 +409,36 @@ const Numerology = () => {
                   })}
                 </div>
               </div>
+
+              {/* Past Reports */}
+              {pastReports.length > 0 && (
+                <Collapsible open={pastReportsOpen} onOpenChange={setPastReportsOpen} className="mt-4">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between text-xs">
+                      <span className="flex items-center gap-1">
+                        <History className="h-3 w-3" />
+                        पिछली रिपोर्ट / Past Reports ({pastReports.length})
+                      </span>
+                      <ChevronDown className={`h-3 w-3 transition-transform ${pastReportsOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-2">
+                    {pastReports.map((r) => (
+                      <div key={r.id} className="p-2 bg-muted/30 rounded-lg text-xs">
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold">{r.name}</p>
+                          <span className="text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString('hi-IN') : ''}</span>
+                        </div>
+                        <div className="flex gap-2 mt-1 text-muted-foreground">
+                          {r.birth_number && <span>जन्मांक: {r.birth_number}</span>}
+                          {r.destiny_number && <span>भाग्यांक: {r.destiny_number}</span>}
+                          {r.lucky_gemstone && <span>💎 {r.lucky_gemstone}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </CardContent>
           </Card>
 

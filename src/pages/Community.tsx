@@ -58,6 +58,8 @@ const Community = () => {
   const { toast } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -65,6 +67,7 @@ const Community = () => {
   const [filterTag, setFilterTag] = useState<string>('');
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [totalDevotees, setTotalDevotees] = useState(0);
+  const PAGE_SIZE = 20;
 
   const availableTags = [
     'devotion', 'experience', 'learning', 'ritual', 'festival', 'pilgrimage',
