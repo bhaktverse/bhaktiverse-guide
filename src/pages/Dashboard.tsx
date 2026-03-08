@@ -516,9 +516,9 @@ const Dashboard = () => {
           </Card>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
             
             {/* Featured Services - Palm Reading & Numerology */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -594,7 +594,7 @@ const Dashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                  <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border -mx-1 px-1">
                     {bhaktiShorts.map((short) => {
                       const extractVideoId = (url: string) => {
                         const match = url.match(/(?:shorts\/|v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -705,16 +705,16 @@ const Dashboard = () => {
 
             {/* Today's Wisdom Quote */}
             <Card className="bg-gradient-to-r from-card via-card-sacred to-card border-primary/20 shadow-lotus overflow-hidden">
-              <CardContent className="p-6 relative">
+              <CardContent className="p-4 sm:p-6 relative">
                 <div className="absolute top-0 right-0 text-6xl sm:text-8xl opacity-5 -mt-4 -mr-4">✨</div>
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 text-3xl animate-sacred-float">📿</div>
-                  <div>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="flex-shrink-0 text-2xl sm:text-3xl animate-sacred-float">📿</div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
                       <Sparkles className="h-4 w-4" />
                       Today's Spiritual Wisdom
                     </h3>
-                    <p className="text-foreground italic text-base sm:text-lg leading-relaxed">{todayQuote}</p>
+                    <p className="text-foreground italic text-sm sm:text-base md:text-lg leading-relaxed break-words">{todayQuote}</p>
                   </div>
                 </div>
               </CardContent>
@@ -722,7 +722,9 @@ const Dashboard = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
+          <div className="space-y-4 sm:space-y-6 min-w-0">
+            {/* Progress & Events side by side on small-medium, stacked on mobile and lg */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
             {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
               <CardHeader>
@@ -803,6 +805,7 @@ const Dashboard = () => {
                 )}
               </CardContent>
             </Card>
+            </div> {/* End Progress & Events grid */}
 
             {/* Palm Re-scan Reminder */}
             {lastPalmReadingDate && (() => {
@@ -835,7 +838,7 @@ const Dashboard = () => {
             })()}
 
             {/* Premium CTA */}
-            <Card className="col-span-2 lg:col-span-1 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
+            <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
               <CardContent className="p-4 sm:p-5 text-center">
                 <Crown className="h-10 w-10 mx-auto mb-3 text-amber-500" />
                 <h3 className="font-bold text-lg mb-1">Unlock Premium</h3>
