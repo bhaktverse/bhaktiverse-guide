@@ -315,7 +315,7 @@ const PalmReading = () => {
     try {
       await supabase.from('palm_reading_history' as never).delete().eq('id', id);
       setHistory(prev => prev.filter(item => item.id !== id));
-      toast({ title: "Reading deleted", description: "Palm reading removed from history" });
+      toast.success("Palm reading removed from history");
     } catch (error) { console.error('Error deleting:', error); }
   };
 
