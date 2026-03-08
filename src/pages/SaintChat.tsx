@@ -47,7 +47,7 @@ const SaintChat = () => {
   const { saintId } = useParams<{ saintId: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
+  
   
   const [saint, setSaint] = useState<Saint | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
