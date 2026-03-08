@@ -28,6 +28,7 @@ import {
   Sun,
   MessageCircle
 } from 'lucide-react';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -155,6 +156,7 @@ const Navigation = () => {
 
                 {/* Desktop User Menu */}
                 <div className="hidden md:flex items-center space-x-2">
+                  <NotificationCenter />
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/profile" className={`hover:text-primary ${isActive('/profile') ? 'text-primary' : ''}`}>
                       <User className="h-4 w-4" />

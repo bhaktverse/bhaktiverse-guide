@@ -11,6 +11,7 @@ import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
+import { useFavorites } from '@/hooks/useFavorites';
 import { 
   MapPin, 
   Search, 
@@ -78,6 +79,7 @@ const Temples = () => {
   const [selectedTradition, setSelectedTradition] = useState("all");
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'name'>('distance');
   const [showMap, setShowMap] = useState(false);
+  const { isFavorited, toggleFavorite } = useFavorites('temple');
 
   useEffect(() => {
     loadTemples();
@@ -381,9 +383,9 @@ const Temples = () => {
                 <div className="flex justify-between pt-2 border-t border-border/50">
                   <Button variant="ghost" size="sm" onClick={(e) => {
                     e.stopPropagation();
-                    // Handle favorite
-                  }}>
-                    <Heart className="h-4 w-4" />
+                    toggleFavorite(temple.id, 'temple');
+                  }} className={isFavorited(temple.id) ? 'text-destructive' : ''}>
+                    <Heart className={`h-4 w-4 ${isFavorited(temple.id) ? 'fill-current' : ''}`} />
                   </Button>
                   
                   <Button variant="ghost" size="sm" onClick={(e) => {

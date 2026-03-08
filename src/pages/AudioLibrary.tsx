@@ -14,6 +14,7 @@ import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import PlaylistManager from '@/components/PlaylistManager';
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Play, 
@@ -58,6 +59,7 @@ const AudioLibrary = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
   const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
+  const { isFavorited, toggleFavorite } = useFavorites('audio');
 
   useEffect(() => {
     loadTracks();
@@ -338,8 +340,9 @@ const AudioLibrary = () => {
                         )}
                         
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="sm">
-                            <Heart className="h-4 w-4" />
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); toggleFavorite(track.id, 'audio'); }}
+                            className={isFavorited(track.id) ? 'text-destructive' : ''}>
+                            <Heart className={`h-4 w-4 ${isFavorited(track.id) ? 'fill-current' : ''}`} />
                           </Button>
                           <Button 
                             variant="ghost" 
