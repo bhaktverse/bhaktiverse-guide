@@ -584,7 +584,7 @@ const PalmReading = () => {
               {generatingPdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               <span className="hidden sm:inline">PDF</span> {!isPremiumUser && <span className="text-[10px]">👑</span>}
             </Button>
-            <SocialShare title="AI Guru Palm Reading" text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'} palmType={analysis.palmType} />
+            <SocialShare title="AI Guru Palm Reading" text={analysis.overallDestiny || analysis.greeting || 'My palm reading from BhaktVerse'} palmType={analysis.palmType} readingId={lastSavedReadingId} />
             <Button onClick={resetScan} variant="ghost" size="sm" className="gap-1.5">
               <RotateCcw className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">New Scan</span>

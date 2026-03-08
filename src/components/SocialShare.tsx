@@ -68,6 +68,7 @@ const SocialShare = ({ title, text, palmType, score, readingId }: SocialSharePro
   };
 
   const copyToClipboard = async () => {
+    await ensureMarkedShared();
     try {
       await navigator.clipboard.writeText(shareText);
       setCopied(true);
@@ -78,7 +79,8 @@ const SocialShare = ({ title, text, palmType, score, readingId }: SocialSharePro
     }
   };
 
-  const openShareLink = (platform: keyof typeof shareLinks) => {
+  const openShareLink = async (platform: keyof typeof shareLinks) => {
+    await ensureMarkedShared();
     window.open(shareLinks[platform], '_blank', 'width=600,height=400');
   };
 
