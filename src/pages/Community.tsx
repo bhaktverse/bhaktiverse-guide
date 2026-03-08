@@ -771,6 +771,20 @@ const Community = () => {
                         </Button>
                       </div>
                       {post.user_id === user?.id && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label="Edit post"
+                            className="text-muted-foreground hover:text-primary"
+                            onClick={() => {
+                              setEditingPost(post);
+                              setEditContent(post.content);
+                              setEditTags([...post.tags]);
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
