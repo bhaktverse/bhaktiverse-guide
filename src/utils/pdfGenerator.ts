@@ -235,19 +235,8 @@ function transliterate(text: string): string {
   return result;
 }
 
-// Global variable to track if we're generating Hindi PDF
-let isHindiPdf = false;
-
 function getSafeText(text: string | undefined | null, fallback: string = ''): string {
   if (!text) return fallback;
-  if (isHindiPdf) {
-    // For Hindi PDFs, keep Devanagari text as-is (no transliteration)
-    // Only clean up zero-width chars and excessive whitespace
-    return text
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')
-      .replace(/\s{2,}/g, ' ')
-      .trim() || fallback;
-  }
   const transliterated = transliterate(text);
   return transliterated || fallback;
 }
