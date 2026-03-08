@@ -49,7 +49,7 @@ interface PlaylistManagerProps {
 
 const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlaylist }) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
