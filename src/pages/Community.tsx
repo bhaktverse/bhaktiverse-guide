@@ -296,14 +296,14 @@ const Community = () => {
     try {
       if (isLiked) {
         const { error } = await supabase
-          .from('post_likes')
+          .from('post_likes' as any)
           .delete()
           .eq('user_id', user.id)
           .eq('post_id', postId);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('post_likes')
+          .from('post_likes' as any)
           .insert({ user_id: user.id, post_id: postId });
         if (error) throw error;
       }
