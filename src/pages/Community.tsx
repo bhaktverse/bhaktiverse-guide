@@ -409,10 +409,7 @@ const Community = () => {
       if (error) throw error;
 
       setPosts(posts.filter(p => p.id !== postId));
-      toast({
-        title: "Post Deleted",
-        description: "Your post has been removed."
-      });
+      toast.success("Your post has been removed.");
     } catch (error) {
       console.error('Error deleting post:', error);
       toast({
