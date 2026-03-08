@@ -133,16 +133,18 @@ const Community = () => {
     };
   }, [user?.id]);
 
-  const loadPosts = async () => {
+  const loadPosts = async (append = false) => {
     try {
-      setLoading(true);
+      if (!append) setLoading(true);
+      
+      const offset = append ? posts.length : 0;
       
       const { data: communityPosts, error } = await supabase
         .from('community_posts')
         .select('*')
         .eq('visibility', 'public')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .range(offset, offset + PAGE_SIZE - 1);
 
       if (error) throw error;
 
@@ -151,7 +153,13 @@ const Community = () => {
         tags: Array.isArray(post.tags) ? post.tags.map(tag => String(tag)) : []
       })) || [];
 
-      setPosts(transformedPosts);
+      if (append) {
+        setPosts(prev => [...prev, ...transformedPosts]);
+      } else {
+        setPosts(transformedPosts);
+      }
+      
+      setHasMore(transformedPosts.length >= PAGE_SIZE);
 
       // Batch query profiles for real user names
       const uniqueUserIds = [...new Set(transformedPosts.map(p => p.user_id))];
