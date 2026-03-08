@@ -1159,8 +1159,6 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
         {history && history.length >= 2 && (() => {
           const currentReading = history[0];
           const olderReadings = history.slice(1);
-          
-          const [compareIdx, setCompareIdx] = React.useState(0);
           const previousReading = olderReadings[compareIdx];
           
           if (!previousReading) return null;
