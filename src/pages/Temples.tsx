@@ -11,6 +11,7 @@ import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
+import { useFavorites } from '@/hooks/useFavorites';
 import { 
   MapPin, 
   Search, 
