@@ -129,6 +129,18 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      toast.error('Avatar must be under 2MB');
+      return;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Only JPEG, PNG, and WebP images allowed');
+      return;
+    }
+
     try {
       const fileExt = file.name.split('.').pop();
       const filePath = `avatars/${user.id}.${fileExt}`;
