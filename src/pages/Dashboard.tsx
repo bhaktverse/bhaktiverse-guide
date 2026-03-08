@@ -247,6 +247,18 @@ const Dashboard = () => {
         setLastPalmReadingDate(lastPalm.created_at);
       }
 
+      // Load AI credits usage for today
+      const { data: usageData } = await supabase
+        .from('user_api_usage')
+        .select('call_count')
+        .eq('user_id', user?.id)
+        .eq('usage_date', today);
+      
+      if (usageData) {
+        const totalUsed = usageData.reduce((sum, row) => sum + row.call_count, 0);
+        setAiCreditsUsed(totalUsed);
+      }
+
       if (devotion) {
         setTodayDevotion(devotion as DailyDevotion);
       }
