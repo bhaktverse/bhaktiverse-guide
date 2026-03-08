@@ -169,6 +169,17 @@ const Community = () => {
     }
   };
 
+  const loadCommunityStats = async () => {
+    const { data } = await supabase
+      .from('community_posts')
+      .select('likes_count, comments_count')
+      .eq('visibility', 'public');
+    if (data) {
+      setTotalBlessings(data.reduce((sum, p) => sum + (p.likes_count || 0), 0));
+      setTotalComments(data.reduce((sum, p) => sum + (p.comments_count || 0), 0));
+    }
+  };
+
   const loadPosts = async (append = false) => {
     try {
       if (!append) setLoading(true);
