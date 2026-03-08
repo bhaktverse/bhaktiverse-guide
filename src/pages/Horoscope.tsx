@@ -118,10 +118,17 @@ const Horoscope = () => {
         setPrediction(data.prediction);
         toast.success(`🌟 ${rashi.hindiName} राशिफल तैयार!`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Horoscope error:', error);
       setPrediction(null);
-      toast.error('राशिफल लोड करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
+      const statusCode = error?.status || error?.code;
+      if (statusCode === 429 || error?.message?.includes('429')) {
+        toast.error("Daily limit reached! Upgrade to Premium for unlimited access.", {
+          action: { label: 'Upgrade', onClick: () => navigate('/premium') }
+        });
+      } else {
+        toast.error('राशिफल लोड करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
+      }
     } finally {
       setLoading(false);
     }
