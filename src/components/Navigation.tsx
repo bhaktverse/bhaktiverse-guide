@@ -29,6 +29,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import NotificationCenter from '@/components/NotificationCenter';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
