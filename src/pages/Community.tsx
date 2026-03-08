@@ -558,6 +558,24 @@ const Community = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Load More */}
+              {hasMore && filteredPosts.length > 0 && !searchQuery && !filterTag && (
+                <div className="text-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setLoadingMore(true);
+                      loadPosts(true).finally(() => setLoadingMore(false));
+                    }}
+                    disabled={loadingMore}
+                    className="gap-2"
+                  >
+                    {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {loadingMore ? 'Loading...' : 'और पोस्ट देखें / Load More'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
