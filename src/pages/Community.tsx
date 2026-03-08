@@ -415,6 +415,20 @@ const Community = () => {
 
   const deletePost = async (postId: string) => {
     try {
+      // Clean up storage files before deleting the post
+      const post = posts.find(p => p.id === postId);
+      if (post?.media_urls?.length) {
+        const storagePaths = post.media_urls
+          .map(url => {
+            const match = url.match(/community-media\/(.+)$/);
+            return match ? match[1] : null;
+          })
+          .filter(Boolean) as string[];
+        if (storagePaths.length > 0) {
+          await supabase.storage.from('community-media').remove(storagePaths);
+        }
+      }
+
       const { error } = await supabase
         .from('community_posts')
         .delete()
