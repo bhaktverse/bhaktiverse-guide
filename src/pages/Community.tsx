@@ -712,6 +712,7 @@ const Community = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label="Share post"
                           className="text-muted-foreground hover:text-primary"
                           onClick={() => sharePost(post)}
                         >
