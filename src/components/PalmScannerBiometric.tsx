@@ -57,7 +57,7 @@ const PalmScannerBiometric = ({
   analyzing,
   languages
 }: PalmScannerProps) => {
-  const { toast } = useToast();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [showLanguageSelector, setShowLanguageSelector] = useState(true);
