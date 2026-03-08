@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 
 const MobileBottomNav = () => {
