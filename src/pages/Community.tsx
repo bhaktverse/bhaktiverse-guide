@@ -200,7 +200,7 @@ const Community = () => {
           profiles.forEach(p => { profileMap[p.user_id] = p; });
           setUserProfiles(prev => ({ ...prev, ...profileMap }));
         }
-        setActiveDevotees(uniqueUserIds.length);
+        // Active devotees now loaded separately via loadActiveThisWeek
       }
 
       // Load user's likes

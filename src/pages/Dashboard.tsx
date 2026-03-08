@@ -125,216 +125,80 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     setIsDataLoading(true);
     try {
-      // Load profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
+      const today = new Date().toISOString().split('T')[0];
 
+      // Batch 1: User-specific fast queries (parallel)
+      const [profileRes, journeyRes, activitiesRes, usageRes, lastPalmRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('user_id', user?.id).maybeSingle(),
+        supabase.from('spiritual_journey').select('*').eq('user_id', user?.id).maybeSingle(),
+        supabase.from('user_activities').select('*').eq('user_id', user?.id).gte('created_at', today),
+        supabase.from('user_api_usage').select('call_count').eq('user_id', user?.id).eq('usage_date', today),
+        supabase.from('palm_reading_history').select('created_at').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+
+      // Batch 2: Public data (parallel)
+      const [eventsRes, shortsRes, devotionRes, quoteRes] = await Promise.all([
+        supabase.from('calendar_events').select('*').gte('date', today).order('date', { ascending: true }).limit(3),
+        supabase.from('bhakti_shorts').select('*').eq('approved', true).eq('featured', true).order('created_at', { ascending: false }).limit(6),
+        supabase.from('daily_devotions').select('*').eq('day_of_week', new Date().getDay()).maybeSingle(),
+        supabase.from('spiritual_content').select('content, title').eq('category', 'teaching').limit(20),
+      ]);
+
+      // Process profile
+      const profile = profileRes.data;
       if (profile) {
         setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
         setUserAvatarUrl(profile.avatar_url || null);
-        
-        // Check if onboarding needed (no favorite deities set)
         const deities = profile.favorite_deities as any[];
-        if (!deities || deities.length === 0) {
-          setShowOnboarding(true);
-        }
-        
+        if (!deities || deities.length === 0) setShowOnboarding(true);
         if (profile.streak_data && typeof profile.streak_data === 'object') {
           const streakData = profile.streak_data as any;
-          setStats(prevStats => ({
-            ...prevStats,
-            currentStreak: streakData.current_streak || 0,
-            longestStreak: streakData.longest_streak || 0
-          }));
+          setStats(prev => ({ ...prev, currentStreak: streakData.current_streak || 0, longestStreak: streakData.longest_streak || 0 }));
         }
       } else {
         setUserName(user?.email?.split('@')[0] || 'Seeker');
         setShowOnboarding(true);
       }
 
-      // Load spiritual journey
-      const { data: journey } = await supabase
-        .from('spiritual_journey')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (journey) {
-        setStats(prev => ({
-          ...prev,
-          level: journey.level || 1,
-          xp: journey.experience_points || 0
-        }));
+      // Process journey
+      if (journeyRes.data) {
+        setStats(prev => ({ ...prev, level: journeyRes.data.level || 1, xp: journeyRes.data.experience_points || 0 }));
       }
 
-      // Load today's activities
-      const today = new Date().toISOString().split('T')[0];
-      const { data: activities } = await supabase
-        .from('user_activities')
-        .select('*')
-        .eq('user_id', user?.id)
-        .gte('created_at', today);
-
-      if (activities) {
-        const todayMantras = activities
-          .filter(a => a.activity_type === 'mantra_chant')
-          .reduce((sum, a) => sum + ((a.activity_data as any)?.count || 0), 0);
-
-        const todayReading = activities
-          .filter(a => a.activity_type === 'scripture_read')
-          .reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
-
-        const todayMeditation = activities
-          .filter(a => a.activity_type === 'meditation')
-          .reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
-
-        setStats(prev => ({
-          ...prev,
-          totalMantras: todayMantras,
-          readingMinutes: todayReading,
-          meditationMinutes: todayMeditation
-        }));
+      // Process activities
+      if (activitiesRes.data) {
+        const activities = activitiesRes.data;
+        const todayMantras = activities.filter(a => a.activity_type === 'mantra_chant').reduce((sum, a) => sum + ((a.activity_data as any)?.count || 0), 0);
+        const todayReading = activities.filter(a => a.activity_type === 'scripture_read').reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
+        const todayMeditation = activities.filter(a => a.activity_type === 'meditation').reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
+        setStats(prev => ({ ...prev, totalMantras: todayMantras, readingMinutes: todayReading, meditationMinutes: todayMeditation }));
       }
 
-      // Load upcoming events
-      const { data: events } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .gte('date', new Date().toISOString().split('T')[0])
-        .order('date', { ascending: true })
-        .limit(3);
+      // Process usage
+      if (usageRes.data) {
+        setAiCreditsUsed(usageRes.data.reduce((sum, row) => sum + row.call_count, 0));
+      }
 
-      if (events) {
-        setUpcomingEvents(events.map(event => ({
+      // Process palm
+      if (lastPalmRes.data?.created_at) setLastPalmReadingDate(lastPalmRes.data.created_at);
+
+      // Process events
+      if (eventsRes.data) {
+        setUpcomingEvents(eventsRes.data.map(event => ({
           name: event.title,
           date: new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
           type: event.event_type
         })));
       }
 
-      // Load Bhakti Shorts
-      const { data: shorts } = await supabase
-        .from('bhakti_shorts')
-        .select('*')
-        .eq('approved', true)
-        .eq('featured', true)
-        .order('created_at', { ascending: false })
-        .limit(6);
+      // Process shorts
+      if (shortsRes.data) setBhaktiShorts(shortsRes.data);
 
-      if (shorts) {
-        setBhaktiShorts(shorts);
-      }
+      // Process devotion
+      if (devotionRes.data) setTodayDevotion(devotionRes.data as DailyDevotion);
 
-      // Load today's devotion
-      const { data: devotion } = await supabase
-        .from('daily_devotions')
-        .select('*')
-        .eq('day_of_week', new Date().getDay())
-        .maybeSingle();
-
-      // Load last palm reading date for re-scan reminder
-      const { data: lastPalm } = await supabase
-        .from('palm_reading_history')
-        .select('created_at')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (lastPalm?.created_at) {
-        setLastPalmReadingDate(lastPalm.created_at);
-      }
-
-      // Load AI credits usage for today
-      const { data: usageData } = await supabase
-        .from('user_api_usage')
-        .select('call_count')
-        .eq('user_id', user?.id)
-        .eq('usage_date', today);
-      
-      if (usageData) {
-        const totalUsed = usageData.reduce((sum, row) => sum + row.call_count, 0);
-        setAiCreditsUsed(totalUsed);
-      }
-
-      if (devotion) {
-        setTodayDevotion(devotion as DailyDevotion);
-      }
-
-      // Load "Continue Your Journey" items
-      const items: any[] = [];
-      
-      // Recent saint chat sessions
-      const { data: chatSessions } = await supabase
-        .from('ai_chat_sessions')
-        .select('id, context_data, last_activity')
-        .eq('user_id', user?.id)
-        .eq('session_type', 'saint_specific')
-        .order('last_activity', { ascending: false })
-        .limit(2);
-      
-      if (chatSessions) {
-        for (const session of chatSessions) {
-          const saintId = (session.context_data as any)?.saint_id;
-          if (saintId) {
-            const { data: saint } = await supabase
-              .from('saints')
-              .select('name')
-              .eq('id', saintId)
-              .maybeSingle();
-            if (saint) {
-              const diff = Math.floor((Date.now() - new Date(session.last_activity || '').getTime()) / 60000);
-              const timeAgo = diff < 60 ? `${diff}m ago` : diff < 1440 ? `${Math.floor(diff / 60)}h ago` : `${Math.floor(diff / 1440)}d ago`;
-              items.push({
-                icon: '🧘',
-                title: `Chat with ${saint.name}`,
-                subtitle: timeAgo,
-                path: `/saints/${saintId}/chat`
-              });
-            }
-          }
-        }
-      }
-
-      // Recent scripture progress
-      const { data: scriptureProgress } = await supabase
-        .from('user_progress')
-        .select('content_id, progress_percentage, last_accessed')
-        .eq('user_id', user?.id)
-        .eq('content_type', 'scripture')
-        .eq('completed', false)
-        .order('last_accessed', { ascending: false })
-        .limit(1);
-      
-      if (scriptureProgress && scriptureProgress.length > 0) {
-        const sp = scriptureProgress[0];
-        const { data: scripture } = await supabase
-          .from('scriptures')
-          .select('title')
-          .eq('id', sp.content_id)
-          .maybeSingle();
-        if (scripture) {
-          items.push({
-            icon: '📖',
-            title: scripture.title,
-            subtitle: `${sp.progress_percentage}% done`,
-            path: `/scriptures/${sp.content_id}`
-          });
-        }
-      }
-
-      setContinueItems(items.slice(0, 3));
-
-      // Load daily quote from spiritual_content
-      const { data: quoteData } = await supabase
-        .from('spiritual_content')
-        .select('content, title')
-        .eq('category', 'teaching')
-        .limit(20);
-
+      // Process quote
+      const quoteData = quoteRes.data;
       if (quoteData && quoteData.length > 0) {
         const randomQuote = quoteData[new Date().getDate() % quoteData.length];
         setTodayQuote(randomQuote.title ? `${randomQuote.content} — ${randomQuote.title}` : randomQuote.content);
@@ -346,13 +210,57 @@ const Dashboard = () => {
         ];
         setTodayQuote(fallbackQuotes[new Date().getDate() % fallbackQuotes.length]);
       }
+
+      // Batch 3: Continue Your Journey items (depends on user, has nested queries)
+      const items: any[] = [];
+      
+      const [chatSessionsRes, scriptureProgressRes] = await Promise.all([
+        supabase.from('ai_chat_sessions').select('id, context_data, last_activity').eq('user_id', user?.id).eq('session_type', 'saint_specific').order('last_activity', { ascending: false }).limit(2),
+        supabase.from('user_progress').select('content_id, progress_percentage, last_accessed').eq('user_id', user?.id).eq('content_type', 'scripture').eq('completed', false).order('last_accessed', { ascending: false }).limit(1),
+      ]);
+
+      // Process chat sessions — gather saint IDs and batch-fetch
+      if (chatSessionsRes.data) {
+        const saintIds = chatSessionsRes.data
+          .map(s => (s.context_data as any)?.saint_id)
+          .filter(Boolean);
+        
+        if (saintIds.length > 0) {
+          const { data: saints } = await supabase
+            .from('saints')
+            .select('id, name')
+            .in('id', saintIds);
+          
+          const saintMap = new Map(saints?.map(s => [s.id, s.name]) || []);
+          
+          for (const session of chatSessionsRes.data) {
+            const saintId = (session.context_data as any)?.saint_id;
+            const saintName = saintMap.get(saintId);
+            if (saintName) {
+              const diff = Math.floor((Date.now() - new Date(session.last_activity || '').getTime()) / 60000);
+              const timeAgo = diff < 60 ? `${diff}m ago` : diff < 1440 ? `${Math.floor(diff / 60)}h ago` : `${Math.floor(diff / 1440)}d ago`;
+              items.push({ icon: '🧘', title: `Chat with ${saintName}`, subtitle: timeAgo, path: `/saints/${saintId}/chat` });
+            }
+          }
+        }
+      }
+
+      // Process scripture progress
+      if (scriptureProgressRes.data && scriptureProgressRes.data.length > 0) {
+        const sp = scriptureProgressRes.data[0];
+        const { data: scripture } = await supabase.from('scriptures').select('title').eq('id', sp.content_id).maybeSingle();
+        if (scripture) {
+          items.push({ icon: '📖', title: scripture.title, subtitle: `${sp.progress_percentage}% done`, path: `/scriptures/${sp.content_id}` });
+        }
+      }
+
+      setContinueItems(items.slice(0, 3));
       
     } catch (error) {
       console.error('Error loading dashboard:', error);
       setTodayQuote("Peace comes from within. Do not seek it without. — Buddha");
     } finally {
       setIsDataLoading(false);
-      // Trigger entrance animations after data loads
       setTimeout(() => setAnimateIn(true), 100);
     }
   };
