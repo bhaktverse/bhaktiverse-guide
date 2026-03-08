@@ -50,6 +50,7 @@ const Scriptures = () => {
   const [selectedTradition, setSelectedTradition] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const { isFavorited, toggleFavorite } = useFavorites('scripture');
 
   useEffect(() => {
     loadScriptures();
