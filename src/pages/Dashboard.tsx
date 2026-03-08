@@ -448,7 +448,7 @@ const Dashboard = () => {
                       key={action.type}
                       variant="outline"
                       size="sm"
-                      className="flex-1 min-w-[80px] sm:flex-none gap-1 text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
+                      className="flex-1 min-w-0 sm:min-w-[80px] sm:flex-none gap-1 text-[10px] sm:text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
                       disabled={sadhanaLoading === action.type}
                       onClick={async () => {
                         if (!user) return;
