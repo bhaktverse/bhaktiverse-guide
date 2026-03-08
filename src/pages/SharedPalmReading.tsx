@@ -25,12 +25,6 @@ const SharedPalmReading = () => {
 
   const fetchReading = async () => {
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('get-shared-reading', {
-        body: null,
-        headers: {},
-      });
-      
-      // Use GET with query params via fetch
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-shared-reading?id=${readingId}`,
         {
