@@ -1172,7 +1172,8 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     doc.text(`Page ${i} of ${totalPageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
   }
 
-  // Save
+  // Save PDF
   const safeName = getSafeText(userName, 'Seeker').replace(/[^a-zA-Z0-9]/g, '_');
   doc.save(`BhaktVerse_Palm_Reading_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
 };
+
