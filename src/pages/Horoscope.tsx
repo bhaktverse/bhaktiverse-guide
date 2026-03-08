@@ -65,12 +65,16 @@ const Horoscope = () => {
         if (idx !== undefined && RASHIS[idx]) {
           setSelectedRashi(RASHIS[idx]);
           toast.success(`🌟 Auto-detected your rashi: ${RASHIS[idx].hindiName}`);
+          // Auto-trigger prediction
+          setTimeout(() => generatePrediction(RASHIS[idx]), 500);
         }
       } else if (data?.dob) {
         const detected = getRashiByDate(new Date(data.dob));
         if (detected) {
           setSelectedRashi(detected);
           toast.success(`🌟 Detected rashi from DOB: ${detected.hindiName}`);
+          // Auto-trigger prediction
+          setTimeout(() => generatePrediction(detected), 500);
         }
       }
     } catch (err) {
