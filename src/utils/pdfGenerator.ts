@@ -522,7 +522,9 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     const c2 = pageWidth / 2 + 5 + halfW / 2;
     doc.text('Overall Score', c1, scoreBoxY + 13, { align: 'center' });
     doc.setFontSize(18);
-    doc.text(`${analysis.overallScore || 8.0}/10`, c1, scoreBoxY + 28, { align: 'center' });
+    const rawScore = analysis.overallScore || 8.0;
+    const displayScore = rawScore > 10 ? (rawScore / 10).toFixed(1) : rawScore.toString();
+    doc.text(`${displayScore}/10`, c1, scoreBoxY + 28, { align: 'center' });
 
     doc.setFontSize(12);
     doc.text('Confidence', c2, scoreBoxY + 13, { align: 'center' });
