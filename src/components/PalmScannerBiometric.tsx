@@ -83,11 +83,7 @@ const PalmScannerBiometric = ({
     if (!file) return;
 
     if (!selectedLanguage) {
-      toast({
-        title: "Select Language",
-        description: "Please choose your preferred language first",
-        variant: "destructive"
-      });
+      toast.error("Please choose your preferred language first");
       return;
     }
 
