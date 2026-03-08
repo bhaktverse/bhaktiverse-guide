@@ -451,14 +451,10 @@ const Community = () => {
                           <span>{post.likes_count}</span>
                         </Button>
                         
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:text-primary"
-                        >
+                        <span className="text-muted-foreground text-sm flex items-center">
                           <MessageCircle className="h-4 w-4 mr-1" />
-                          <span>{post.comments_count}</span>
-                        </Button>
+                          {post.comments_count}
+                        </span>
                         
                         <Button
                           variant="ghost"
