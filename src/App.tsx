@@ -42,6 +42,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Horoscope = lazy(() => import("./pages/Horoscope"));
 const KundaliMatch = lazy(() => import("./pages/KundaliMatch"));
 const SharedPalmReading = lazy(() => import("./pages/SharedPalmReading"));
+const Favorites = lazy(() => import("./pages/Favorites"));
 
 const queryClient = new QueryClient();
 
