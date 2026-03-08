@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     // Use service role to delete all user data
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Delete from all user-related tables
+    // Delete from all user-related tables (order matters for FK constraints)
     const tables = [
       'post_comments',
       'post_likes',
@@ -55,12 +55,11 @@ Deno.serve(async (req) => {
       'kundali_match_history',
       'astro_profiles',
       'spiritual_journey',
-      'horoscope_cache', // no user_id, skip
+      'user_roles',
       'profiles',
     ];
 
     for (const table of tables) {
-      if (table === 'horoscope_cache') continue;
       await adminClient.from(table).delete().eq('user_id', userId);
     }
 
