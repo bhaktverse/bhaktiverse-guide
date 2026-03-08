@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Navigation from '@/components/Navigation';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import ScrollToTop from '@/components/ScrollToTop';
 import SocialShare from '@/components/SocialShare';
 import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import EnhancedPalmVisualization from '@/components/EnhancedPalmVisualization';
