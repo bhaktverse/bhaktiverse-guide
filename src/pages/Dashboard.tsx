@@ -640,14 +640,14 @@ const Dashboard = () => {
               </Card>
             )}
 
-            <Card className="card-sacred">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-primary" />
+            <Card className="card-sacred overflow-hidden">
+              <CardHeader className="p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                    <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                     Today's Spiritual Goals
                   </CardTitle>
-                  <Badge variant="outline" className="text-primary border-primary/30">
+                  <Badge variant="outline" className="text-primary border-primary/30 text-xs w-fit">
                     {overallProgress}% Complete
                   </Badge>
                 </div>
