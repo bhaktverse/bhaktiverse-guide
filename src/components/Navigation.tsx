@@ -28,6 +28,7 @@ import {
   Sun,
   MessageCircle
 } from 'lucide-react';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
