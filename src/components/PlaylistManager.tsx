@@ -137,10 +137,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
           : p
       ));
       resetForm();
-      toast({
-        title: "✨ Playlist Updated!",
-        description: "Your changes have been saved.",
-      });
+      toast.success("✨ Playlist Updated! Your changes have been saved.");
     } catch (error) {
       console.error('Error updating playlist:', error);
       toast({
