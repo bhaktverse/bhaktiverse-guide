@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, Mic, MicOff, Volume2, BookOpen, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Navigation from '@/components/Navigation';
 import Breadcrumbs from '@/components/Breadcrumbs';
