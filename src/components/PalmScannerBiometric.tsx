@@ -107,11 +107,7 @@ const PalmScannerBiometric = ({
   // Start biometric camera scan
   const startBiometricScan = () => {
     if (!selectedLanguage) {
-      toast({
-        title: "Select Language",
-        description: "Please choose your preferred language first",
-        variant: "destructive"
-      });
+      toast.error("Please choose your preferred language first");
       return;
     }
     setShowLanguageSelector(false);
