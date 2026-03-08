@@ -282,12 +282,12 @@ const Horoscope = () => {
         {/* Error/Retry */}
         {selectedRashi && !prediction && !loading && (
           <div className="max-w-md mx-auto text-center py-16">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h3 className="text-xl font-bold mb-2">राशिफल उपलब्ध नहीं</h3>
-            <p className="text-muted-foreground mb-6">Could not generate prediction. Please try again.</p>
+            <div className="text-6xl mb-4">{selectedRashi.symbol}</div>
+            <h3 className="text-xl font-bold mb-2">{selectedRashi.hindiName} राशिफल</h3>
+            <p className="text-muted-foreground mb-6">Tap below to generate today's AI-powered prediction for {selectedRashi.name}.</p>
             <div className="flex gap-3 justify-center">
               <Button onClick={() => generatePrediction(selectedRashi)} className="bg-gradient-temple text-white">
-                <RefreshCw className="h-4 w-4 mr-2" /> Retry
+                <Sparkles className="h-4 w-4 mr-2" /> Get Today's Prediction
               </Button>
               <Button variant="outline" onClick={() => { setSelectedRashi(null); setPrediction(null); }}>
                 Change Rashi
