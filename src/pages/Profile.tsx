@@ -284,10 +284,7 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "Logged Out",
-        description: "May your journey continue with blessings. 🙏",
-      });
+      toast.success("Logged Out — May your journey continue with blessings. 🙏");
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
