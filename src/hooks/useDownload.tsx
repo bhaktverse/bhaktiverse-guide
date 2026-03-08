@@ -8,7 +8,7 @@ interface DownloadState {
 }
 
 export const useDownload = () => {
-  const { toast } = useToast();
+  
   const [downloadState, setDownloadState] = useState<DownloadState>({
     isDownloading: false,
     progress: 0,
