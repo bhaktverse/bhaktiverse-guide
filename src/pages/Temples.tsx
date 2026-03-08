@@ -79,7 +79,7 @@ const Temples = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTradition, setSelectedTradition] = useState("all");
-  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'name'>('distance');
+  const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
   const [showMap, setShowMap] = useState(false);
   const { isFavorited, toggleFavorite } = useFavorites('temple');
 
