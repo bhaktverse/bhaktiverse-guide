@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { generatePalmReadingPDF } from '@/utils/pdfGenerator';
