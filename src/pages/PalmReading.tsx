@@ -380,7 +380,7 @@ const PalmReading = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!selectedLanguage) { toast({ title: "Select Language", description: "Please select your preferred language first", variant: "destructive" }); return; }
+    if (!selectedLanguage) { toast.error("Please select your preferred language first"); return; }
     const reader = new FileReader();
     reader.onloadend = () => { setPalmImages([reader.result as string]); toast({ title: "Palm image uploaded", description: "Ready for analysis" }); };
     reader.readAsDataURL(file);
