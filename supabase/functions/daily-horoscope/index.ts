@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,14 +20,36 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({
-        prediction: generateFallbackPrediction(rashiName, rashiHindi, ruler, element)
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // Check cache first using service role
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: cached } = await supabase
+      .from('horoscope_cache')
+      .select('prediction_data')
+      .eq('rashi_name', rashiName.toLowerCase())
+      .eq('prediction_date', today)
+      .maybeSingle();
+
+    if (cached?.prediction_data) {
+      console.log(`Cache hit for ${rashiName} on ${today}`);
+      return new Response(JSON.stringify({ prediction: cached.prediction_data, cached: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const today = new Date().toLocaleDateString('hi-IN', { 
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      const fallback = generateFallbackPrediction(rashiName, rashiHindi, ruler, element);
+      return new Response(JSON.stringify({ prediction: fallback }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const todayHindi = new Date().toLocaleDateString('hi-IN', { 
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
     });
 
@@ -58,7 +81,7 @@ Return ONLY valid JSON in this exact format:
 Rashi: ${rashiName} (${rashiHindi})
 Ruling Planet: ${ruler}
 Element: ${element}
-Date: ${today}
+Date: ${todayHindi}
 ${panchang ? `Panchang: Tithi - ${panchang.hindu?.tithi || 'N/A'}, Nakshatra - ${panchang.hindu?.nakshatra || 'N/A'}` : ''}
 
 Provide specific, personalized predictions.`;
@@ -104,7 +127,20 @@ Provide specific, personalized predictions.`;
       prediction = generateFallbackPrediction(rashiName, rashiHindi, ruler, element);
     }
 
-    return new Response(JSON.stringify({ prediction }), {
+    // Save to cache (non-blocking)
+    supabase
+      .from('horoscope_cache')
+      .upsert({
+        rashi_name: rashiName.toLowerCase(),
+        prediction_date: today,
+        prediction_data: prediction,
+      }, { onConflict: 'rashi_name,prediction_date' })
+      .then(({ error }) => {
+        if (error) console.error('Cache save error:', error);
+        else console.log(`Cached prediction for ${rashiName} on ${today}`);
+      });
+
+    return new Response(JSON.stringify({ prediction, cached: false }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
