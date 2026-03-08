@@ -311,7 +311,7 @@ const Community = () => {
         .insert([
           {
             user_id: user?.id,
-            content: newPost,
+            content: sanitizedContent,
             post_type: postType,
             tags: selectedTags,
             visibility: 'public',
