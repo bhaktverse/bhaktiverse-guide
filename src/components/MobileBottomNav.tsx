@@ -17,23 +17,26 @@ import {
   LogOut,
   Star,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Search
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Primary nav items (always visible)
   const primaryNavItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
+    { icon: Search, label: 'Search', path: '__search__' },
     { icon: Hand, label: 'Palm', path: '/palm-reading' },
-    { icon: Compass, label: 'Astro', path: '/numerology' },
     { icon: Music, label: 'Audio', path: '/audio-library' },
     { icon: Menu, label: 'More', path: null }, // Opens sheet
   ];
@@ -55,6 +58,8 @@ const MobileBottomNav = () => {
   const handleNavClick = (path: string | null) => {
     if (path === null) {
       setMoreOpen(true);
+    } else if (path === '__search__') {
+      setSearchOpen(true);
     } else {
       navigate(path);
       setMoreOpen(false);
@@ -76,74 +81,77 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 border-t border-border/50 backdrop-blur-md safe-area-inset-bottom">
-      <div className="flex justify-around items-center py-2 px-2">
-        {primaryNavItems.map(({ icon: Icon, label, path }) => (
-          path === null ? (
-            <Sheet key="more-sheet" open={moreOpen} onOpenChange={setMoreOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center space-y-1 p-2 text-muted-foreground min-w-[60px]"
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-[10px] font-medium">{label}</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-                <SheetHeader className="mb-4">
-                  <SheetTitle className="text-center">More Options</SheetTitle>
-                </SheetHeader>
-                <div className="grid grid-cols-3 gap-4">
-                  {secondaryNavItems.map(({ icon: SecIcon, label: secLabel, path: secPath }) => (
+    <>
+      <MobileSearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 border-t border-border/50 backdrop-blur-md safe-area-inset-bottom">
+        <div className="flex justify-around items-center py-2 px-2">
+          {primaryNavItems.map(({ icon: Icon, label, path }) => (
+            path === null ? (
+              <Sheet key="more-sheet" open={moreOpen} onOpenChange={setMoreOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 text-muted-foreground"
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="text-[10px] font-medium">{label}</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-xl">
+                  <SheetHeader>
+                    <SheetTitle className="text-center">🕉️ More Options</SheetTitle>
+                  </SheetHeader>
+                  <div className="grid grid-cols-4 gap-3 py-4">
+                    {secondaryNavItems.map(({ icon: SecIcon, label: secLabel, path: secPath }) => (
+                      <Button
+                        key={secPath}
+                        variant="ghost"
+                        className={`flex flex-col items-center gap-1 h-auto py-3 ${
+                          location.pathname === secPath ? 'text-primary bg-primary/10' : ''
+                        }`}
+                        onClick={() => handleNavClick(secPath)}
+                      >
+                        <SecIcon className="h-5 w-5" />
+                        <span className="text-[10px] font-medium text-center leading-tight">{secLabel}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  <Separator />
+                  <div className="py-3">
                     <Button
-                      key={secPath}
                       variant="ghost"
-                      onClick={() => handleNavClick(secPath)}
-                      className={`flex flex-col items-center space-y-2 p-4 h-auto ${
-                        location.pathname === secPath 
-                          ? 'text-primary bg-primary/10' 
-                          : 'text-muted-foreground'
-                      }`}
+                      className="w-full flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleLogout}
                     >
-                      <SecIcon className="h-6 w-6" />
-                      <span className="text-xs font-medium text-center">{secLabel}</span>
+                      <LogOut className="h-4 w-4" />
+                      Logout
                     </Button>
-                  ))}
-                </div>
-                
-                {/* Logout Section */}
-                <Separator className="my-4" />
-                <Button
-                  variant="destructive"
-                  onClick={handleLogout}
-                  className="w-full gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </SheetContent>
-            </Sheet>
-          ) : (
-            <Button
-              key={path}
-              variant="ghost"
-              size="sm"
-              onClick={() => handleNavClick(path)}
-              className={`flex flex-col items-center space-y-1 p-2 min-w-[60px] ${
-                location.pathname === path 
-                  ? 'text-primary bg-primary/10' 
-                  : 'text-muted-foreground'
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{label}</span>
-            </Button>
-          )
-        ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Button
+                key={label}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleNavClick(path)}
+                className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 ${
+                  path === '__search__'
+                    ? 'text-muted-foreground'
+                    : location.pathname === path 
+                      ? 'text-primary bg-primary/10' 
+                      : 'text-muted-foreground'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{label}</span>
+              </Button>
+            )
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

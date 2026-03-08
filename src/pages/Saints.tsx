@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, MessageCircle, BookOpen, Sparkles, ArrowLeft } from 'lucide-react';
+import { Search, MessageCircle, BookOpen, Sparkles, ArrowLeft, Heart } from 'lucide-react';
+import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
@@ -33,6 +34,7 @@ const Saints = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTradition, setSelectedTradition] = useState<string>('');
+  const { isFavorited, toggleFavorite } = useFavorites('saint');
 
   useEffect(() => { loadSaints(); }, []);
 
@@ -165,14 +167,24 @@ const Saints = () => {
                     </div>
                   )}
                   
-                  <Button 
-                    onClick={() => navigate(`/saints/${saint.id}/chat`)}
-                    className="w-full gap-2"
-                    size="sm"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Chat with Guru
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => navigate(`/saints/${saint.id}/chat`)}
+                      className="flex-1 gap-2"
+                      size="sm"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Chat with Guru
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleFavorite(saint.id, 'saint')}
+                      className={isFavorited(saint.id) ? 'text-destructive border-destructive/30' : ''}
+                    >
+                      <Heart className={`h-4 w-4 ${isFavorited(saint.id) ? 'fill-current' : ''}`} />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
