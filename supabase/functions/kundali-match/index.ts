@@ -9,6 +9,7 @@ interface PartnerInfo {
   name: string;
   dob: string;
   timeOfBirth?: string;
+  placeOfBirth?: string;
   rashi: string;
   rashiHindi: string;
 }
