@@ -56,8 +56,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const createUserProfile = async (user: User) => {
+  const ensureUserProfile = async (user: User) => {
     try {
+      // Check if profile already exists before inserting
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) return; // Profile already exists, skip
+
       const { error } = await supabase
         .from('profiles')
         .insert([
@@ -69,7 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
         ]);
 
-      if (error && !error.message.includes('duplicate')) {
+      if (error && error.code !== '23505') {
         console.error('Error creating profile:', error);
       }
     } catch (error) {
