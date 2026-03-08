@@ -82,15 +82,26 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
-    let userId: string | null = null;
     const authHeader = req.headers.get('Authorization');
     
-    if (authHeader?.startsWith('Bearer ') && supabaseUrl && supabaseAnonKey) {
-      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } }
-      });
-      const { data: { user } } = await supabaseAuth.auth.getUser();
-      userId = user?.id || null;
+    if (!authHeader?.startsWith('Bearer ') || !supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    const { data: { user: authUser } } = await supabaseAuth.auth.getUser();
+    const userId = authUser?.id || null;
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');

@@ -151,8 +151,8 @@ const Index = () => {
               © 2026 BhaktVerse. Made with ❤️ for the global spiritual community.
             </p>
             <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
-              <span>🌍 Multi-Language</span>
-              <span>📱 Mobile Optimized</span>
+              <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
               <span>🔒 Secure & Private</span>
             </div>
           </div>

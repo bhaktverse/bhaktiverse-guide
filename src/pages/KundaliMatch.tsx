@@ -195,7 +195,7 @@ const KundaliMatch = () => {
     if (!user?.id || !partner1.rashi || !partner2.rashi) return;
     try {
       await supabase.from('kundali_match_history').insert({
-        user_id: session.user.id,
+        user_id: user.id,
         partner1_name: partner1.name,
         partner1_dob: partner1.dob,
         partner1_rashi: partner1.rashi.name,

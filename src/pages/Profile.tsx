@@ -219,15 +219,11 @@ const Profile = () => {
           reports_generated: journey.reports_generated || 0,
           karma_score: journey.karma_score || 0
         });
-        if (journey.level >= 3 || journey.experience_points >= 500) {
-          setIsPremium(true);
-        }
       }
 
       const roles = rolesRes.data;
       if (roles?.some(r => r.role === 'admin' || r.role === 'moderator')) {
         setIsAdmin(true);
-        setIsPremium(true);
       }
 
       const history = historyRes.data;
