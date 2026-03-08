@@ -43,6 +43,7 @@ const MobileBottomNav = () => {
 
   // Secondary nav items (in More sheet)
   const secondaryNavItems = [
+    { icon: Heart, label: 'Favorites', path: '/favorites' },
     { icon: Calendar, label: 'Spiritual Calendar', path: '/spiritual-calendar' },
     { icon: BookOpen, label: 'Scriptures', path: '/scriptures' },
     { icon: User, label: 'Saints', path: '/saints' },

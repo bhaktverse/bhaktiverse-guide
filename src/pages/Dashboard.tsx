@@ -129,17 +129,13 @@ const Dashboard = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Batch 1: User-specific fast queries (parallel)
-      const [profileRes, journeyRes, activitiesRes, usageRes, lastPalmRes] = await Promise.all([
+      // All independent queries in a single Promise.all
+      const [profileRes, journeyRes, activitiesRes, usageRes, lastPalmRes, eventsRes, shortsRes, devotionRes, quoteRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', user?.id).maybeSingle(),
         supabase.from('spiritual_journey').select('*').eq('user_id', user?.id).maybeSingle(),
         supabase.from('user_activities').select('*').eq('user_id', user?.id).gte('created_at', today),
         supabase.from('user_api_usage').select('call_count').eq('user_id', user?.id).eq('usage_date', today),
         supabase.from('palm_reading_history').select('created_at').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      ]);
-
-      // Batch 2: Public data (parallel)
-      const [eventsRes, shortsRes, devotionRes, quoteRes] = await Promise.all([
         supabase.from('calendar_events').select('*').gte('date', today).order('date', { ascending: true }).limit(3),
         supabase.from('bhakti_shorts').select('*').eq('approved', true).eq('featured', true).order('created_at', { ascending: false }).limit(6),
         supabase.from('daily_devotions').select('*').eq('day_of_week', new Date().getDay()).maybeSingle(),

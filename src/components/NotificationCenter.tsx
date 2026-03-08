@@ -34,7 +34,7 @@ const NotificationCenter = () => {
 
   const loadNotifications = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', user.id)
@@ -68,19 +68,19 @@ const NotificationCenter = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = async (id: string) => {
-    await (supabase as any).from('notifications').update({ read: true }).eq('id', id);
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
   const markAllRead = async () => {
     if (!user) return;
-    await (supabase as any).from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const clearAll = async () => {
     if (!user) return;
-    await (supabase as any).from('notifications').delete().eq('user_id', user.id);
+    await supabase.from('notifications').delete().eq('user_id', user.id);
     setNotifications([]);
   };
 
