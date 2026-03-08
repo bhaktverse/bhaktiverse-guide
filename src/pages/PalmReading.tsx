@@ -481,7 +481,7 @@ const PalmReading = () => {
   };
 
   const analyzeCompatibility = async () => {
-    if (!analysis || !selectedForCompatibility) { toast({ title: "Select readings", description: "Please select two palm readings to compare", variant: "destructive" }); return; }
+    if (!analysis || !selectedForCompatibility) { toast.error("Please select two palm readings to compare"); return; }
     setAnalyzingCompatibility(true);
     try {
       const { data, error } = await supabase.functions.invoke('palm-compatibility', {
