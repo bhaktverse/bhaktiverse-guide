@@ -769,15 +769,15 @@ const Dashboard = () => {
                 {upcomingEvents.length > 0 ? (
                   <div className="space-y-3">
                     {upcomingEvents.map((event, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <Calendar className="h-4 w-4 text-primary" />
+                      <div key={idx} className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{event.name}</p>
-                          <p className="text-xs text-muted-foreground">{event.date}</p>
+                          <p className="font-medium text-xs sm:text-sm truncate">{event.name}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">{event.date}</p>
                         </div>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0">
                           {event.type}
                         </Badge>
                       </div>
