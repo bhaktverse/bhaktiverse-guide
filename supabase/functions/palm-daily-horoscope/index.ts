@@ -47,10 +47,14 @@ serve(async (req) => {
       );
     }
 
+    // Input validation: cap palmAnalysis size to prevent prompt injection
+    const safeAnalysis = JSON.stringify(palmAnalysis).slice(0, 5000);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "AI API key not configured" }),
+        JSON.stringify({ error: "Service temporarily unavailable" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -123,7 +127,7 @@ Generate JSON with these fields:
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Generate today's personalized Vedic horoscope for this person based on their palm reading:\n\nPALM ANALYSIS:\n${JSON.stringify(palmAnalysis, null, 2)}\n\nCreate deeply personalized predictions combining their palm destiny with today's cosmic energy.`
+            content: `Generate today's personalized Vedic horoscope for this person based on their palm reading:\n\nPALM ANALYSIS:\n${safeAnalysis}\n\nCreate deeply personalized predictions combining their palm destiny with today's cosmic energy.`
           }
         ],
         max_tokens: 3000,
