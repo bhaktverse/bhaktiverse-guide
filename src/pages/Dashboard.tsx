@@ -438,7 +438,7 @@ const Dashboard = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   {[
                     { label: 'Chant 108', type: 'mantra_chant' as const, data: { count: 108, mantra: todayDevotion.mantra || 'Om' }, points: 10, icon: '📿' },
                     { label: 'Read 15 min', type: 'scripture_read' as const, data: { minutes: 15 }, points: 15, icon: '📖' },
