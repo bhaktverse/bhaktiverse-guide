@@ -215,6 +215,17 @@ const Dashboard = () => {
         setBhaktiShorts(shorts);
       }
 
+      // Load today's devotion
+      const { data: devotion } = await supabase
+        .from('daily_devotions')
+        .select('*')
+        .eq('day_of_week', new Date().getDay())
+        .maybeSingle();
+
+      if (devotion) {
+        setTodayDevotion(devotion as DailyDevotion);
+      }
+
       // Load daily quote from spiritual_content
       const { data: quoteData } = await supabase
         .from('spiritual_content')
@@ -226,7 +237,6 @@ const Dashboard = () => {
         const randomQuote = quoteData[new Date().getDate() % quoteData.length];
         setTodayQuote(randomQuote.title ? `${randomQuote.content} — ${randomQuote.title}` : randomQuote.content);
       } else {
-        // Fallback universal quotes only if DB has no content
         const fallbackQuotes = [
           "The mind is everything. What you think you become. — Buddha",
           "The best way to find yourself is to lose yourself in service. — Gandhi",
