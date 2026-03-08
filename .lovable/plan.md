@@ -1,109 +1,179 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# BhaktVerse Platform Audit -- Round 11 (Senior Expert Review)
 
-## Current Critical Issues
+Rounds 1-10 resolved. This round addresses **3 critical security scanner findings still open**, plus **5 UX/architecture gaps** discovered through deep code inspection.
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
+---
 
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
+## CRITICAL SECURITY (Scanner Findings Still Open)
 
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+### Issue 1: Premium Bypass via Client-Writable XP Fields
+
+**File**: `usePremium.tsx` lines 58-71
+**Scanner**: `CLIENT_SIDE_AUTH` -- WARN
+
+**Problem**: Premium access is granted when `level >= 3` or `experience_points >= 500` from `spiritual_journey`. Users have UPDATE access to their own `spiritual_journey` rows via RLS. Any user can run:
+```js
+await supabase.from('spiritual_journey').update({ level: 5, experience_points: 1000 }).eq('user_id', user.id);
+```
+This instantly grants premium access without payment.
+
+**Fix**: Create a `subscriptions` table that users cannot write to:
+```sql
+CREATE TABLE subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE,
+  tier VARCHAR(20) NOT NULL DEFAULT 'free',
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  started_at TIMESTAMPTZ DEFAULT now(),
+  expires_at TIMESTAMPTZ
+);
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users read own subscription" ON subscriptions FOR SELECT USING (auth.uid() = user_id);
+-- No INSERT/UPDATE/DELETE for users -- only service_role or admin
+CREATE POLICY "Admins manage subscriptions" ON subscriptions FOR ALL
+  USING (has_role(auth.uid(), 'admin'::app_role))
+  WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
+```
+
+Update `usePremium.tsx` to query `subscriptions` instead of `spiritual_journey`:
+```ts
+const { data: sub } = await supabase.from('subscriptions').select('tier, status, expires_at').eq('user_id', user.id).maybeSingle();
+if (sub && sub.status === 'active' && (!sub.expires_at || new Date(sub.expires_at) > new Date())) {
+  setIsPremium(true);
+  setSubscriptionTier(sub.tier);
+}
+```
+
+Update `Premium.tsx` CTA to say "Contact us to activate" since there's no payment gateway yet.
+
+---
+
+### Issue 2: Edge Functions Leak Raw Error Messages
+
+**Scanner**: `INFO_LEAKAGE` -- WARN
+
+**Problem**: 7 edge functions return `error.message` directly to clients. This can leak OpenAI API key names, internal paths, and service details to attackers.
+
+**Affected**: `palm-reading-tts`, `palm-compatibility`, `spiritual-audio-tts`, `palm-daily-horoscope`, `daily-divine-recommendation`, `numerology-analysis`, `palm-reading-analysis`
+
+**Fix**: In each function's catch block, replace `{ error: error.message }` with:
+```ts
+console.error('Function error:', error);
+return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), { status: 500, headers: corsHeaders });
+```
+
+---
+
+### Issue 3: Edge Functions Missing Input Size Validation
+
+**Scanner**: `INPUT_VALIDATION` -- ERROR
+
+**Problem**: 6 edge functions have no `content-length` check. Attackers can send multi-MB payloads to exhaust function memory/credits.
+
+**Fix**: Add at the top of each function handler:
+```ts
+const contentLength = req.headers.get('content-length');
+if (contentLength && parseInt(contentLength) > 50000) {
+  return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: corsHeaders });
+}
+```
+
+Also validate string field lengths (e.g., `name.length > 255`).
+
+---
+
+## UX & ARCHITECTURE GAPS
+
+### Issue 4: Footer Links Use `<a>` Tags Instead of React Router `<Link>`
+
+**File**: `Index.tsx` lines 121-144
+
+**Problem**: All footer navigation links use raw `<a href="/saints">` instead of React Router `<Link to="/saints">`. This causes full page reloads instead of client-side navigation -- destroying SPA state, re-fetching all JS bundles, and losing the auth session momentarily.
+
+**Fix**: Replace all `<a href="...">` in the footer with `<Link to="...">` from react-router-dom. The import already exists on line 3.
+
+---
+
+### Issue 5: Temples "Sort by Distance" Does Nothing
+
+**File**: `Temples.tsx` line 141, 190-191
+
+**Problem**: `distance` is hardcoded to `undefined` (line 141: `distance: undefined // Real geolocation not yet implemented`). The sort-by-distance option exists in the UI but does nothing -- all temples sort to 0. Users see "Sort by Distance" as the default but get random ordering.
+
+**Fix (UX)**: Either:
+- (a) Remove "Sort by Distance" from the sort dropdown and default to "Sort by Rating", OR
+- (b) Implement actual geolocation using the Capacitor Geolocation plugin (already installed) to calculate distance from user's coordinates
+
+Recommended: Option (a) for now -- change `useState<'distance' | 'rating' | 'name'>('distance')` to `useState<'rating' | 'name'>('rating')` and remove the distance SelectItem.
+
+---
+
+### Issue 6: Temple Share and Camera Buttons Are No-Ops
+
+**File**: `Temples.tsx` lines 393-411
+
+**Problem**: The Share and Camera buttons in the temple card have empty `onClick` handlers with just `e.stopPropagation()` and a comment `// Handle share` / `// Handle photo gallery`. Users tap buttons that do nothing.
+
+**Fix**: Either implement the functionality or remove the buttons. For Share, reuse the existing `SocialShare` component pattern. For Camera, navigate to the temple detail page's gallery section: `navigate(\`/temples/${temple.id}#gallery\`)`.
+
+---
+
+### Issue 7: `post_likes` Table Accessed via Unsafe `as any` Cast
+
+**File**: `Community.tsx` line 89
+
+**Problem**: `const postLikesTable = () => supabase.from('post_likes' as any) as any;` -- This bypasses all TypeScript type safety. If the table schema changes, errors will only be caught at runtime.
+
+**Fix**: Add `post_likes` to the Supabase types file. Since we can't edit the auto-generated types file, the correct fix is to create a typed helper:
+```ts
+const postLikesQuery = () => supabase.from('post_likes') as unknown as PostgrestQueryBuilder<any, { id: string; user_id: string; post_id: string; created_at: string }>;
+```
+Or better: regenerate the Supabase types to include `post_likes`.
+
+---
+
+### Issue 8: No "Back to Top" on Long Pages
+
+**Problem**: Pages like Community (1010 lines), Dashboard (844 lines), Numerology (940 lines), and PalmReading (716 lines) generate very long scroll content. On mobile, scrolling back to the top requires extensive manual scrolling. No "Back to Top" floating button exists.
+
+**Fix**: Create a reusable `ScrollToTop` component:
+```tsx
+const ScrollToTop = () => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const toggle = () => setVisible(window.scrollY > 600);
+    window.addEventListener('scroll', toggle);
+    return () => window.removeEventListener('scroll', toggle);
+  }, []);
+  if (!visible) return null;
+  return (
+    <Button size="icon" className="fixed bottom-20 right-4 z-40 rounded-full shadow-lg md:bottom-8"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <ChevronUp className="h-5 w-5" />
+    </Button>
+  );
+};
+```
+Add to Dashboard, Community, Numerology, PalmReading, Temples, Saints, AudioLibrary, and Scriptures pages.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+### Phase 1: Critical Security
+| # | Change | Files |
+|---|--------|-------|
+| 1 | Create `subscriptions` table, update `usePremium.tsx` to use it | SQL Migration + `usePremium.tsx` + `Premium.tsx` |
+| 2 | Sanitize error responses in 7 edge functions | 7 edge function files |
+| 3 | Add input size validation to 6 edge functions | 6 edge function files |
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
-
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
-
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
-
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
-
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
-
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
-
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
-
----
-
-## Technical Details
-
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
-
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
-
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
-```
-
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
-
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
-
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
-
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+### Phase 2: UX Fixes
+| # | Change | Files |
+|---|--------|-------|
+| 4 | Replace footer `<a>` tags with React Router `<Link>` | `Index.tsx` |
+| 5 | Remove "Sort by Distance" default, set "Rating" as default | `Temples.tsx` |
+| 6 | Remove no-op Share/Camera buttons from temple cards | `Temples.tsx` |
+| 7 | Create `ScrollToTop` component, add to 8 long pages | New component + 8 pages |
 
