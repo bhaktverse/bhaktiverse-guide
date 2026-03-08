@@ -96,6 +96,7 @@ const Dashboard = () => {
   const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [aiCreditsUsed, setAiCreditsUsed] = useState(0);
+  const [continueItems, setContinueItems] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
