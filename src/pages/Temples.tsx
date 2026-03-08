@@ -79,6 +79,7 @@ const Temples = () => {
   const [selectedTradition, setSelectedTradition] = useState("all");
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'name'>('distance');
   const [showMap, setShowMap] = useState(false);
+  const { isFavorited, toggleFavorite } = useFavorites('temple');
 
   useEffect(() => {
     loadTemples();
