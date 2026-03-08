@@ -181,7 +181,9 @@ const Navigation = () => {
                 </div>
 
                 {/* Mobile Menu Button */}
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center gap-1">
+                  <ThemeToggle />
+                  <NotificationCenter />
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/profile">
                       <User className="h-4 w-4" />

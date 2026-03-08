@@ -573,7 +573,7 @@ const PalmReading = () => {
         />
         
         {/* Sticky Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-primary/20 py-3 px-4 shadow-[0_-4px_30px_rgba(255,102,0,0.1)]">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-primary/20 py-3 px-4 shadow-[0_-4px_30px_rgba(255,102,0,0.1)]">
           <div className="container mx-auto flex items-center justify-center gap-2 flex-wrap max-w-2xl">
             <Button onClick={toggleNarration} disabled={narrationLoading || (!isPremiumUser && !showFullReading)} variant="outline" size="sm" className="gap-1.5">
               {narrationLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isNarrating ? <Pause className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}

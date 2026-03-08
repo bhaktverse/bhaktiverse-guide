@@ -179,7 +179,7 @@ const FeaturesSection = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="relative text-center p-12 md:p-16 rounded-3xl overflow-hidden">
+        <div className="relative text-center p-6 sm:p-12 md:p-16 rounded-3xl overflow-hidden">
           {/* Gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-primary/10" />
           <div className="absolute inset-0 backdrop-blur-sm border border-primary/20 rounded-3xl" />
