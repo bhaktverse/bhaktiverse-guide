@@ -359,7 +359,7 @@ const KundaliMatch = () => {
           {/* Match Button */}
           {!result && (
             <div className="text-center mt-8">
-          <Button
+              <Button
                 onClick={performMatching}
                 disabled={loading || !partner1.name || !partner1.dob || !partner2.name || !partner2.dob}
                 size="lg"
@@ -377,7 +377,6 @@ const KundaliMatch = () => {
                     <ChevronRight className="ml-2 h-5 w-5" />
                   </>
                 )}
-              </Button>
               </Button>
             </div>
           )}
