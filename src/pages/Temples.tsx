@@ -255,12 +255,11 @@ const Temples = () => {
                 </SelectContent>
               </Select>
               
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'distance' | 'rating' | 'name')}>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'rating' | 'name')}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="distance">Sort by Distance</SelectItem>
                   <SelectItem value="rating">Sort by Rating</SelectItem>
                   <SelectItem value="name">Sort by Name</SelectItem>
                 </SelectContent>
