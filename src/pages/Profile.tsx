@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Breadcrumbs from '@/components/Breadcrumbs';
