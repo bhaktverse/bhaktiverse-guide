@@ -722,7 +722,7 @@ const Dashboard = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
             {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
               <CardHeader>
