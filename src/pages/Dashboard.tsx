@@ -350,7 +350,7 @@ const Dashboard = () => {
         <Breadcrumbs className="mb-6" />
 
         {/* Animated Content Wrapper */}
-        <div className={`space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`space-y-5 sm:space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         
         {/* Welcome Header */}
         <div className="relative p-4 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
