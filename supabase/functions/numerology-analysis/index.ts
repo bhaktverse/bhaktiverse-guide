@@ -25,6 +25,22 @@ serve(async (req) => {
       });
     }
 
+    // Input validation: sanitize name and validate dob format
+    const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dobRegex.test(dob)) {
+      return new Response(JSON.stringify({ error: 'Invalid date format. Use YYYY-MM-DD.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const safeName = String(name).slice(0, 100).replace(/[^\w\s\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0B00-\u0B7F\u0C00-\u0C7F\u0D00-\u0D7F]/g, '');
+    if (!safeName.trim()) {
+      return new Response(JSON.stringify({ error: 'Invalid name provided.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
