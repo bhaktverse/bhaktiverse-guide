@@ -1,109 +1,106 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# Mobile Responsiveness Audit & Fix Plan
 
-## Current Critical Issues
+## Issues Found
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
+### 1. `App.css` conflicts with layout (`#root` styles)
+The `App.css` file applies `max-width: 1280px`, `padding: 2rem`, and `text-align: center` to `#root`, which can interfere with full-width layouts on all viewports, especially mobile.
 
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
+**Fix**: Remove the legacy Vite boilerplate styles from `App.css` entirely (or clear the file). These are leftover from the Vite scaffold and conflict with Tailwind-based layouts.
 
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+---
+
+### 2. HeroSection: oversized text on small screens (320-375px)
+- `text-5xl` on the title at mobile is too large for 320px screens
+- `text-7xl` Om symbol is oversized on small devices
+- Gradient orbs (`w-96 h-96`, `w-80 h-80`) cause horizontal overflow on small screens
+
+**Fix**: Reduce base heading to `text-3xl sm:text-5xl`, Om to `text-5xl md:text-7xl md:text-8xl`, and constrain orbs with `max-w-full` or reduce their size on mobile.
+
+---
+
+### 3. Footer: 2-column grid cramped on 320px
+The footer uses `grid-cols-2 md:grid-cols-5` which squeezes link columns on very small screens.
+
+**Fix**: Change to `grid-cols-1 sm:grid-cols-2 md:grid-cols-5` so links stack on the smallest screens.
+
+---
+
+### 4. Dashboard welcome header: badges overflow on small screens
+Three badges (Level, XP, AI credits) sit inline and can wrap awkwardly or overflow on 320px viewports.
+
+**Fix**: Wrap badges with `flex-wrap` to allow natural wrapping on tight screens.
+
+---
+
+### 5. Dashboard Quick Actions grid: `md:grid-cols-5` leaves poor mobile layout
+Uses `grid-cols-2 sm:grid-cols-3 md:grid-cols-5` but on 320px, 2 columns with padding can be tight.
+
+**Fix**: This is acceptable at `grid-cols-2` but ensure the buttons have proper `min-w-0` to prevent overflow.
+
+---
+
+### 6. PalmReading sticky action bar overlaps MobileBottomNav
+The palm reading report view has a `fixed bottom-0` action bar AND the MobileBottomNav renders below it. Both occupy `bottom-0`, causing overlap.
+
+**Fix**: Add `mb-14 md:mb-0` or similar bottom padding to the sticky action bar on mobile, or conditionally hide MobileBottomNav on the report view. Better: raise the action bar above the bottom nav with `bottom-16 md:bottom-0`.
+
+---
+
+### 7. SaintChat: input area `pb-20` is hardcoded, not synced with bottom nav height
+The `pb-20 md:pb-4` on the chat input works but is fragile.
+
+**Fix**: Keep as-is — this is a reasonable workaround. No change needed.
+
+---
+
+### 8. Numerology: hero title `text-4xl md:text-6xl` too large on 320px
+**Fix**: Reduce to `text-2xl sm:text-4xl md:text-6xl`.
+
+---
+
+### 9. AudioLibrary: player sidebar hidden on mobile with no alternative
+The `lg:col-span-1` player/playlist column disappears on mobile — the player works via the `EnhancedAudioPlayer` but playlist manager is only visible on `lg` screens.
+
+**Fix**: This is already handled since the audio player renders regardless. The playlist manager could benefit from being shown below the track list on mobile. Change the grid to stack naturally: already does with `lg:grid-cols-3`.
+
+---
+
+### 10. Navigation: mobile header only shows profile icon, no theme toggle or notification center
+On mobile (`md:hidden`), only the profile icon appears. Theme toggle and notifications are desktop-only.
+
+**Fix**: Add ThemeToggle and NotificationCenter to the mobile top bar area.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+### File: `src/App.css`
+- Clear the file or remove the `#root` styles that conflict with the layout
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
+### File: `src/components/HeroSection.tsx`
+- Reduce hero heading sizes for mobile: `text-3xl sm:text-5xl md:text-7xl lg:text-8xl`
+- Reduce Om symbol: `text-5xl md:text-7xl md:text-8xl`
+- Constrain floating orb sizes on mobile
 
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
+### File: `src/pages/Index.tsx`
+- Footer grid: `grid-cols-1 sm:grid-cols-2 md:grid-cols-5`
 
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
+### File: `src/pages/Dashboard.tsx`
+- Add `flex-wrap` to the badges row in welcome header
+- Ensure quick stats card doesn't overflow
 
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
+### File: `src/pages/PalmReading.tsx`
+- Fix sticky action bar: `bottom-16 md:bottom-0` to clear MobileBottomNav on mobile
 
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
+### File: `src/pages/Numerology.tsx`
+- Reduce hero heading: `text-2xl sm:text-4xl md:text-6xl`
 
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
+### File: `src/components/Navigation.tsx`
+- Add ThemeToggle and NotificationCenter to mobile header section
 
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
-
----
-
-## Technical Details
-
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
-
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
-
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
-```
-
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
-
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
-
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
-
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+### File: `src/components/FeaturesSection.tsx`
+- CTA section: reduce padding on mobile `p-6 sm:p-12 md:p-16`
+- Section header: `text-3xl sm:text-4xl md:text-5xl lg:text-6xl`
 
