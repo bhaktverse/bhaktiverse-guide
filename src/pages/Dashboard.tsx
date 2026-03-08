@@ -395,6 +395,10 @@ const Dashboard = () => {
                     <Sparkles className="h-3 w-3 mr-1" />
                     {stats.xp} XP
                   </Badge>
+                  <Badge variant="outline" className={`${aiCreditsUsed >= 18 ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-primary/10 border-primary/30'}`}>
+                    <Zap className="h-3 w-3 mr-1" />
+                    AI: {aiCreditsUsed}/20
+                  </Badge>
                 </div>
               </div>
             </div>
