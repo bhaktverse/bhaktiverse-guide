@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 const Premium = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Premium Membership');
   const { isPremium } = usePremium();
   const { toast } = useToast();
 

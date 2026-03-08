@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -170,6 +171,7 @@ const i18n = {
 const Numerology = () => {
   const { session } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Vedic Numerology');
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);

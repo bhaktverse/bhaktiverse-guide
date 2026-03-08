@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +50,7 @@ interface AudioTrack {
 const AudioLibrary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  usePageTitle('Spiritual Audio Library');
   const { toast } = useToast();
   const { downloadAudio, downloadState } = useDownload();
   const [tracks, setTracks] = useState<AudioTrack[]>([]);

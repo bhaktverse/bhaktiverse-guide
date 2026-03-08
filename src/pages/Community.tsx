@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,10 +58,13 @@ interface UserProfile {
 const Community = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Spiritual Community');
   const { toast } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [pendingImages, setPendingImages] = useState<{ file: File; preview: string }[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -81,6 +85,7 @@ const Community = () => {
   useEffect(() => {
     loadPosts();
     loadTotalMembers();
+    loadActiveThisWeek();
 
     const channel = supabase
       .channel('community_posts_realtime')
@@ -144,6 +149,19 @@ const Community = () => {
     if (count !== null) setTotalMembers(count);
   };
 
+  const loadActiveThisWeek = async () => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const { data } = await supabase
+      .from('community_posts')
+      .select('user_id')
+      .gte('created_at', weekAgo.toISOString());
+    if (data) {
+      const uniqueIds = new Set(data.map(d => d.user_id));
+      setActiveDevotees(uniqueIds.size);
+    }
+  };
+
   const loadPosts = async (append = false) => {
     try {
       if (!append) setLoading(true);
@@ -186,7 +204,7 @@ const Community = () => {
           profiles.forEach(p => { profileMap[p.user_id] = p; });
           setUserProfiles(prev => ({ ...prev, ...profileMap }));
         }
-        setActiveDevotees(uniqueUserIds.length);
+        // Active devotees now loaded separately via loadActiveThisWeek
       }
 
       // Load user's likes
@@ -224,19 +242,57 @@ const Community = () => {
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newImages = Array.from(files).slice(0, 4 - pendingImages.length).map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+    setPendingImages(prev => [...prev, ...newImages]);
+  };
+
+  const removeImage = (index: number) => {
+    setPendingImages(prev => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const createPost = async () => {
-    if (!newPost.trim()) return;
+    if (!newPost.trim() && pendingImages.length === 0) return;
 
     try {
+      let mediaUrls: string[] = [];
+
+      // Upload images if any
+      if (pendingImages.length > 0) {
+        setUploadingImages(true);
+        for (const img of pendingImages) {
+          const ext = img.file.name.split('.').pop() || 'jpg';
+          const path = `posts/${user?.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('community-media')
+            .upload(path, img.file);
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(path);
+          mediaUrls.push(urlData.publicUrl);
+        }
+        setUploadingImages(false);
+      }
+
+      const postType = mediaUrls.length > 0 ? 'image' : 'text';
+
       const { data: newPostData, error } = await supabase
         .from('community_posts')
         .insert([
           {
             user_id: user?.id,
             content: newPost,
-            post_type: 'text',
+            post_type: postType,
             tags: selectedTags,
-            visibility: 'public'
+            visibility: 'public',
+            media_urls: mediaUrls
           }
         ])
         .select('*')
@@ -253,6 +309,7 @@ const Community = () => {
       setPosts([transformedPost, ...posts]);
       setNewPost('');
       setSelectedTags([]);
+      setPendingImages([]);
       setShowCreatePost(false);
       
       toast({
@@ -262,6 +319,7 @@ const Community = () => {
       
     } catch (error) {
       console.error('Error creating post:', error);
+      setUploadingImages(false);
       toast({
         title: "Error",
         description: "Failed to create post. Please try again.",
@@ -505,9 +563,48 @@ const Community = () => {
                             </div>
                           </div>
                           
-                          <Button onClick={createPost} className="w-full">
-                            <Send className="h-4 w-4 mr-2" />
-                            Share with Community
+                          {/* Image upload */}
+                          <div className="flex items-center gap-2">
+                            <label className="cursor-pointer inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                              <Image className="h-4 w-4" />
+                              <span>Add Photos</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={handleImageSelect}
+                                disabled={pendingImages.length >= 4}
+                              />
+                            </label>
+                            {pendingImages.length > 0 && (
+                              <span className="text-xs text-muted-foreground">{pendingImages.length}/4</span>
+                            )}
+                          </div>
+
+                          {/* Image previews */}
+                          {pendingImages.length > 0 && (
+                            <div className="flex gap-2 flex-wrap">
+                              {pendingImages.map((img, i) => (
+                                <div key={i} className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
+                                  <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                                  <button
+                                    onClick={() => removeImage(i)}
+                                    className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <Button onClick={createPost} className="w-full" disabled={uploadingImages}>
+                            {uploadingImages ? (
+                              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</>
+                            ) : (
+                              <><Send className="h-4 w-4 mr-2" />Share with Community</>
+                            )}
                           </Button>
                         </div>
                       </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -37,6 +38,7 @@ interface DailyPrediction {
 const Horoscope = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  usePageTitle('Daily Horoscope & Rashi');
   const [selectedRashi, setSelectedRashi] = useState<RashiData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [loading, setLoading] = useState(false);

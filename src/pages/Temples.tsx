@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +74,7 @@ interface Temple {
 const Temples = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Sacred Temples of India');
   const [temples, setTemples] = useState<Temple[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

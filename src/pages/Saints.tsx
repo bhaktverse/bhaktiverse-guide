@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ interface Saint {
 const Saints = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  usePageTitle('Saints & Spiritual Leaders');
   const [saints, setSaints] = useState<Saint[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

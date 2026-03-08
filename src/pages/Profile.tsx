@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
@@ -93,6 +94,7 @@ const DarkModeSwitch = () => {
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('My Profile');
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);

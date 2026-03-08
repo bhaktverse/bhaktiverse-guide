@@ -194,8 +194,6 @@ const Navigation = () => {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation */}
-      {user && <MobileBottomNav />}
     </>
   );
 };

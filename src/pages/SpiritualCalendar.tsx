@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +47,7 @@ interface TithiInfo {
 const SpiritualCalendar = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Spiritual Calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [events, setEvents] = useState<SpiritualEvent[]>([]);

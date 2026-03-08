@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('AI-Powered Spiritual Platform');
   const [featuredPosts, setFeaturedPosts] = useState<any[]>([]);
 
   useEffect(() => {
