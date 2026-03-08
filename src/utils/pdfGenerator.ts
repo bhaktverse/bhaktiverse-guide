@@ -519,7 +519,8 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
   }
 
   // QR Code for online reading link
-  const qrUrl = readingUrl || `https://bhaktverse.lovable.app/palm-reading?ref=${readingId}`;
+  const shareId = dbReadingId || readingId;
+  const qrUrl = readingUrl || `https://bhaktverse.lovable.app/palm-reading/shared/${shareId}`;
   try {
     const qrDataUrl = await QRCode.toDataURL(qrUrl, {
       width: 200,

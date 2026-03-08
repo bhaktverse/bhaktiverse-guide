@@ -58,6 +58,7 @@ const App = () => (
             <Route path="/audio-library" element={<AudioLibrary />} />
             <Route path="/numerology" element={<Numerology />} />
             <Route path="/palm-reading" element={<PalmReading />} />
+            <Route path="/palm-reading/shared/:readingId" element={<SharedPalmReading />} />
             <Route path="/daily-devotion" element={<DailyDevotion />} />
             <Route path="/horoscope" element={<Horoscope />} />
             <Route path="/kundali-match" element={<KundaliMatch />} />
