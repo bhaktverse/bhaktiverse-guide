@@ -457,7 +457,7 @@ const PalmReading = () => {
       utterance.rate = 0.9;
       utterance.pitch = 1.0;
       utterance.onend = () => { setIsNarrating(false); };
-      utterance.onerror = () => { setIsNarrating(false); toast({ title: "Narration error", description: "Voice narration encountered an error", variant: "destructive" }); };
+      utterance.onerror = () => { setIsNarrating(false); toast.error("Voice narration encountered an error"); };
       
       speechSynthRef.current = utterance;
       window.speechSynthesis.speak(utterance);
