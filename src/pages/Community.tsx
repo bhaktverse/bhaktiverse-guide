@@ -170,13 +170,22 @@ const Community = () => {
   };
 
   const loadCommunityStats = async () => {
-    const { data } = await supabase
-      .from('community_posts')
-      .select('likes_count, comments_count')
-      .eq('visibility', 'public');
-    if (data) {
-      setTotalBlessings(data.reduce((sum, p) => sum + (p.likes_count || 0), 0));
-      setTotalComments(data.reduce((sum, p) => sum + (p.comments_count || 0), 0));
+    try {
+      const { data } = await supabase.rpc('get_community_stats');
+      if (data) {
+        setTotalBlessings(Number((data as any).total_likes) || 0);
+        setTotalComments(Number((data as any).total_comments) || 0);
+      }
+    } catch {
+      // Fallback: query limited rows client-side
+      const { data } = await supabase
+        .from('community_posts')
+        .select('likes_count, comments_count')
+        .eq('visibility', 'public');
+      if (data) {
+        setTotalBlessings(data.reduce((sum, p) => sum + (p.likes_count || 0), 0));
+        setTotalComments(data.reduce((sum, p) => sum + (p.comments_count || 0), 0));
+      }
     }
   };
 
