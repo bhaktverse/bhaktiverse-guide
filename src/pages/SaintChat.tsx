@@ -145,7 +145,8 @@ const SaintChat = () => {
     if (!msgText || !saint) return;
 
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: msgText, timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputMessage('');
     setLoading(true);
 
@@ -154,21 +155,22 @@ const SaintChat = () => {
         body: {
           message: msgText,
           saintId: saint.id,
-          conversationHistory: messages.slice(-6),
+          conversationHistory: updatedMessages.slice(-6),
           userPreferences: { language: 'English' }
         }
       });
 
       if (error) throw error;
 
-      const newMessages = [...prev, {
+      const saintResponse: Message = {
         id: (Date.now() + 1).toString(),
-        role: 'saint' as const,
+        role: 'saint',
         content: data?.response || "I'm experiencing some difficulty right now. Please try again.",
         timestamp: new Date()
-      }];
-      setMessages(newMessages);
-      persistSession(newMessages);
+      };
+      const allMessages = [...updatedMessages, saintResponse];
+      setMessages(allMessages);
+      persistSession(allMessages);
     } catch (error) {
       console.error('Chat error:', error);
       toast({ 
