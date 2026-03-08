@@ -96,6 +96,24 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
+    // Rate limit check for authenticated users
+    if (userId) {
+      const { data: usageCheck } = await supabase.rpc('check_and_increment_api_usage', {
+        _user_id: userId,
+        _function_name: 'saint-chat',
+        _daily_limit: 20
+      });
+      if (usageCheck && !usageCheck.allowed) {
+        return new Response(JSON.stringify({ 
+          error: `Daily limit reached (${usageCheck.daily_limit} calls/day). Please try again tomorrow or upgrade to Premium.`,
+          rate_limited: true
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     console.log('Processing chat request for saint:', saintId, userId ? `(user: ${userId})` : '(anonymous)');
 
     const { data: saint, error: saintError } = await supabase

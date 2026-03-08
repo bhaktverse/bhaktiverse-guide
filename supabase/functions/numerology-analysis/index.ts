@@ -35,6 +35,26 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit check
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    const { data: usageCheck } = await serviceClient.rpc('check_and_increment_api_usage', {
+      _user_id: user.id,
+      _function_name: 'numerology-analysis',
+      _daily_limit: 20
+    });
+    if (usageCheck && !usageCheck.allowed) {
+      return new Response(JSON.stringify({ 
+        error: `Daily limit reached (${usageCheck.daily_limit} calls/day). Please try again tomorrow or upgrade to Premium.`,
+        rate_limited: true
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Create hash for caching
     const crypto = await import("https://deno.land/std@0.177.0/crypto/mod.ts");
     const hash = Array.from(
