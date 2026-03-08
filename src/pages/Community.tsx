@@ -282,7 +282,8 @@ const Community = () => {
   };
 
   const createPost = async () => {
-    if (!newPost.trim() && pendingImages.length === 0) return;
+    const sanitizedContent = newPost.replace(/<[^>]*>/g, '').trim();
+    if (!sanitizedContent && pendingImages.length === 0) return;
 
     try {
       let mediaUrls: string[] = [];
