@@ -78,6 +78,7 @@ const Horoscope = () => {
     }
   };
 
+  const loadPanchang = async () => {
     try {
       const { data } = await supabase.functions.invoke('hindu-panchang', {
         body: { 
