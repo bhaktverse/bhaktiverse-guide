@@ -835,8 +835,8 @@ const Dashboard = () => {
             })()}
 
             {/* Premium CTA */}
-            <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
-              <CardContent className="p-5 text-center">
+            <Card className="col-span-2 lg:col-span-1 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
+              <CardContent className="p-4 sm:p-5 text-center">
                 <Crown className="h-10 w-10 mx-auto mb-3 text-amber-500" />
                 <h3 className="font-bold text-lg mb-1">Unlock Premium</h3>
                 <p className="text-sm text-muted-foreground mb-4">
