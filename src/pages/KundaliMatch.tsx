@@ -432,6 +432,18 @@ const KundaliMatch = () => {
                 </CardContent>
               </Card>
 
+              {/* Fallback Banner */}
+              {usedFallback && !aiAnalysis && (
+                <Card className="card-sacred border-amber-500/30 bg-amber-500/5">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      AI विश्लेषण अनुपलब्ध है। बेसिक गुण मिलान गणना दिखाई जा रही है। विस्तृत विश्लेषण के लिए पुनः प्रयास करें।
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* AI Analysis */}
               {aiAnalysis && (
                 <Card className="card-sacred">
@@ -442,7 +454,7 @@ const KundaliMatch = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-foreground leading-relaxed">{aiAnalysis}</p>
+                    <p className="text-foreground leading-relaxed whitespace-pre-line">{aiAnalysis}</p>
                   </CardContent>
                 </Card>
               )}
