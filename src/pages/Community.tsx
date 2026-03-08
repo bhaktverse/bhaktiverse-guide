@@ -197,7 +197,7 @@ const Community = () => {
         
         if (allPostIds.length > 0) {
           const { data: likes } = await supabase
-            .from('post_likes')
+            .from('post_likes' as any)
             .select('post_id')
             .eq('user_id', user.id)
             .in('post_id', allPostIds);
@@ -205,7 +205,7 @@ const Community = () => {
           if (likes) {
             setUserLikes(prev => {
               const newSet = new Set(prev);
-              likes.forEach(l => newSet.add(l.post_id));
+              (likes as any[]).forEach(l => newSet.add(l.post_id));
               return newSet;
             });
           }
