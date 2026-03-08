@@ -342,7 +342,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Navigation />
       
       <div className="container mx-auto px-4 py-6 pb-24 md:pb-8 max-w-7xl">
