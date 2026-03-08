@@ -298,7 +298,8 @@ const PalmReading = () => {
 
       const { data: insertedData, error } = await supabase.from('palm_reading_history' as never).insert({
         user_id: user.id, palm_image_url: palmImageUrl,
-        language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis
+        language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis,
+        user_name: userName || null, user_dob: userDob || null
       } as never).select('id').single();
       if (error) console.error('Save error:', error);
       if (insertedData && (insertedData as any).id) {
