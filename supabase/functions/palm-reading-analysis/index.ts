@@ -64,6 +64,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  try {
+    // Auth check
+    const authHeader = req.headers.get('Authorization');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    const { data: { user } } = await authClient.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Invalid session' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const contentLength = req.headers.get('content-length');
     if (contentLength && parseInt(contentLength) > 5000000) {
       return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
