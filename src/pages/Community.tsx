@@ -59,7 +59,7 @@ const Community = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   usePageTitle('Spiritual Community');
-  const { toast } = useToast();
+  
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
