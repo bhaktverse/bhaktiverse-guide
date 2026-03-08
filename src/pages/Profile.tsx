@@ -664,11 +664,7 @@ const Profile = () => {
                             navigate('/');
                           } catch (error) {
                             console.error('Delete account error:', error);
-                            toast({
-                              title: "Error",
-                              description: "Could not delete account. Please try again or contact support.",
-                              variant: "destructive"
-                            });
+                            toast.error("Could not delete account. Please try again or contact support.");
                           } finally {
                             setDeleting(false);
                           }

@@ -279,10 +279,7 @@ const Auth = () => {
                           redirectTo: `${window.location.origin}/reset-password`,
                         });
                         if (error) throw error;
-                        toast({
-                          title: "Password Reset Email Sent 📧",
-                          description: "Check your inbox for the reset link.",
-                        });
+                        toast.success("Password Reset Email Sent 📧 — Check your inbox for the reset link.");
                       } catch (err: any) {
                         setError(err.message);
                       } finally {
