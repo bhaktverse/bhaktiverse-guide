@@ -61,8 +61,12 @@ const KundaliMatch = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
-    if (session?.user?.id) loadPastMatches();
-  }, [session?.user?.id]);
+    if (!authLoading && !user) navigate('/auth');
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user?.id) loadPastMatches();
+  }, [user?.id]);
 
   const loadPastMatches = async () => {
     if (!session?.user?.id) return;
