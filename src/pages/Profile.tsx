@@ -275,11 +275,7 @@ const Profile = () => {
       toast.success("Profile Updated 🙏 — Your spiritual profile has been saved.");
     } catch (error) {
       console.error('Error saving profile:', error);
-      toast({
-        title: "Save Failed",
-        description: "Could not save profile. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Could not save profile. Please try again.");
     } finally {
       setSaving(false);
     }
