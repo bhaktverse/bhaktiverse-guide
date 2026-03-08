@@ -1,109 +1,90 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# Palm Reading Improvements - Implementation Plan
 
-## Current Critical Issues
+## Issues Identified
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
+### Issue 1: Palm Reading Deduplication (Name-based history reuse)
+Currently every scan creates a new analysis and saves to DB, wasting AI credits. The `palm_reading_history` table lacks `user_name` and `user_dob` columns, making person-wise lookup impossible.
 
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
+**Plan:**
+1. **Database migration**: Add `user_name` (varchar), `user_dob` (date) columns to `palm_reading_history`
+2. **Frontend logic in `PalmReading.tsx`**: Before calling the edge function, query `palm_reading_history` for matching `user_name + user_id` records. If a match exists and is less than 1 month old, load results directly from DB and skip AI analysis. Show a toast: "Previous reading found, loading from history"
+3. **History display**: Show `user_name` in history items so users can identify person-wise readings and click to reopen them
+4. **Save metadata**: Update `saveToHistory` to include `user_name` and `user_dob` in the insert
 
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+### Issue 2: PDF Report - Hindi Content Rendered in English/Transliteration
+The uploaded PDF confirms the problem: user selected Hindi but the PDF shows Roman transliteration (e.g., "AapKe Hath Ki Yah tsveer") instead of actual Hindi Devanagari. This is by design — the `transliterate()` function strips all Devanagari and converts to IAST/Roman because jsPDF's default Helvetica font cannot render Devanagari.
 
----
+**Fix approach** (without aggressive changes):
+- The AI already returns Hindi content when language='hi'. The `getSafeText()` function calls `transliterate()` which strips all Hindi. 
+- **Solution**: When language is 'hi', skip the transliteration step entirely and use the raw Hindi text. jsPDF can render Devanagari if we register a Devanagari-capable font. However, embedding a full font adds ~2-5MB to bundle.
+- **Practical alternative**: Use a lightweight approach — add a Noto Sans Devanagari subset font (base64 embedded, ~300KB for a subset). Register it with jsPDF and use it when language='hi'. This preserves Hindi content authentically.
+- **Kundali format improvements**: Add more decorative borders, section dividers with Om symbols, saffron/gold color scheme enhancements, and traditional table layouts for line analysis sections (matching traditional Kundali paper reports).
+- Fix the "85/10" score display bug (should be "8.5/10")
 
-## Implementation Plan
+### Issue 3: Listen/TTS Feature Not Working
+The `palm-reading-tts` edge function uses `OPENAI_API_KEY` with direct `api.openai.com` — the same invalid API key causing 401 errors (confirmed in logs for `palm-daily-horoscope`).
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+**Fix**: Migrate `palm-reading-tts` to use Lovable AI Gateway. The gateway supports TTS or we use a text-based approach: generate a spoken-style text response via the gateway and use browser's Web Speech API (`speechSynthesis`) as fallback for actual audio playback. Since the Lovable AI Gateway is a chat completion endpoint (not TTS), we need to use the browser's built-in `SpeechSynthesis` API for voice narration instead.
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
+### Issue 4: Edge Functions Returning Non-2xx Errors
+Three edge functions still use `OPENAI_API_KEY` directly (invalid key):
+- `palm-daily-horoscope` — uses `api.openai.com` with `OPENAI_API_KEY` (401 confirmed in logs)
+- `daily-horoscope` — uses `api.openai.com` with `OPENAI_API_KEY`
+- `kundali-match` — uses `api.openai.com` with `OPENAI_API_KEY`
+- `spiritual-audio-tts` — uses `api.openai.com` with `OPENAI_API_KEY`
 
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
+All need migration to Lovable AI Gateway (`ai.gateway.lovable.dev` with `LOVABLE_API_KEY`).
 
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
-
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
-
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
-
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
-
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
+Also missing full CORS headers on `palm-daily-horoscope`, `daily-horoscope`, `kundali-match`, `spiritual-audio-tts`, `palm-reading-tts`.
 
 ---
 
-## Technical Details
+## Implementation Phases
 
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
+### Phase 1: Fix Broken Edge Functions (Critical)
+Migrate 4 edge functions from OpenAI direct to Lovable AI Gateway:
 
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
+| Function | Current | Fix |
+|----------|---------|-----|
+| `palm-daily-horoscope` | `api.openai.com` + `OPENAI_API_KEY` | `ai.gateway.lovable.dev` + `LOVABLE_API_KEY` + model `google/gemini-2.0-flash` |
+| `daily-horoscope` | `api.openai.com` + `OPENAI_API_KEY` | Same gateway migration |
+| `kundali-match` | `api.openai.com` + `OPENAI_API_KEY` | Same gateway migration |
+| `palm-reading-tts` | `api.openai.com/v1/audio/speech` | Replace with browser SpeechSynthesis API (client-side) |
+| `spiritual-audio-tts` | `api.openai.com/v1/audio/speech` | Replace with browser SpeechSynthesis API (client-side) |
 
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
-```
+Fix CORS headers on all 4 functions to include full header set.
 
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
+### Phase 2: Listen Feature (TTS via Browser SpeechSynthesis)
+Since the Lovable AI Gateway doesn't support TTS audio generation, replace the server-side TTS with browser-native `window.speechSynthesis`:
+- Update `generateNarration()` and `toggleNarration()` in `PalmReading.tsx` to use `SpeechSynthesisUtterance` with Hindi voice selection
+- Remove dependency on `palm-reading-tts` edge function
+- Support pause/resume natively
 
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
+### Phase 3: Palm Reading Deduplication
+1. **Migration**: Add `user_name`, `user_dob` to `palm_reading_history`
+2. **Dedup logic in `PalmReading.tsx`**: 
+   - In `handleBiometricAnalyze`, before calling the edge function, check DB for existing reading with same `user_name` (case-insensitive) + `user_id` where `created_at` is within last 30 days
+   - If found: load from DB, show toast, skip AI call
+   - If not found or older than 1 month: proceed with new analysis
+3. **History UI**: Show person name in history items, allow clicking to view full report
+
+### Phase 4: PDF Hindi + Kundali Layout Fix
+1. Remove transliteration when `language === 'hi'` — pass raw Hindi text through
+2. Embed a subset Devanagari font (Noto Sans Devanagari) for jsPDF
+3. Use the Devanagari font for all content sections when Hindi is selected
+4. Fix score display bug (85/10 → 8.5/10)
+5. Enhance Kundali-style layout: traditional grid for planetary analysis, decorative mandala borders, Sanskrit section headers
 
 ### Files Modified
+
 | Phase | File | Change |
 |-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
-
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+| 1 | `supabase/functions/palm-daily-horoscope/index.ts` | Gateway migration + CORS fix |
+| 1 | `supabase/functions/daily-horoscope/index.ts` | Gateway migration + CORS fix |
+| 1 | `supabase/functions/kundali-match/index.ts` | Gateway migration + CORS fix |
+| 2 | `src/pages/PalmReading.tsx` | Browser SpeechSynthesis for Listen, dedup logic, name/DOB in save |
+| 3 | Migration SQL | Add `user_name`, `user_dob` columns |
+| 4 | `src/utils/pdfGenerator.ts` | Hindi font support, skip transliteration for Hindi, Kundali layout, score fix |
 
