@@ -609,7 +609,7 @@ const Dashboard = () => {
                           href={short.video_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-shrink-0 w-36 group cursor-pointer"
+                          className="flex-shrink-0 w-28 sm:w-36 group cursor-pointer"
                         >
                           <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-sm group-hover:shadow-divine transition-all duration-300 group-hover:-translate-y-1">
                             <AspectRatio ratio={9 / 16}>
