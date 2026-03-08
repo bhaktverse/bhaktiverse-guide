@@ -225,6 +225,15 @@ const KundaliMatch = () => {
                       onChange={(e) => setPartner1(prev => ({ ...prev, timeOfBirth: e.target.value }))}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pob1">जन्म स्थान / Place of Birth</Label>
+                    <Input
+                      id="pob1"
+                      placeholder="जैसे: जयपुर, राजस्थान"
+                      value={partner1.placeOfBirth}
+                      onChange={(e) => setPartner1(prev => ({ ...prev, placeOfBirth: e.target.value }))}
+                    />
+                  </div>
                   {partner1.rashi && (
                     <div className="p-3 bg-muted/30 rounded-lg flex items-center gap-3">
                       <div className="text-3xl">{partner1.rashi.symbol}</div>
