@@ -383,9 +383,9 @@ const Temples = () => {
                 <div className="flex justify-between pt-2 border-t border-border/50">
                   <Button variant="ghost" size="sm" onClick={(e) => {
                     e.stopPropagation();
-                    // Handle favorite
-                  }}>
-                    <Heart className="h-4 w-4" />
+                    toggleFavorite(temple.id, 'temple');
+                  }} className={isFavorited(temple.id) ? 'text-destructive' : ''}>
+                    <Heart className={`h-4 w-4 ${isFavorited(temple.id) ? 'fill-current' : ''}`} />
                   </Button>
                   
                   <Button variant="ghost" size="sm" onClick={(e) => {

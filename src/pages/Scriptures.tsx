@@ -391,10 +391,10 @@ const Scriptures = () => {
                     <Button 
                       variant="outline"
                       size="icon"
-                      onClick={(e) => e.stopPropagation()}
-                      className="hover:bg-red-100 dark:hover:bg-red-900/20"
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(scripture.id, 'scripture'); }}
+                      className={isFavorited(scripture.id) ? 'text-destructive border-destructive/30 hover:bg-destructive/10' : 'hover:bg-red-100 dark:hover:bg-red-900/20'}
                     >
-                      <Heart className="h-4 w-4" />
+                      <Heart className={`h-4 w-4 ${isFavorited(scripture.id) ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
                   
