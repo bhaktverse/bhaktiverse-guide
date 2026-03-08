@@ -89,11 +89,12 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </PremiumProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </PremiumProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
