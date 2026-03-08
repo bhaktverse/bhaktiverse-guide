@@ -118,7 +118,7 @@ const Community = () => {
 
           if (!userProfiles[newPost.user_id]) {
             const { data: profile } = await supabase
-              .from('profiles')
+              .from('profiles_public')
               .select('user_id, name, avatar_url')
               .eq('user_id', newPost.user_id)
               .maybeSingle();
