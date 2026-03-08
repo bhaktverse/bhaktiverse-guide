@@ -23,6 +23,7 @@ interface PartnerDetails {
   name: string;
   dob: string;
   timeOfBirth: string;
+  placeOfBirth: string;
   rashi: RashiData | null;
 }
 
@@ -31,11 +32,12 @@ const KundaliMatch = () => {
   const navigate = useNavigate();
   
   const [partner1, setPartner1] = useState<PartnerDetails>({
-    name: '', dob: '', timeOfBirth: '', rashi: null
+    name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null
   });
   const [partner2, setPartner2] = useState<PartnerDetails>({
-    name: '', dob: '', timeOfBirth: '', rashi: null
+    name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null
   });
+  const [usedFallback, setUsedFallback] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GunMilanResult | null>(null);
@@ -91,15 +93,16 @@ const KundaliMatch = () => {
     setLoading(true);
     setResult(null);
     setAiAnalysis('');
+    setUsedFallback(false);
 
     try {
-      // Call edge function for detailed analysis
       const { data, error } = await supabase.functions.invoke('kundali-match', {
         body: {
           partner1: {
             name: partner1.name,
             dob: partner1.dob,
             timeOfBirth: partner1.timeOfBirth,
+            placeOfBirth: partner1.placeOfBirth,
             rashi: partner1.rashi.name,
             rashiHindi: partner1.rashi.hindiName
           },
@@ -107,6 +110,7 @@ const KundaliMatch = () => {
             name: partner2.name,
             dob: partner2.dob,
             timeOfBirth: partner2.timeOfBirth,
+            placeOfBirth: partner2.placeOfBirth,
             rashi: partner2.rashi.name,
             rashiHindi: partner2.rashi.hindiName
           }
@@ -117,19 +121,25 @@ const KundaliMatch = () => {
 
       if (data?.gunMilan) {
         setResult(data.gunMilan);
-        setAiAnalysis(data.analysis || '');
-        toast.success("🎉 कुंडली मिलान पूर्ण! / Kundali Match Complete!");
+        if (data.analysis) {
+          setAiAnalysis(data.analysis);
+          toast.success("🎉 कुंडली मिलान पूर्ण! AI विश्लेषण सहित");
+        } else {
+          setUsedFallback(true);
+          toast.success("कुंडली मिलान पूर्ण! (बेसिक गणना)");
+        }
       } else {
-        // Fallback to local calculation
         const gunMilan = calculateGunMilan(partner1.rashi, partner2.rashi);
         setResult(gunMilan);
+        setUsedFallback(true);
+        toast.info("बेसिक गुण मिलान गणना दिखाई जा रही है।");
       }
     } catch (error) {
       console.error('Kundali match error:', error);
-      // Fallback to local calculation
       const gunMilan = calculateGunMilan(partner1.rashi!, partner2.rashi!);
       setResult(gunMilan);
-      toast.success("कुंडली मिलान पूर्ण!");
+      setUsedFallback(true);
+      toast.info("⚠️ AI अनुपलब्ध — बेसिक गुण मिलान गणना दिखाई जा रही है।");
     } finally {
       setLoading(false);
     }
@@ -215,6 +225,15 @@ const KundaliMatch = () => {
                       onChange={(e) => setPartner1(prev => ({ ...prev, timeOfBirth: e.target.value }))}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pob1">जन्म स्थान / Place of Birth</Label>
+                    <Input
+                      id="pob1"
+                      placeholder="जैसे: जयपुर, राजस्थान"
+                      value={partner1.placeOfBirth}
+                      onChange={(e) => setPartner1(prev => ({ ...prev, placeOfBirth: e.target.value }))}
+                    />
+                  </div>
                   {partner1.rashi && (
                     <div className="p-3 bg-muted/30 rounded-lg flex items-center gap-3">
                       <div className="text-3xl">{partner1.rashi.symbol}</div>
@@ -261,6 +280,15 @@ const KundaliMatch = () => {
                       type="time"
                       value={partner2.timeOfBirth}
                       onChange={(e) => setPartner2(prev => ({ ...prev, timeOfBirth: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pob2">जन्म स्थान / Place of Birth</Label>
+                    <Input
+                      id="pob2"
+                      placeholder="जैसे: दिल्ली"
+                      value={partner2.placeOfBirth}
+                      onChange={(e) => setPartner2(prev => ({ ...prev, placeOfBirth: e.target.value }))}
                     />
                   </div>
                   {partner2.rashi && (
@@ -404,6 +432,18 @@ const KundaliMatch = () => {
                 </CardContent>
               </Card>
 
+              {/* Fallback Banner */}
+              {usedFallback && !aiAnalysis && (
+                <Card className="card-sacred border-amber-500/30 bg-amber-500/5">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      AI विश्लेषण अनुपलब्ध है। बेसिक गुण मिलान गणना दिखाई जा रही है। विस्तृत विश्लेषण के लिए पुनः प्रयास करें।
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* AI Analysis */}
               {aiAnalysis && (
                 <Card className="card-sacred">
@@ -414,7 +454,7 @@ const KundaliMatch = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-foreground leading-relaxed">{aiAnalysis}</p>
+                    <p className="text-foreground leading-relaxed whitespace-pre-line">{aiAnalysis}</p>
                   </CardContent>
                 </Card>
               )}
@@ -426,8 +466,9 @@ const KundaliMatch = () => {
                   onClick={() => {
                     setResult(null);
                     setAiAnalysis('');
-                    setPartner1({ name: '', dob: '', timeOfBirth: '', rashi: null });
-                    setPartner2({ name: '', dob: '', timeOfBirth: '', rashi: null });
+                    setPartner1({ name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null });
+                    setPartner2({ name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null });
+                    setUsedFallback(false);
                   }}
                   className="gap-2"
                 >

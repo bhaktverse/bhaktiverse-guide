@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -174,6 +174,7 @@ const Numerology = () => {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
   const [lang, setLang] = useState<'hi' | 'en'>('hi');
+  const resultsRef = React.useRef<HTMLDivElement>(null);
 
   const t = i18n[lang];
 
@@ -201,6 +202,11 @@ const Numerology = () => {
       if (error) throw error;
 
       setReport(data);
+      
+      // Auto-scroll to results on mobile
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
       
       if (data.cached) {
         toast.success(`✨ ${t.cachedReport}`);
@@ -390,7 +396,7 @@ const Numerology = () => {
 
           {/* Results Display - 3 columns */}
           {report ? (
-            <Card className="lg:col-span-3 card-sacred backdrop-blur-2xl bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine-lg overflow-hidden">
+            <Card ref={resultsRef} className="lg:col-span-3 card-sacred backdrop-blur-2xl bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine-lg overflow-hidden">
               <CardHeader className="border-b border-border/50 bg-gradient-to-r from-accent/10 via-primary/10 to-accent/10 pb-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
