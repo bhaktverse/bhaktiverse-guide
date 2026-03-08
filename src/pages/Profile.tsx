@@ -150,10 +150,7 @@ const Profile = () => {
         .eq('user_id', user.id);
 
       setAvatarUrl(newUrl);
-      toast({
-        title: "Avatar Updated 📷",
-        description: "Your profile picture has been saved."
-      });
+      toast.success("Avatar Updated 📷 — Your profile picture has been saved.");
     } catch (error) {
       console.error('Avatar upload error:', error);
       toast({
