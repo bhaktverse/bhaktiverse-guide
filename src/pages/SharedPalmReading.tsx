@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import PalmAnalysisResults from '@/components/PalmAnalysisResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Hand, Star, Share2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Loader2, Hand, Star } from 'lucide-react';
 
 const SharedPalmReading = () => {
   const { readingId } = useParams<{ readingId: string }>();
