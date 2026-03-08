@@ -192,7 +192,7 @@ const KundaliMatch = () => {
   };
 
   const saveToHistory = async (gunMilan: GunMilanResult, analysis: string | null) => {
-    if (!session?.user?.id || !partner1.rashi || !partner2.rashi) return;
+    if (!user?.id || !partner1.rashi || !partner2.rashi) return;
     try {
       await supabase.from('kundali_match_history').insert({
         user_id: session.user.id,
