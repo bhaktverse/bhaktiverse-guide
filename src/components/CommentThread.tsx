@@ -35,7 +35,7 @@ const CommentThread = ({ postId, onCountChange }: CommentThreadProps) => {
 
   const loadComments = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('post_comments')
       .select('*')
       .eq('post_id', postId)
