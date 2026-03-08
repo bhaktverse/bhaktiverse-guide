@@ -218,6 +218,7 @@ const PalmReading = () => {
   const [showFullReading, setShowFullReading] = useState(false);
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
+  const [lastSavedReadingId, setLastSavedReadingId] = useState<string | null>(null);
 
   // Auto-transition to report view when analysis completes
   useEffect(() => {
@@ -292,11 +293,14 @@ const PalmReading = () => {
         console.error('Image upload failed, saving without image:', uploadErr);
       }
 
-      const { error } = await supabase.from('palm_reading_history' as never).insert({
+      const { data: insertedData, error } = await supabase.from('palm_reading_history' as never).insert({
         user_id: user.id, palm_image_url: palmImageUrl,
         language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis
-      } as never);
+      } as never).select('id').single();
       if (error) console.error('Save error:', error);
+      if (insertedData && (insertedData as any).id) {
+        setLastSavedReadingId((insertedData as any).id);
+      }
       loadHistory();
     } catch (error) { console.error('Error saving to history:', error); }
   };
@@ -436,7 +440,7 @@ const PalmReading = () => {
     if (!isPremiumUser) { toast({ title: "Premium Feature", description: "Upgrade to Premium to download PDF reports", variant: "destructive" }); navigate('/premium'); return; }
     setGeneratingPdf(true);
     try {
-      await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob);
+      await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob, undefined, lastSavedReadingId || undefined);
       toast({ title: "📄 Report Downloaded", description: "Your beautiful PDF report has been saved" });
     } catch (error) {
       console.error('PDF generation error:', error);
