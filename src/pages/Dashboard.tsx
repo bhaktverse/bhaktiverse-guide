@@ -655,7 +655,7 @@ const Dashboard = () => {
               <CardContent className="space-y-4 sm:space-y-5 px-3 sm:px-6 pb-3 sm:pb-6">
                 {/* Mantras */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-2">
                     <span className="font-medium flex items-center gap-2 min-w-0">
                       <div className="p-1.5 sm:p-2 rounded-lg bg-orange-500/10 flex-shrink-0">
                         <Flame className="h-4 w-4 text-orange-500" />
