@@ -52,8 +52,8 @@ const ScriptureReader = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { scriptureId } = useParams();
-  usePageTitle('Scripture Reader');
   const [scripture, setScripture] = useState<Scripture | null>(null);
+  usePageTitle(scripture ? scripture.title : 'Scripture Reader');
   const [currentChapter, setCurrentChapter] = useState(1);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);

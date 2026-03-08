@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sun, Moon, Sparkles, Heart, BookOpen, Play } from "lucide-react";
+import { Sun, Moon, Sparkles, Heart, BookOpen, Play, RefreshCw, AlertTriangle } from "lucide-react";
 
 const DailyDevotion = () => {
   usePageTitle('Daily Devotion & Puja');
@@ -17,25 +17,55 @@ const DailyDevotion = () => {
   const [panchang, setPanchang] = useState<any>(null);
   const [personalizedMessage, setPersonalizedMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     loadDailyDevotion();
   }, []);
 
-  const loadDailyDevotion = async () => {
+  const loadFromDatabase = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('daily-divine-recommendation');
+      const dayOfWeek = new Date().getDay();
+      const { data: dbDevotion } = await supabase
+        .from('daily_devotions')
+        .select('*')
+        .eq('day_of_week', dayOfWeek)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (dbDevotion) {
+        setDevotion(dbDevotion);
+        setError(false);
+      }
+
+      const { data: dbMantra } = await supabase
+        .from('mantras_library')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (dbMantra) setMantra(dbMantra);
+    } catch (e) {
+      console.error('DB fallback also failed:', e);
+    }
+  };
+
+  const loadDailyDevotion = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('daily-divine-recommendation');
+
+      if (fnError) throw fnError;
 
       setDevotion(data.devotion);
       setMantra(data.mantra);
       setPanchang(data.panchang);
       setPersonalizedMessage(data.personalizedMessage);
-
-    } catch (error) {
-      console.error('Error loading daily devotion:', error);
-      toast.error("आज का देव दर्शन लोड करने में त्रुटि");
+    } catch (err) {
+      console.error('Error loading daily devotion:', err);
+      setError(true);
+      // Fallback to direct DB query
+      await loadFromDatabase();
     } finally {
       setLoading(false);
     }
@@ -57,12 +87,48 @@ const DailyDevotion = () => {
     );
   }
 
+  // Full error state with no data at all
+  if (error && !devotion) {
+    return (
+      <div className="min-h-screen bg-gradient-divine">
+        <Navigation />
+        <main className="container mx-auto px-4 pt-24 pb-24 flex items-center justify-center">
+          <Card className="card-sacred max-w-md w-full">
+            <CardContent className="text-center py-12 space-y-4">
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+              <h3 className="text-xl font-semibold">Unable to Load Today's Devotion</h3>
+              <p className="text-sm text-muted-foreground">
+                The divine guidance service is temporarily unavailable. Please try again.
+              </p>
+              <Button onClick={loadDailyDevotion} className="bg-gradient-saffron text-white">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-divine">
       <Navigation />
       
       <main className="container mx-auto px-4 pt-24 pb-24">
         <Breadcrumbs className="mb-6" />
+
+        {/* Error banner when using DB fallback */}
+        {error && devotion && (
+          <div className="mb-6 bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center justify-between">
+            <p className="text-sm text-destructive">Showing offline data. Panchang unavailable.</p>
+            <Button size="sm" variant="outline" onClick={loadDailyDevotion}>
+              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+            </Button>
+          </div>
+        )}
+
         {/* Hero Header */}
         <div className="text-center mb-12 animate-fade-in">
           <Badge className="bg-gradient-saffron text-white px-6 py-2 text-lg shadow-divine mb-4">
@@ -180,7 +246,7 @@ const DailyDevotion = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              {panchang && (
+              {panchang ? (
                 <>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
@@ -224,6 +290,11 @@ const DailyDevotion = () => {
                     <div className="text-sm">{panchang.auspicious_time}</div>
                   </div>
                 </>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Moon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Panchang data unavailable</p>
+                </div>
               )}
             </CardContent>
           </Card>

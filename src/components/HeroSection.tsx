@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles, BookOpen, ArrowRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +12,7 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [dbStats, setDbStats] = useState({ saints: 0, temples: 0, scriptures: 0, audio: 0 });
+  const [statsLoaded, setStatsLoaded] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -30,8 +32,10 @@ const HeroSection = () => {
         scriptures: scripturesRes.count || 0,
         audio: audioRes.count || 0,
       });
+      setStatsLoaded(true);
     } catch (e) {
       console.error('Stats load error:', e);
+      setStatsLoaded(true);
     }
   };
 
@@ -147,17 +151,25 @@ const HeroSection = () => {
           </div>
 
           {/* Trust Stats - Dynamic from DB */}
-          <div className="mt-16 p-8 bg-gradient-to-r from-card via-card-sacred to-card rounded-3xl shadow-lotus border border-border/50 backdrop-blur-sm">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              {statsDisplay.map((stat) => (
-                <div key={stat.label} className="group">
-                  <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
-                  <div className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-1">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </div>
-              ))}
+          {(!statsLoaded || statsDisplay.some(s => parseInt(s.value) > 0)) && (
+            <div className="mt-16 p-8 bg-gradient-to-r from-card via-card-sacred to-card rounded-3xl shadow-lotus border border-border/50 backdrop-blur-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                {statsDisplay.map((stat) => (
+                  <div key={stat.label} className="group">
+                    <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{stat.icon}</div>
+                    {statsLoaded ? (
+                      parseInt(stat.value) > 0 && (
+                        <div className="text-3xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-1">{stat.value}</div>
+                      )
+                    ) : (
+                      <Skeleton className="h-9 w-16 mx-auto mb-1" />
+                    )}
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
