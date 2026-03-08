@@ -108,10 +108,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
 
       setPlaylists(prev => [{ ...data, tracks: selectedTracks }, ...prev]);
       resetForm();
-      toast({
-        title: "🎵 Playlist Created!",
-        description: `"${newPlaylistName}" has been created successfully.`,
-      });
+      toast.success(`🎵 Playlist "${newPlaylistName}" has been created!`);
     } catch (error) {
       console.error('Error creating playlist:', error);
       toast({
