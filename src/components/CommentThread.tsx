@@ -93,9 +93,7 @@ const CommentThread = ({ postId, onCountChange }: CommentThreadProps) => {
     if (parentId) { setReplyText(''); setReplyingTo(null); }
     else setNewComment('');
 
-    // Update comment count on community_posts
-    await supabase.from('community_posts').update({ comments_count: comments.length + 1 }).eq('id', postId);
-
+    // comments_count is updated automatically by DB trigger
     loadComments();
     toast.success('Comment posted 🙏');
   };
