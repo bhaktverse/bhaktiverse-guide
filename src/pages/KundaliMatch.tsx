@@ -150,6 +150,29 @@ const KundaliMatch = () => {
     }
   };
 
+  const saveToHistory = async (gunMilan: GunMilanResult, analysis: string | null) => {
+    if (!session?.user?.id || !partner1.rashi || !partner2.rashi) return;
+    try {
+      await supabase.from('kundali_match_history').insert({
+        user_id: session.user.id,
+        partner1_name: partner1.name,
+        partner1_dob: partner1.dob,
+        partner1_rashi: partner1.rashi.name,
+        partner1_place: partner1.placeOfBirth || null,
+        partner2_name: partner2.name,
+        partner2_dob: partner2.dob,
+        partner2_rashi: partner2.rashi.name,
+        partner2_place: partner2.placeOfBirth || null,
+        total_score: gunMilan.total,
+        percentage: gunMilan.percentage,
+        gun_milan_data: gunMilan as any,
+        ai_analysis: analysis,
+      });
+    } catch (err) {
+      console.error('Error saving kundali history:', err);
+    }
+  };
+
   const getScoreColor = (points: number, max: number) => {
     const percentage = (points / max) * 100;
     if (percentage >= 75) return 'text-green-500';
