@@ -181,13 +181,14 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      // Load profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const [profileRes, journeyRes, rolesRes, historyRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('spiritual_journey').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', user.id),
+        supabase.from('palm_reading_history').select('id, created_at, palm_type, language').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+      ]);
 
+      const profile = profileRes.data;
       if (profile) {
         setProfileData({
           name: profile.name || '',
@@ -203,13 +204,7 @@ const Profile = () => {
         setAvatarUrl(profile.avatar_url || null);
       }
 
-      // Load journey
-      const { data: journey } = await supabase
-        .from('spiritual_journey')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      const journey = journeyRes.data;
       if (journey) {
         setJourneyData({
           level: journey.level || 1,
@@ -218,32 +213,18 @@ const Profile = () => {
           reports_generated: journey.reports_generated || 0,
           karma_score: journey.karma_score || 0
         });
-
-        // Check premium based on level/XP
         if (journey.level >= 3 || journey.experience_points >= 500) {
           setIsPremium(true);
         }
       }
 
-      // Check admin role
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
+      const roles = rolesRes.data;
       if (roles?.some(r => r.role === 'admin' || r.role === 'moderator')) {
         setIsAdmin(true);
         setIsPremium(true);
       }
 
-      // Load reading history
-      const { data: history } = await supabase
-        .from('palm_reading_history')
-        .select('id, created_at, palm_type, language')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
+      const history = historyRes.data;
       if (history) {
         setReadingHistory(history);
       }
