@@ -815,7 +815,7 @@ const Dashboard = () => {
               return (
                 <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-secondary/5 overflow-hidden">
                   <div className="h-1 bg-gradient-temple" />
-                  <CardContent className="p-5 text-center">
+                  <CardContent className="p-3 sm:p-5 text-center">
                     <div className="text-4xl mb-3">🤚</div>
                     <h3 className="font-bold text-base mb-1">Time for a Re-scan!</h3>
                     <p className="text-sm text-muted-foreground mb-1">
