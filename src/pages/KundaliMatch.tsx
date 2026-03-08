@@ -23,6 +23,7 @@ interface PartnerDetails {
   name: string;
   dob: string;
   timeOfBirth: string;
+  placeOfBirth: string;
   rashi: RashiData | null;
 }
 
