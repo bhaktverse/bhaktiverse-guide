@@ -188,6 +188,7 @@ const PalmReading = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   
   const [activeTab, setActiveTab] = useState('scan');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('hi');
