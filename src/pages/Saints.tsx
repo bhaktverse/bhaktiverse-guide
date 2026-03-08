@@ -167,14 +167,24 @@ const Saints = () => {
                     </div>
                   )}
                   
-                  <Button 
-                    onClick={() => navigate(`/saints/${saint.id}/chat`)}
-                    className="w-full gap-2"
-                    size="sm"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Chat with Guru
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => navigate(`/saints/${saint.id}/chat`)}
+                      className="flex-1 gap-2"
+                      size="sm"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Chat with Guru
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleFavorite(saint.id, 'saint')}
+                      className={isFavorited(saint.id) ? 'text-destructive border-destructive/30' : ''}
+                    >
+                      <Heart className={`h-4 w-4 ${isFavorited(saint.id) ? 'fill-current' : ''}`} />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
