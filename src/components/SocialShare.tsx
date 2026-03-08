@@ -17,7 +17,7 @@ interface SocialShareProps {
 }
 
 const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
-  const { toast } = useToast();
+  
   const [copied, setCopied] = useState(false);
 
   const shareUrl = window.location.href;
