@@ -417,8 +417,8 @@ const Dashboard = () => {
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-2xl sm:text-3xl shadow-divine flex-shrink-0">
                     🙏
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg flex items-center gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base sm:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
                       <Flame className="h-5 w-5 text-primary" />
                       Daily Sadhana
                       {stats.currentStreak > 0 && (
