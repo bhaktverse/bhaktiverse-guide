@@ -92,6 +92,7 @@ const Community = () => {
     loadPosts();
     loadTotalMembers();
     loadActiveThisWeek();
+    loadCommunityStats();
 
     const channel = supabase
       .channel('community_posts_realtime')
