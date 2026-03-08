@@ -232,11 +232,7 @@ const Community = () => {
       
     } catch (error) {
       console.error('Error loading community posts:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load community posts. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to load community posts. Please try again.");
     } finally {
       setLoading(false);
     }
