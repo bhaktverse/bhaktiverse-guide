@@ -45,6 +45,8 @@ const KundaliMatch = lazy(() => import("./pages/KundaliMatch"));
 const SharedPalmReading = lazy(() => import("./pages/SharedPalmReading"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
                 
                 {/* Public Content Routes */}
                 <Route path="/saints" element={<Saints />} />

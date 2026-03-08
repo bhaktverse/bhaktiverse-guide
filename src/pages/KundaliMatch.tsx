@@ -43,7 +43,7 @@ interface HistoryEntry {
 
 const KundaliMatch = () => {
   usePageTitle('Kundali Matching');
-  const { session } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [partner1, setPartner1] = useState<PartnerDetails>({
@@ -61,15 +61,19 @@ const KundaliMatch = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
-    if (session?.user?.id) loadPastMatches();
-  }, [session?.user?.id]);
+    if (!authLoading && !user) navigate('/auth');
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user?.id) loadPastMatches();
+  }, [user?.id]);
 
   const loadPastMatches = async () => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
     const { data } = await supabase
       .from('kundali_match_history')
       .select('id, partner1_name, partner1_rashi, partner2_name, partner2_rashi, total_score, percentage, ai_analysis, created_at')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
     if (data) setPastMatches(data);
@@ -105,7 +109,7 @@ const KundaliMatch = () => {
   };
 
   const performMatching = async () => {
-    if (!session) {
+    if (!user) {
       toast.error("कृपया पहले लॉगिन करें / Please login first");
       navigate("/auth");
       return;
@@ -188,10 +192,10 @@ const KundaliMatch = () => {
   };
 
   const saveToHistory = async (gunMilan: GunMilanResult, analysis: string | null) => {
-    if (!session?.user?.id || !partner1.rashi || !partner2.rashi) return;
+    if (!user?.id || !partner1.rashi || !partner2.rashi) return;
     try {
       await supabase.from('kundali_match_history').insert({
-        user_id: session.user.id,
+        user_id: user.id,
         partner1_name: partner1.name,
         partner1_dob: partner1.dob,
         partner1_rashi: partner1.rashi.name,

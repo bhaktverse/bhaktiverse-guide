@@ -3,6 +3,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
+import { usePremium } from '@/hooks/usePremium';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
@@ -93,6 +94,7 @@ const DarkModeSwitch = () => {
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isPremium } = usePremium();
   const navigate = useNavigate();
   usePageTitle('My Profile');
   
@@ -119,7 +121,6 @@ const Profile = () => {
     karma_score: 0
   });
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
   const [readingHistory, setReadingHistory] = useState<any[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -127,6 +128,18 @@ const Profile = () => {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+
+    const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      toast.error('Avatar must be under 2MB');
+      return;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Only JPEG, PNG, and WebP images allowed');
+      return;
+    }
 
     try {
       const fileExt = file.name.split('.').pop();
@@ -206,15 +219,11 @@ const Profile = () => {
           reports_generated: journey.reports_generated || 0,
           karma_score: journey.karma_score || 0
         });
-        if (journey.level >= 3 || journey.experience_points >= 500) {
-          setIsPremium(true);
-        }
       }
 
       const roles = rolesRes.data;
       if (roles?.some(r => r.role === 'admin' || r.role === 'moderator')) {
         setIsAdmin(true);
-        setIsPremium(true);
       }
 
       const history = historyRes.data;

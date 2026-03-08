@@ -408,7 +408,10 @@ const Auth = () => {
         </Card>
 
         <div className="text-center mt-6 text-muted-foreground text-sm">
-          <p>By joining, you become part of a global spiritual community</p>
+          <p>By joining, you agree to our{' '}
+            <a href="/terms" className="text-primary hover:underline">Terms of Service</a>{' '}and{' '}
+            <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+          </p>
           <p className="mt-2">🙏 Namaste 🕉️</p>
         </div>
       </div>
