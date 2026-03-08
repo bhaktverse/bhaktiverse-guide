@@ -286,7 +286,8 @@ const Dashboard = () => {
               .eq('id', saintId)
               .maybeSingle();
             if (saint) {
-              const timeAgo = getTimeAgo(session.last_activity || '');
+              const diff = Math.floor((Date.now() - new Date(session.last_activity || '').getTime()) / 60000);
+              const timeAgo = diff < 60 ? `${diff}m ago` : diff < 1440 ? `${Math.floor(diff / 60)}h ago` : `${Math.floor(diff / 1440)}d ago`;
               items.push({
                 icon: '🧘',
                 title: `Chat with ${saint.name}`,
