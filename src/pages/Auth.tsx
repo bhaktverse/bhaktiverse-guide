@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
