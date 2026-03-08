@@ -570,7 +570,7 @@ const Dashboard = () => {
                     <Button
                       key={action.path}
                       variant="ghost"
-                      className="h-auto flex-col gap-2 p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl"
+                      className="h-auto flex-col gap-2 p-3 sm:p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl min-w-0"
                       onClick={() => navigate(action.path)}
                     >
                       <div className="text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
