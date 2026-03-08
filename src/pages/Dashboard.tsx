@@ -594,7 +594,7 @@ const Dashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+                  <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border -mx-1 px-1">
                     {bhaktiShorts.map((short) => {
                       const extractVideoId = (url: string) => {
                         const match = url.match(/(?:shorts\/|v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
