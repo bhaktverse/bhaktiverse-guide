@@ -491,6 +491,19 @@ const Profile = () => {
                     }))}
                   />
                 </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <Label className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Appearance
+                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="dark-mode" className="text-sm font-normal">Dark Mode</Label>
+                    <DarkModeSwitch />
+                  </div>
+                </div>
               </div>
 
               <Button onClick={handleSave} className="w-full gap-2" disabled={saving}>
