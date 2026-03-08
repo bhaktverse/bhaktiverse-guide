@@ -193,11 +193,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
       onPlayPlaylist(playlistTracks);
       toast.success(`▶️ Playing "${playlist.name}" (${playlistTracks.length} tracks)`);
     } else {
-      toast({
-        title: "Empty Playlist",
-        description: "This playlist has no tracks.",
-        variant: "destructive",
-      });
+      toast.error("This playlist has no tracks.");
     }
   };
 
