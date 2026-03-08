@@ -232,8 +232,7 @@ const Community = () => {
           : transformedPosts.map(p => p.id);
         
         if (allPostIds.length > 0) {
-          const { data: likes } = await supabase
-            .from('post_likes' as any)
+          const { data: likes } = await postLikesTable()
             .select('post_id')
             .eq('user_id', user.id)
             .in('post_id', allPostIds);
