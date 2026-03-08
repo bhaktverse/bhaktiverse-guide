@@ -560,7 +560,37 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Main Content Grid */}
+        {/* Continue Your Journey */}
+        {continueItems.length > 0 && (
+          <Card className="card-sacred">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Continue Your Journey
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {continueItems.map((item, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    className="flex-shrink-0 h-auto py-3 px-4 gap-3 hover:shadow-divine transition-all hover:-translate-y-0.5"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <span className="text-2xl">{item.icon}</span>
+                    <div className="text-left">
+                      <div className="text-sm font-semibold">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">{item.subtitle}</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
