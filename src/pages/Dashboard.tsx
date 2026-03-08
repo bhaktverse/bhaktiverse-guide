@@ -224,6 +224,19 @@ const Dashboard = () => {
         .eq('day_of_week', new Date().getDay())
         .maybeSingle();
 
+      // Load last palm reading date for re-scan reminder
+      const { data: lastPalm } = await supabase
+        .from('palm_reading_history')
+        .select('created_at')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastPalm?.created_at) {
+        setLastPalmReadingDate(lastPalm.created_at);
+      }
+
       if (devotion) {
         setTodayDevotion(devotion as DailyDevotion);
       }
