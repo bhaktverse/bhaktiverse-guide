@@ -491,7 +491,7 @@ const PalmReading = () => {
       if (data?.compatibility) { setCompatibilityResult(data.compatibility); toast.success("💕 Compatibility Analysis Complete — Your relationship insights are ready"); }
     } catch (error) {
       console.error('Compatibility error:', error);
-      toast({ title: "Analysis failed", description: "Could not analyze compatibility", variant: "destructive" });
+      toast.error("Could not analyze compatibility");
     } finally { setAnalyzingCompatibility(false); }
   };
 
