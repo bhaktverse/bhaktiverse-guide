@@ -1,109 +1,112 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# Audio Library -- Full Expert Audit & Improvement Plan
 
-## Current Critical Issues
+## Current State Summary
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
+The audio system consists of 4 files:
+- **AudioLibrary.tsx** (page) -- track list, search/filters, grid layout
+- **EnhancedAudioPlayer.tsx** -- full player with lyrics/meaning, TTS, progress, volume
+- **AudioPlayer.tsx** -- older/duplicate player component (unused in AudioLibrary)
+- **PlaylistManager.tsx** -- CRUD playlists with Supabase
+- **useDownload.tsx** -- streaming file download hook
 
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
+---
 
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+## Issues Found
+
+### A. Mobile Responsiveness (Critical)
+
+1. **Player + Playlist sidebar disappears below fold on mobile.** The `lg:grid-cols-3` layout means on mobile, the player card renders far below the track list (which uses `max-h-[calc(100vh-300px)]`). Users must scroll past the entire track list to find the player.
+
+2. **Track action buttons (favorite, download) are `hidden sm:flex`** -- completely invisible on mobile. No way to favorite or download on phones.
+
+3. **EnhancedAudioPlayer track info row overflows on 320px.** The avatar (64px) + text + 3 icon buttons (heart/share/more) all sit in a single flex row with no wrapping.
+
+4. **Volume slider is useless on mobile** -- mobile devices control volume via hardware buttons. This wastes vertical space.
+
+5. **PlaylistManager dialog `max-w-2xl`** -- too wide for mobile, and the `ScrollArea h-[250px]` leaves little room for the form fields on short screens.
+
+6. **Playlist action buttons use `opacity-0 group-hover:opacity-100`** -- unusable on touch devices since there is no hover state.
+
+### B. Functional / Logic Issues
+
+7. **Duplicate component: `AudioPlayer.tsx`** is never imported by AudioLibrary (it uses EnhancedAudioPlayer). Dead code.
+
+8. **EnhancedAudioPlayer `isLiked` state is local** -- not persisted. The heart button in the player does nothing meaningful vs. the `useFavorites` hook used in the track list.
+
+9. **Share button is a no-op** -- no onClick handler.
+
+10. **MoreHorizontal button is a no-op** -- no menu or action attached.
+
+11. **Shuffle only reorders the playlist array once** -- doesn't implement true shuffle-play (next track should be random from unplayed).
+
+12. **No "Now Playing" indicator on the track list** -- only background color change, no animated equalizer or visual cue that audio is actively playing.
+
+13. **TTS `generateTTS` creates a detached `new Audio()` element** -- doesn't pause the main player, and there's no way to stop/control TTS playback once started.
+
+### C. UX Gaps
+
+14. **No sticky/fixed mini-player on mobile** -- when scrolling through tracks, users lose access to play controls. The `sticky bottom-4` class only works within the sidebar column, not as a global fixed bar.
+
+15. **No category chip filters** -- only dropdown selects. Horizontal scrollable chips would be faster for browsing.
+
+16. **No "Recently Played" or "Continue Listening"** section.
+
+17. **Empty state when no tracks match** is adequate but could include filter-reset action.
+
+18. **No loading skeleton for individual track rows** during initial load.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+### 1. Mobile-First Player Redesign
+**File: `src/components/EnhancedAudioPlayer.tsx`**
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
+- On mobile (`lg:` breakpoint), render a **fixed bottom mini-player bar** (above MobileBottomNav at ~`bottom-16`) showing: track title (truncated), play/pause, next, progress bar. Tapping it expands to full player via a `Drawer` (vaul).
+- Hide volume slider on mobile (use `hidden md:flex`).
+- Wrap track info + action buttons in `flex-wrap` for 320px safety.
+- Remove the non-functional Share and MoreHorizontal buttons, or wire them up.
 
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
+### 2. Track List Mobile Fixes
+**File: `src/pages/AudioLibrary.tsx`**
 
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
+- Remove `hidden sm:flex` from action buttons row. Instead, always show favorite and download as small icon buttons on the right side of each track row.
+- Add a visible "Now Playing" equalizer animation (3 bars CSS animation) next to the currently playing track.
+- Add horizontal scrollable category **chip filters** above the track list for quick one-tap filtering.
+- On mobile, move the player rendering **above** the track list (or use the fixed mini-player approach from point 1).
+- Change grid from `lg:grid-cols-3` to show player first on mobile via `order-first lg:order-last`.
 
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
+### 3. PlaylistManager Mobile Fixes
+**File: `src/components/PlaylistManager.tsx`**
 
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
+- Change dialog to `max-w-lg` and use `Drawer` on mobile for better UX.
+- Make playlist action buttons always visible on mobile (remove `opacity-0 group-hover:opacity-100`, use `sm:opacity-0 sm:group-hover:opacity-100` instead so they are visible on touch).
+- Reduce ScrollArea height to `h-[200px]` on mobile.
 
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
+### 4. Fix Functional Issues
+**Files: `EnhancedAudioPlayer.tsx`, `AudioLibrary.tsx`**
 
-### Phase 2: Add Reading Depth Score Clarification
+- Connect the player's heart button to `useFavorites` hook (pass `toggleFavorite` and `isFavorited` as props).
+- Pause main audio before playing TTS; add a stop-TTS button.
+- Wire Share button to `navigator.share()` API or `SocialShare` component.
+- Delete `src/components/AudioPlayer.tsx` (dead code).
 
-**File: `src/components/PalmReadingReport.tsx`**
+### 5. UX Enhancements
+**File: `src/pages/AudioLibrary.tsx`**
 
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
+- Add **category chip bar** (horizontal scroll): `flex overflow-x-auto gap-2 pb-2 snap-x` with chips for each category + "All".
+- Add a **filter reset** button in the empty state.
+- Add CSS equalizer animation for the playing track indicator.
 
-### Phase 3: PDF Report Optimization
+### 6. Estimated Changes
 
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
-
----
-
-## Technical Details
-
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
-
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
-
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
-```
-
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
-
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
-
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
-
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+| File | Changes |
+|------|---------|
+| `EnhancedAudioPlayer.tsx` | Mini-player bar, drawer expand, hide volume on mobile, fix heart/share |
+| `AudioLibrary.tsx` | Reorder grid, show action buttons on mobile, add chip filters, equalizer CSS |
+| `PlaylistManager.tsx` | Touch-friendly actions, responsive dialog |
+| `AudioPlayer.tsx` | Delete (dead code) |
+| `src/index.css` | Add equalizer bar keyframes |
 
