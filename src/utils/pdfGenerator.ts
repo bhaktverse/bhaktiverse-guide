@@ -276,9 +276,6 @@ function getZodiacFromDob(dob: string): { sign: string; hindiSign: string } {
 }
 
 export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: string, language?: string, userDob?: string, readingUrl?: string, dbReadingId?: string): Promise<void> => {
-  // Set global Hindi mode flag
-  isHindiPdf = language === 'hi';
-  
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -287,15 +284,6 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
   const bottomMargin = pageHeight - 25;
   let yPos = margin;
   let currentPage = 1;
-
-  // For Hindi, we need to use a font that supports Devanagari
-  // jsPDF's default fonts don't support Devanagari, so for Hindi we use transliteration as fallback
-  // but keep the content more readable than the previous aggressive stripping
-  if (isHindiPdf) {
-    // Unfortunately jsPDF standard fonts can't render Devanagari glyphs
-    // We'll use IAST transliteration but preserve the structure better
-    isHindiPdf = false; // Fall back to transliteration but with better mapping
-  }
 
   const primaryColor: [number, number, number] = [255, 102, 0];
   const secondaryColor: [number, number, number] = [128, 0, 128];
