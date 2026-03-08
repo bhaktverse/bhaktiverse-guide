@@ -572,7 +572,6 @@ const Community = () => {
                               {newPost.length}/{POST_MAX_LENGTH}
                             </p>
                           </div>
-                          />
                           
                           <div>
                             <p className="text-sm font-medium mb-2">Add tags:</p>
