@@ -417,24 +417,24 @@ const Dashboard = () => {
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-2xl sm:text-3xl shadow-divine flex-shrink-0">
                     🙏
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-base sm:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
-                      <Flame className="h-5 w-5 text-primary" />
-                      Daily Sadhana
+                   <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-sm sm:text-base md:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
+                      <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                      <span>Daily Sadhana</span>
                       {stats.currentStreak > 0 && (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs">
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] sm:text-xs">
                           🔥 {stats.currentStreak} Day Streak
                         </Badge>
                       )}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
                       Today's Deity: <span className="font-semibold text-foreground">{todayDevotion.deity}</span>
                       {todayDevotion.color && (
                         <> • Color: <span className="font-semibold" style={{ color: todayDevotion.color === 'Red' ? '#ef4444' : todayDevotion.color === 'Yellow' ? '#eab308' : todayDevotion.color === 'Green' ? '#22c55e' : todayDevotion.color === 'White' ? '#94a3b8' : todayDevotion.color === 'Orange' ? '#f97316' : todayDevotion.color === 'Blue' ? '#3b82f6' : todayDevotion.color === 'Black' ? '#64748b' : 'inherit' }}>{todayDevotion.color}</span></>
                       )}
                     </p>
                     {todayDevotion.mantra && (
-                      <p className="text-xs text-primary font-medium mt-1 italic">🕉️ {todayDevotion.mantra}</p>
+                      <p className="text-[10px] sm:text-xs text-primary font-medium mt-1 italic truncate">🕉️ {todayDevotion.mantra}</p>
                     )}
                   </div>
                 </div>
