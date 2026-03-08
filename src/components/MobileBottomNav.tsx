@@ -135,7 +135,7 @@ const MobileBottomNav = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleNavClick(path)}
-                className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 ${
+                className={`flex flex-col items-center gap-0.5 h-12 min-w-[48px] py-1.5 px-3 ${
                   path === '__search__'
                     ? 'text-muted-foreground'
                     : location.pathname === path 
