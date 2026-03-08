@@ -81,6 +81,7 @@ const Community = () => {
   useEffect(() => {
     loadPosts();
     loadTotalMembers();
+    loadActiveThisWeek();
 
     const channel = supabase
       .channel('community_posts_realtime')
