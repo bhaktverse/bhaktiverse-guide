@@ -396,7 +396,7 @@ const Numerology = () => {
 
           {/* Results Display - 3 columns */}
           {report ? (
-            <Card className="lg:col-span-3 card-sacred backdrop-blur-2xl bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine-lg overflow-hidden">
+            <Card ref={resultsRef} className="lg:col-span-3 card-sacred backdrop-blur-2xl bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine-lg overflow-hidden">
               <CardHeader className="border-b border-border/50 bg-gradient-to-r from-accent/10 via-primary/10 to-accent/10 pb-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
