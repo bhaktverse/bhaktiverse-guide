@@ -89,6 +89,8 @@ const Dashboard = () => {
   const [userName, setUserName] = useState("");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [animateIn, setAnimateIn] = useState(false);
+  const [todayDevotion, setTodayDevotion] = useState<DailyDevotion | null>(null);
+  const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
