@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.get-shared-reading]
 verify_jwt = false
+
+[functions.festival-notifications]
+verify_jwt = false
