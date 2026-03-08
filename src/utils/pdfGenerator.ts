@@ -518,6 +518,27 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     doc.text('(Hindi content displayed in Roman transliteration / IAST for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
   }
 
+  // QR Code for online reading link
+  const qrUrl = readingUrl || `https://bhaktverse.lovable.app/palm-reading?ref=${readingId}`;
+  try {
+    const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#8B0000', light: '#FFF8DC' },
+      errorCorrectionLevel: 'M',
+    });
+    const qrSize = 28;
+    const qrX = (pageWidth - qrSize) / 2;
+    const qrY = scoreBoxY + 62;
+    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+    doc.setFontSize(8);
+    doc.setTextColor(...mutedColor);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Scan to view & share your reading online', pageWidth / 2, qrY + qrSize + 4, { align: 'center' });
+  } catch (qrErr) {
+    console.warn('QR code generation failed:', qrErr);
+  }
+
   doc.setFontSize(8);
   doc.setTextColor(...mutedColor);
   doc.text('Powered by BhaktVerse AI - Vedic Palm Reading', pageWidth / 2, pageHeight - 20, { align: 'center' });
