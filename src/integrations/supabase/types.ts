@@ -1298,6 +1298,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_api_usage: {
+        Row: {
+          call_count: number
+          created_at: string | null
+          function_name: string
+          id: string
+          updated_at: string | null
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          call_count?: number
+          created_at?: string | null
+          function_name: string
+          id?: string
+          updated_at?: string | null
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          call_count?: number
+          created_at?: string | null
+          function_name?: string
+          id?: string
+          updated_at?: string | null
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
           content_id: string
@@ -1417,6 +1447,14 @@ export type Database = {
       }
     }
     Functions: {
+      check_and_increment_api_usage: {
+        Args: {
+          _daily_limit?: number
+          _function_name: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
