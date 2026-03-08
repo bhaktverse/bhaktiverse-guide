@@ -546,9 +546,18 @@ const Profile = () => {
                 <div className="text-center p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
                   <div className="text-4xl font-bold text-amber-500">Level {journeyData.level}</div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    {journeyData.experience_points} / {xpToNextLevel} XP
+                    {xpInCurrentLevel} / {xpToNextLevel} XP
                   </div>
-                  <Progress value={xpProgress} className="mt-2 h-2" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div><Progress value={xpProgress} className="mt-2 h-2 cursor-help" /></div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{xpInCurrentLevel}/{xpToNextLevel} XP to Level {journeyData.level + 1}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
