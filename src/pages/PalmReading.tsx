@@ -293,11 +293,14 @@ const PalmReading = () => {
         console.error('Image upload failed, saving without image:', uploadErr);
       }
 
-      const { error } = await supabase.from('palm_reading_history' as never).insert({
+      const { data: insertedData, error } = await supabase.from('palm_reading_history' as never).insert({
         user_id: user.id, palm_image_url: palmImageUrl,
         language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis
-      } as never);
+      } as never).select('id').single();
       if (error) console.error('Save error:', error);
+      if (insertedData && (insertedData as any).id) {
+        setLastSavedReadingId((insertedData as any).id);
+      }
       loadHistory();
     } catch (error) { console.error('Error saving to history:', error); }
   };
