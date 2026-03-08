@@ -153,11 +153,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     } catch (error) {
       console.error('Playback error:', error);
       setIsPlaying(false);
-      toast({
-        title: "Playback Error",
-        description: "Unable to play this audio. The file may be unavailable.",
-        variant: "destructive",
-      });
+      toast.error("Unable to play this audio. The file may be unavailable.");
     }
   };
 

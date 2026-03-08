@@ -347,7 +347,7 @@ ${language === 'hi' ? 'Respond in Hindi/Hinglish.' : 'Respond in English.'}`,
                     return `${c.position}: ${c.name}${c.isReversed ? ' (Reversed)' : ''}${deity ? ` • ${deity}` : ''}`;
                   }).join('\n')}\n\nGet your reading at BhaktVerse!`;
                   navigator.share?.({ text }) || navigator.clipboard.writeText(text);
-                  toast({ title: "Copied to clipboard!" });
+                  toast.success("Copied to clipboard!");
                 }}
               >
                 <Share2 className="h-4 w-4" />

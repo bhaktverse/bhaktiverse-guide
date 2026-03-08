@@ -145,11 +145,7 @@ const PalmScannerBiometric = ({
   // Start analysis - ONLY when user clicks this button
   const handleStartAnalysis = () => {
     if (palmImages.length === 0) {
-      toast({
-        title: "No Image",
-        description: "Please upload or capture a palm image first",
-        variant: "destructive"
-      });
+      toast.error("Please upload or capture a palm image first");
       return;
     }
     
