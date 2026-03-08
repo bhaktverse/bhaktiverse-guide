@@ -191,10 +191,7 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
     const playlistTracks = allTracks.filter(track => playlist.tracks.includes(track.id));
     if (playlistTracks.length > 0) {
       onPlayPlaylist(playlistTracks);
-      toast({
-        title: "▶️ Now Playing",
-        description: `Playing "${playlist.name}" (${playlistTracks.length} tracks)`,
-      });
+      toast.success(`▶️ Playing "${playlist.name}" (${playlistTracks.length} tracks)`);
     } else {
       toast({
         title: "Empty Playlist",
