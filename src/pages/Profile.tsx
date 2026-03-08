@@ -299,7 +299,7 @@ const Profile = () => {
         title: "Logged Out",
         description: "May your journey continue with blessings. 🙏",
       });
-      window.location.href = '/';
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
     }

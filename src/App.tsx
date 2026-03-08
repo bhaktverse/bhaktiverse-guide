@@ -4,77 +4,90 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { PremiumProvider } from "@/hooks/usePremium";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Pages
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Saints from "./pages/Saints";
-import SaintChat from "./pages/SaintChat";
-import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
-import Temples from "./pages/Temples";
-import TempleDetail from "./pages/TempleDetail";
-import Scriptures from "./pages/Scriptures";
-import ScriptureReader from "./pages/ScriptureReader";
-import SpiritualCalendar from "./pages/SpiritualCalendar";
-import AudioLibrary from "./pages/AudioLibrary";
-import Community from "./pages/Community";
-import Premium from "./pages/Premium";
-import Numerology from "./pages/Numerology";
-import DailyDevotion from "./pages/DailyDevotion";
-import PalmReading from "./pages/PalmReading";
-import Profile from "./pages/Profile";
-import Horoscope from "./pages/Horoscope";
-import KundaliMatch from "./pages/KundaliMatch";
-import SharedPalmReading from "./pages/SharedPalmReading";
+// Spiritual loading fallback
+const SpiritualLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="text-center space-y-4">
+      <div className="text-6xl animate-om-pulse">🕉️</div>
+      <p className="text-muted-foreground text-sm">Loading...</p>
+      <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary/50" />
+    </div>
+  </div>
+);
+
+// Lazy-loaded pages
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Saints = lazy(() => import("./pages/Saints"));
+const SaintChat = lazy(() => import("./pages/SaintChat"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Temples = lazy(() => import("./pages/Temples"));
+const TempleDetail = lazy(() => import("./pages/TempleDetail"));
+const Scriptures = lazy(() => import("./pages/Scriptures"));
+const ScriptureReader = lazy(() => import("./pages/ScriptureReader"));
+const SpiritualCalendar = lazy(() => import("./pages/SpiritualCalendar"));
+const AudioLibrary = lazy(() => import("./pages/AudioLibrary"));
+const Community = lazy(() => import("./pages/Community"));
+const Premium = lazy(() => import("./pages/Premium"));
+const Numerology = lazy(() => import("./pages/Numerology"));
+const DailyDevotion = lazy(() => import("./pages/DailyDevotion"));
+const PalmReading = lazy(() => import("./pages/PalmReading"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Horoscope = lazy(() => import("./pages/Horoscope"));
+const KundaliMatch = lazy(() => import("./pages/KundaliMatch"));
+const SharedPalmReading = lazy(() => import("./pages/SharedPalmReading"));
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            
-            {/* Main Dashboard */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            
-            {/* Content Routes */}
-            <Route path="/saints" element={<Saints />} />
-            <Route path="/saints/:saintId/chat" element={<SaintChat />} />
-            <Route path="/scriptures" element={<Scriptures />} />
-            <Route path="/scriptures/:scriptureId" element={<ScriptureReader />} />
-            <Route path="/temples" element={<Temples />} />
-            <Route path="/temples/:templeId" element={<TempleDetail />} />
-            
-            {/* Features Routes */}
-            <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
-            <Route path="/audio-library" element={<AudioLibrary />} />
-            <Route path="/numerology" element={<Numerology />} />
-            <Route path="/palm-reading" element={<PalmReading />} />
-            <Route path="/palm-reading/shared/:readingId" element={<SharedPalmReading />} />
-            <Route path="/daily-devotion" element={<DailyDevotion />} />
-            <Route path="/horoscope" element={<Horoscope />} />
-            <Route path="/kundali-match" element={<KundaliMatch />} />
-            
-            {/* User Routes */}
-            <Route path="/profile" element={<Profile />} />
-            
-            {/* Social & Premium */}
-            <Route path="/community" element={<Community />} />
-            <Route path="/premium" element={<Premium />} />
+      <PremiumProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<SpiritualLoader />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                
+                {/* Public Content Routes */}
+                <Route path="/saints" element={<Saints />} />
+                <Route path="/scriptures" element={<Scriptures />} />
+                <Route path="/temples" element={<Temples />} />
+                <Route path="/temples/:templeId" element={<TempleDetail />} />
+                <Route path="/audio-library" element={<AudioLibrary />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/daily-devotion" element={<DailyDevotion />} />
+                <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
+                <Route path="/palm-reading/shared/:readingId" element={<SharedPalmReading />} />
 
-            {/* CATCH-ALL */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/saints/:saintId/chat" element={<ProtectedRoute><SaintChat /></ProtectedRoute>} />
+                <Route path="/scriptures/:scriptureId" element={<ProtectedRoute><ScriptureReader /></ProtectedRoute>} />
+                <Route path="/numerology" element={<ProtectedRoute><Numerology /></ProtectedRoute>} />
+                <Route path="/palm-reading" element={<ProtectedRoute><PalmReading /></ProtectedRoute>} />
+                <Route path="/horoscope" element={<ProtectedRoute><Horoscope /></ProtectedRoute>} />
+                <Route path="/kundali-match" element={<ProtectedRoute><KundaliMatch /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
+
+                {/* CATCH-ALL */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </PremiumProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
