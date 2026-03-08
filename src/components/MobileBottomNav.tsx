@@ -58,6 +58,8 @@ const MobileBottomNav = () => {
   const handleNavClick = (path: string | null) => {
     if (path === null) {
       setMoreOpen(true);
+    } else if (path === '__search__') {
+      setSearchOpen(true);
     } else {
       navigate(path);
       setMoreOpen(false);
