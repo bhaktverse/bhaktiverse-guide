@@ -49,7 +49,6 @@ const SaintChat = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   
-  
   const [saint, setSaint] = useState<Saint | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
