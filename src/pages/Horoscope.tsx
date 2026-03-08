@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { RASHIS, getRashiByDate, type RashiData } from "@/data/rashiData";
 import { 
@@ -34,6 +35,7 @@ interface DailyPrediction {
 
 const Horoscope = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedRashi, setSelectedRashi] = useState<RashiData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,8 @@ const Horoscope = () => {
 
   useEffect(() => {
     loadPanchang();
-  }, []);
+    autoDetectRashi();
+  }, [user]);
 
   const loadPanchang = async () => {
     try {
