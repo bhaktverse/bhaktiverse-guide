@@ -69,7 +69,7 @@ const KundaliMatch = () => {
   }, [user?.id]);
 
   const loadPastMatches = async () => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
     const { data } = await supabase
       .from('kundali_match_history')
       .select('id, partner1_name, partner1_rashi, partner2_name, partner2_rashi, total_score, percentage, ai_analysis, created_at')
