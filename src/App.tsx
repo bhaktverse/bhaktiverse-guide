@@ -48,12 +48,13 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <PremiumProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <PremiumProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
           <BrowserRouter>
             <Suspense fallback={<SpiritualLoader />}>
               <Routes>
