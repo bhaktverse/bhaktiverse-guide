@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -15,26 +15,19 @@ serve(async (req) => {
     
     if (!rashiName) {
       return new Response(JSON.stringify({ error: 'Rashi name required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      // Return fallback prediction
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({
         prediction: generateFallbackPrediction(rashiName, rashiHindi, ruler, element)
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const today = new Date().toLocaleDateString('hi-IN', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
     });
 
     const systemPrompt = `You are "Jyotish AI Guru", a Vedic astrology expert providing daily horoscope readings.
@@ -44,38 +37,21 @@ Style:
 - Mix of Hindi and English (Hinglish)
 - Positive and constructive guidance
 - Reference today's Panchang data when provided
-- Include specific advice, not generic statements
 
 Return ONLY valid JSON in this exact format:
 {
-  "overall": "2-3 sentence overall prediction for the day in Hinglish",
-  "love": {
-    "score": 75,
-    "prediction": "Love life prediction",
-    "tip": "Specific relationship advice"
-  },
-  "career": {
-    "score": 80,
-    "prediction": "Career/work prediction",
-    "tip": "Professional advice"
-  },
-  "health": {
-    "score": 70,
-    "prediction": "Health and wellness prediction",
-    "tip": "Health advice"
-  },
-  "finance": {
-    "score": 72,
-    "prediction": "Financial prediction",
-    "tip": "Money advice"
-  },
-  "luckyColor": "शुभ रंग in Hindi",
+  "overall": "2-3 sentence overall prediction",
+  "love": { "score": 75, "prediction": "...", "tip": "..." },
+  "career": { "score": 80, "prediction": "...", "tip": "..." },
+  "health": { "score": 70, "prediction": "...", "tip": "..." },
+  "finance": { "score": 72, "prediction": "...", "tip": "..." },
+  "luckyColor": "शुभ रंग",
   "luckyNumber": 7,
-  "luckyTime": "Morning time window like 9-11 AM in Hindi",
-  "mantraOfDay": "Specific mantra with Sanskrit",
-  "doToday": ["3 things to do today"],
+  "luckyTime": "Morning time window",
+  "mantraOfDay": "Specific mantra",
+  "doToday": ["3 things to do"],
   "avoidToday": ["2 things to avoid"],
-  "cosmicMessage": "Inspirational cosmic message in Hinglish"
+  "cosmicMessage": "Inspirational message"
 }`;
 
     const userPrompt = `Generate today's horoscope for:
@@ -85,27 +61,35 @@ Element: ${element}
 Date: ${today}
 ${panchang ? `Panchang: Tithi - ${panchang.hindu?.tithi || 'N/A'}, Nakshatra - ${panchang.hindu?.nakshatra || 'N/A'}` : ''}
 
-Provide specific, personalized predictions considering the planetary positions and Panchang of today.`;
+Provide specific, personalized predictions.`;
 
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.8,
         max_tokens: 1500,
       }),
     });
 
     if (!aiResponse.ok) {
-      throw new Error('OpenAI API error');
+      console.error('AI gateway error:', aiResponse.status);
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited, please try again later." }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: "Credits exhausted." }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      throw new Error('AI API error');
     }
 
     const aiData = await aiResponse.json();
@@ -113,7 +97,6 @@ Provide specific, personalized predictions considering the planetary positions a
     
     try {
       const content = aiData.choices[0].message.content;
-      // Extract JSON from potential markdown code blocks
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, content];
       prediction = JSON.parse(jsonMatch[1] || content);
     } catch (parseError) {
@@ -131,8 +114,7 @@ Provide specific, personalized predictions considering the planetary positions a
       error: 'Service temporarily unavailable',
       prediction: generateFallbackPrediction('', '', '', '')
     }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
@@ -143,26 +125,10 @@ function generateFallbackPrediction(rashiName: string, rashiHindi: string, ruler
   
   return {
     overall: `आज ${rashiHindi || 'आपकी'} राशि के लिए सकारात्मक दिन है। ${ruler || 'ग्रह'} का प्रभाव आपको ऊर्जा प्रदान करेगा। धैर्य रखें और अपने लक्ष्यों पर ध्यान केंद्रित करें।`,
-    love: { 
-      score: randomScore(), 
-      prediction: "प्रेम जीवन में हल्की-फुल्की खुशियां मिलेंगी।", 
-      tip: "पार्टनर के साथ quality time बिताएं।" 
-    },
-    career: { 
-      score: randomScore(), 
-      prediction: "करियर में नई opportunities आ सकती हैं।", 
-      tip: "नई skills सीखने पर focus करें।" 
-    },
-    health: { 
-      score: randomScore(), 
-      prediction: "स्वास्थ्य सामान्य रहेगा।", 
-      tip: "सुबह व्यायाम और पर्याप्त पानी पिएं।" 
-    },
-    finance: { 
-      score: randomScore(), 
-      prediction: "आर्थिक स्थिति स्थिर रहेगी।", 
-      tip: "अनावश्यक खर्चों से बचें।" 
-    },
+    love: { score: randomScore(), prediction: "प्रेम जीवन में हल्की-फुल्की खुशियां मिलेंगी।", tip: "पार्टनर के साथ quality time बिताएं।" },
+    career: { score: randomScore(), prediction: "करियर में नई opportunities आ सकती हैं।", tip: "नई skills सीखने पर focus करें।" },
+    health: { score: randomScore(), prediction: "स्वास्थ्य सामान्य रहेगा।", tip: "सुबह व्यायाम और पर्याप्त पानी पिएं।" },
+    finance: { score: randomScore(), prediction: "आर्थिक स्थिति स्थिर रहेगी।", tip: "अनावश्यक खर्चों से बचें।" },
     luckyColor: "पीला",
     luckyNumber: 7,
     luckyTime: "सुबह 9-11 बजे",

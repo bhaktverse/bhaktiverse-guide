@@ -121,6 +121,8 @@ interface PalmReadingRecord {
   palm_type: string | null;
   analysis: PalmAnalysis;
   created_at: string;
+  user_name?: string | null;
+  user_dob?: string | null;
 }
 
 interface CompatibilityResult {
@@ -186,6 +188,7 @@ const PalmReading = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   
   const [activeTab, setActiveTab] = useState('scan');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('hi');
@@ -295,7 +298,8 @@ const PalmReading = () => {
 
       const { data: insertedData, error } = await supabase.from('palm_reading_history' as never).insert({
         user_id: user.id, palm_image_url: palmImageUrl,
-        language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis
+        language: selectedLanguage, palm_type: palmAnalysis.palmType || null, analysis: palmAnalysis,
+        user_name: userName || null, user_dob: userDob || null
       } as never).select('id').single();
       if (error) console.error('Save error:', error);
       if (insertedData && (insertedData as any).id) {
@@ -324,12 +328,38 @@ const PalmReading = () => {
 
   const handleBiometricAnalyze = async (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
     setPalmImages(images);
-    setUserName(metadata.name || '');
-    setUserDob(metadata.dob || '');
+    const metaName = metadata.name || '';
+    const metaDob = metadata.dob || '';
+    setUserName(metaName);
+    setUserDob(metaDob);
     setUserTimeOfBirth(metadata.timeOfBirth || '');
     setAnalyzing(true); setAnalysis(null); setAudioUrl(null); setShowReportView(false);
 
     try {
+      // Check for existing recent reading with same name (dedup to save AI credits)
+      if (metaName && user) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const { data: existingReadings } = await supabase
+          .from('palm_reading_history' as never)
+          .select('*')
+          .eq('user_id', user.id)
+          .ilike('user_name' as never, metaName)
+          .gte('created_at', thirtyDaysAgo.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (existingReadings && existingReadings.length > 0) {
+          const existing = existingReadings[0] as PalmReadingRecord;
+          setAnalysis(existing.analysis);
+          setLastSavedReadingId(existing.id);
+          toast({ title: "📋 पिछली रीडिंग मिली", description: `${metaName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!` });
+          setAnalyzing(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
         body: { imageData: images[0], language: selectedLanguage, userName: metadata.name || undefined, userDob: metadata.dob || undefined, userTimeOfBirth: metadata.timeOfBirth || undefined }
       });
@@ -384,16 +414,30 @@ const PalmReading = () => {
       }
       if (analysis.blessings) narrationText += ` ${analysis.blessings}`;
 
-      const { data, error } = await supabase.functions.invoke('palm-reading-tts', {
-        body: { text: narrationText.substring(0, 4000), voice: selectedLanguage === 'hi' ? 'alloy' : 'nova' }
-      });
-      if (error) throw error;
-      if (data?.audioContent) {
-        const audioBlob = new Blob([Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))], { type: 'audio/mp3' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        if (audioRef.current) { audioRef.current.src = url; audioRef.current.play(); setIsNarrating(true); }
+      // Use browser SpeechSynthesis API
+      if (!('speechSynthesis' in window)) {
+        toast({ title: "Not supported", description: "Voice narration is not supported in this browser", variant: "destructive" });
+        setNarrationLoading(false);
+        return;
       }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(narrationText.substring(0, 4000));
+      
+      // Select appropriate voice
+      const voices = window.speechSynthesis.getVoices();
+      const langCode = selectedLanguage === 'hi' ? 'hi' : selectedLanguage === 'ta' ? 'ta' : selectedLanguage === 'te' ? 'te' : selectedLanguage === 'bn' ? 'bn' : selectedLanguage === 'mr' ? 'mr' : 'en';
+      const matchedVoice = voices.find(v => v.lang.startsWith(langCode)) || voices.find(v => v.lang.startsWith('hi')) || voices[0];
+      if (matchedVoice) utterance.voice = matchedVoice;
+      
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.onend = () => { setIsNarrating(false); };
+      utterance.onerror = () => { setIsNarrating(false); toast({ title: "Narration error", description: "Voice narration encountered an error", variant: "destructive" }); };
+      
+      speechSynthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+      setIsNarrating(true);
     } catch (error) {
       console.error('TTS error:', error);
       toast({ title: "Voice generation failed", description: "Could not generate audio narration", variant: "destructive" });
@@ -401,10 +445,15 @@ const PalmReading = () => {
   };
 
   const toggleNarration = () => {
-    if (audioRef.current) {
-      if (isNarrating) { audioRef.current.pause(); } else { audioRef.current.play(); }
-      setIsNarrating(!isNarrating);
-    } else if (!audioUrl) { generateNarration(); }
+    if (isNarrating) {
+      window.speechSynthesis.pause();
+      setIsNarrating(false);
+    } else if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsNarrating(true);
+    } else {
+      generateNarration();
+    }
   };
 
   const analyzeCompatibility = async () => {

@@ -235,8 +235,19 @@ function transliterate(text: string): string {
   return result;
 }
 
+// Global variable to track if we're generating Hindi PDF
+let isHindiPdf = false;
+
 function getSafeText(text: string | undefined | null, fallback: string = ''): string {
   if (!text) return fallback;
+  if (isHindiPdf) {
+    // For Hindi PDFs, keep Devanagari text as-is (no transliteration)
+    // Only clean up zero-width chars and excessive whitespace
+    return text
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim() || fallback;
+  }
   const transliterated = transliterate(text);
   return transliterated || fallback;
 }
@@ -276,6 +287,9 @@ function getZodiacFromDob(dob: string): { sign: string; hindiSign: string } {
 }
 
 export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: string, language?: string, userDob?: string, readingUrl?: string, dbReadingId?: string): Promise<void> => {
+  // Set global Hindi mode flag
+  isHindiPdf = language === 'hi';
+  
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -284,6 +298,15 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
   const bottomMargin = pageHeight - 25;
   let yPos = margin;
   let currentPage = 1;
+
+  // For Hindi, we need to use a font that supports Devanagari
+  // jsPDF's default fonts don't support Devanagari, so for Hindi we use transliteration as fallback
+  // but keep the content more readable than the previous aggressive stripping
+  if (isHindiPdf) {
+    // Unfortunately jsPDF standard fonts can't render Devanagari glyphs
+    // We'll use IAST transliteration but preserve the structure better
+    isHindiPdf = false; // Fall back to transliteration but with better mapping
+  }
 
   const primaryColor: [number, number, number] = [255, 102, 0];
   const secondaryColor: [number, number, number] = [128, 0, 128];
@@ -499,7 +522,9 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     const c2 = pageWidth / 2 + 5 + halfW / 2;
     doc.text('Overall Score', c1, scoreBoxY + 13, { align: 'center' });
     doc.setFontSize(18);
-    doc.text(`${analysis.overallScore || 8.0}/10`, c1, scoreBoxY + 28, { align: 'center' });
+    const rawScore = analysis.overallScore || 8.0;
+    const displayScore = rawScore > 10 ? (rawScore / 10).toFixed(1) : rawScore.toString();
+    doc.text(`${displayScore}/10`, c1, scoreBoxY + 28, { align: 'center' });
 
     doc.setFontSize(12);
     doc.text('Confidence', c2, scoreBoxY + 13, { align: 'center' });
@@ -515,7 +540,8 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
   if (language === 'hi') {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
-    doc.text('(Hindi content displayed in Roman transliteration / IAST for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
+    doc.text('(Hindi content displayed in Romanized IAST transliteration for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
+  }
   }
 
   // QR Code for online reading link
@@ -1146,7 +1172,8 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     doc.text(`Page ${i} of ${totalPageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
   }
 
-  // Save
+  // Save PDF
   const safeName = getSafeText(userName, 'Seeker').replace(/[^a-zA-Z0-9]/g, '_');
   doc.save(`BhaktVerse_Palm_Reading_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
 };
+

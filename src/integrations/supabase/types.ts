@@ -610,7 +610,9 @@ export type Database = {
           language: string | null
           palm_image_url: string | null
           palm_type: string | null
+          user_dob: string | null
           user_id: string
+          user_name: string | null
         }
         Insert: {
           analysis: Json
@@ -619,7 +621,9 @@ export type Database = {
           language?: string | null
           palm_image_url?: string | null
           palm_type?: string | null
+          user_dob?: string | null
           user_id: string
+          user_name?: string | null
         }
         Update: {
           analysis?: Json
@@ -628,7 +632,9 @@ export type Database = {
           language?: string | null
           palm_image_url?: string | null
           palm_type?: string | null
+          user_dob?: string | null
           user_id?: string
+          user_name?: string | null
         }
         Relationships: []
       }

@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface PartnerInfo {
@@ -39,19 +39,16 @@ serve(async (req) => {
     
     if (!partner1 || !partner2) {
       return new Response(JSON.stringify({ error: 'Both partner details required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Calculate Gun Milan scores using Vedic methodology
     const gunMilan = calculateGunMilan(partner1, partner2);
     
-    // Get AI analysis
     let analysis = '';
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
-    if (openAIKey) {
+    if (LOVABLE_API_KEY) {
       try {
         const systemPrompt = `You are "Jyotish AI Pandit", an expert in Vedic marriage compatibility.
 Provide a brief, warm analysis (max 150 words) based on Gun Milan results.
@@ -76,19 +73,18 @@ Key Factors:
 
 Provide personalized compatibility analysis and blessing.`;
 
-        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openAIKey}`,
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
+            model: 'google/gemini-2.5-flash',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt }
             ],
-            temperature: 0.7,
             max_tokens: 500,
           }),
         });
@@ -102,75 +98,60 @@ Provide personalized compatibility analysis and blessing.`;
       }
     }
 
-    // Fallback analysis if AI fails
     if (!analysis) {
       analysis = generateFallbackAnalysis(partner1, partner2, gunMilan);
     }
 
-    return new Response(JSON.stringify({ 
-      gunMilan,
-      analysis
-    }), {
+    return new Response(JSON.stringify({ gunMilan, analysis }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error in kundali-match:', error);
     return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
 
 function calculateGunMilan(partner1: PartnerInfo, partner2: PartnerInfo): GunMilanResult {
-  // Rashi-based calculations (simplified for demo)
   const rashis = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 
                   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
   
   const rashi1Index = rashis.indexOf(partner1.rashi);
   const rashi2Index = rashis.indexOf(partner2.rashi);
   
-  // Varna (Caste) - Based on rashi classification
-  const varnaGroups = [[0,4,8], [1,5,9], [2,6,10], [3,7,11]]; // Kshatriya, Vaishya, Shudra, Brahmin
+  const varnaGroups = [[0,4,8], [1,5,9], [2,6,10], [3,7,11]];
   const varna1 = varnaGroups.findIndex(g => g.includes(rashi1Index));
   const varna2 = varnaGroups.findIndex(g => g.includes(rashi2Index));
   const varnaPoints = varna1 >= varna2 ? 1 : 0;
   
-  // Vashya (Dominance) - Compatibility based on rashi types
   const vashyaCompatible = Math.abs(rashi1Index - rashi2Index) <= 4;
   const vashyaPoints = vashyaCompatible ? 2 : Math.random() > 0.5 ? 1 : 0;
   
-  // Tara (Birth Star) - Based on position difference
   const taraDiff = Math.abs(rashi1Index - rashi2Index);
   const taraPoints = taraDiff <= 3 ? 3 : taraDiff <= 6 ? 2 : taraDiff <= 9 ? 1 : 0;
   
-  // Yoni (Animal) - Sexual compatibility
-  const yoniPairs = [0,1,2,3,4,5,6,7,8,9,10,11];
   const yoniMatch = (rashi1Index + rashi2Index) % 4;
   const yoniPoints = yoniMatch === 0 ? 4 : yoniMatch === 1 ? 3 : yoniMatch === 2 ? 2 : 1;
   
-  // Maitri (Friendship) - Planetary friendship
   const friendlyRashis = [[0,4,8], [1,5,9], [2,6,10], [3,7,11]];
   const inSameGroup = friendlyRashis.some(g => g.includes(rashi1Index) && g.includes(rashi2Index));
   const maitriPoints = inSameGroup ? 5 : Math.floor(Math.random() * 4) + 1;
   
-  // Gana (Temperament) - Deva, Manushya, Rakshasa
-  const ganaGroups = [[0,4,8], [1,2,5,6,9,10], [3,7,11]]; // Deva, Manushya, Rakshasa
+  const ganaGroups = [[0,4,8], [1,2,5,6,9,10], [3,7,11]];
   const gana1 = ganaGroups.findIndex(g => g.includes(rashi1Index));
   const gana2 = ganaGroups.findIndex(g => g.includes(rashi2Index));
   const ganaPoints = gana1 === gana2 ? 6 : Math.abs(gana1 - gana2) === 1 ? 3 : 0;
   
-  // Bhakoot (Moon Sign) - 7 points max
-  const bhakootBad = [1, 5, 6, 8, 11]; // Bad combinations
+  const bhakootBad = [1, 5, 6, 8, 11];
   const diff = Math.abs(rashi1Index - rashi2Index);
   const bhakootPoints = bhakootBad.includes(diff) ? Math.floor(Math.random() * 3) : 7;
   
-  // Nadi (Health/Genetics) - 8 points max
-  const nadiGroups = [[0,3,6,9], [1,4,7,10], [2,5,8,11]]; // Adi, Madhya, Antya
+  const nadiGroups = [[0,3,6,9], [1,4,7,10], [2,5,8,11]];
   const nadi1 = nadiGroups.findIndex(g => g.includes(rashi1Index));
   const nadi2 = nadiGroups.findIndex(g => g.includes(rashi2Index));
-  const nadiPoints = nadi1 !== nadi2 ? 8 : 0; // Same Nadi = Dosha
+  const nadiPoints = nadi1 !== nadi2 ? 8 : 0;
   
   const total = varnaPoints + vashyaPoints + taraPoints + yoniPoints + 
                 maitriPoints + ganaPoints + bhakootPoints + nadiPoints;
@@ -202,11 +183,7 @@ function calculateGunMilan(partner1: PartnerInfo, partner2: PartnerInfo): GunMil
     gana: { points: ganaPoints, max: 6, description: "स्वभाव मिलान (देव/मनुष्य/राक्षस)" },
     bhakoot: { points: bhakootPoints, max: 7, description: "चंद्र राशि अनुकूलता और समृद्धि" },
     nadi: { points: nadiPoints, max: 8, description: "स्वास्थ्य और आनुवंशिक अनुकूलता" },
-    total,
-    maxTotal: 36,
-    percentage,
-    verdict,
-    recommendation
+    total, maxTotal: 36, percentage, verdict, recommendation
   };
 }
 
@@ -216,19 +193,15 @@ function generateFallbackAnalysis(partner1: PartnerInfo, partner2: PartnerInfo, 
     
 ${partner1.rashiHindi} और ${partner2.rashiHindi} राशियों का संयोग शुभ है। यह जोड़ी ब्रह्मांडीय आशीर्वाद से युक्त है।
 
-✨ आशीर्वाद: विवाह सुखद और समृद्ध होगा। परस्पर प्रेम और सम्मान से जीवन आनंदमय रहेगा।`;
+✨ आशीर्वाद: विवाह सुखद और समृद्ध होगा।`;
   } else if (gunMilan.percentage >= 60) {
     return `🙏 ${partner1.name} और ${partner2.name} का मिलान ${gunMilan.total}/36 गुणों पर अच्छा है।
-
-${partner1.rashiHindi} और ${partner2.rashiHindi} राशियों में कुछ चुनौतियां हो सकती हैं, लेकिन प्रेम और समझदारी से सब ठीक होगा।
 
 💡 उपाय: विवाह से पहले गणेश जी की पूजा करें और "ॐ गं गणपतये नमः" मंत्र का जाप करें।`;
   } else {
     return `🙏 ${partner1.name} और ${partner2.name} का मिलान ${gunMilan.total}/36 गुणों पर है।
 
-${partner1.rashiHindi} और ${partner2.rashiHindi} राशियों में कुछ दोष हैं जिनके लिए विशेष उपाय आवश्यक हैं।
-
-⚠️ सलाह: किसी अनुभवी पंडित से विस्तृत कुंडली मिलान करवाएं और उचित उपाय लें।
+⚠️ सलाह: किसी अनुभवी पंडित से विस्तृत कुंडली मिलान करवाएं।
 
 🙏 मंत्र: "ॐ नमः शिवाय" का नियमित जाप करें।`;
   }
