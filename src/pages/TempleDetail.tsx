@@ -38,6 +38,7 @@ interface Temple {
 const TempleDetail = () => {
   const { templeId } = useParams<{ templeId: string }>();
   const navigate = useNavigate();
+  usePageTitle('Temple Details');
   const [temple, setTemple] = useState<Temple | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);

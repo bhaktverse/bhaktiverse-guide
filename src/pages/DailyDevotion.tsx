@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Sun, Moon, Sparkles, Heart, BookOpen, Play } from "lucide-react";
 
 const DailyDevotion = () => {
+  usePageTitle('Daily Devotion & Puja');
   const [devotion, setDevotion] = useState<any>(null);
   const [mantra, setMantra] = useState<any>(null);
   const [panchang, setPanchang] = useState<any>(null);

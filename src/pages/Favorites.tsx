@@ -23,6 +23,7 @@ interface FavoriteItem {
 }
 
 const Favorites = () => {
+  usePageTitle('My Favorites');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { favorites, loading: favsLoading, toggleFavorite } = useFavorites();

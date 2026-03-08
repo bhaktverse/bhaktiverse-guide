@@ -42,6 +42,7 @@ interface HistoryEntry {
 }
 
 const KundaliMatch = () => {
+  usePageTitle('Kundali Matching');
   const { session } = useAuth();
   const navigate = useNavigate();
   
