@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { 
   Sparkles, Calendar, User, Loader2, Star, Heart, Zap, Crown, 
   Brain, Target, Compass, Gem, Palette, Sun, TrendingUp, 
-  ChevronRight, CheckCircle2, Database, Sparkle, Gift, Globe
+  ChevronRight, CheckCircle2, Database, Sparkle, Gift, Globe, History, ChevronDown
 } from "lucide-react";
 
 // i18n labels
