@@ -57,8 +57,8 @@ Use Hinglish (Hindi-English mix). Be positive but honest about compatibility.
 Include one specific remedy if needed.`;
 
         const userPrompt = `Analyze this Kundali Match:
-Groom: ${partner1.name} (${partner1.rashiHindi} - ${partner1.rashi})
-Bride: ${partner2.name} (${partner2.rashiHindi} - ${partner2.rashi})
+Groom: ${partner1.name} (${partner1.rashiHindi} - ${partner1.rashi})${partner1.placeOfBirth ? `, Born in ${partner1.placeOfBirth}` : ''}${partner1.timeOfBirth ? `, Time: ${partner1.timeOfBirth}` : ''}
+Bride: ${partner2.name} (${partner2.rashiHindi} - ${partner2.rashi})${partner2.placeOfBirth ? `, Born in ${partner2.placeOfBirth}` : ''}${partner2.timeOfBirth ? `, Time: ${partner2.timeOfBirth}` : ''}
 
 Gun Milan Score: ${gunMilan.total}/36 (${gunMilan.percentage}%)
 
