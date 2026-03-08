@@ -121,18 +121,22 @@ const KundaliMatch = () => {
 
       if (data?.gunMilan) {
         setResult(data.gunMilan);
-        if (data.analysis) {
+        const hasAI = !!data.analysis;
+        if (hasAI) {
           setAiAnalysis(data.analysis);
           toast.success("🎉 कुंडली मिलान पूर्ण! AI विश्लेषण सहित");
         } else {
           setUsedFallback(true);
           toast.success("कुंडली मिलान पूर्ण! (बेसिक गणना)");
         }
+        // Save to history
+        saveToHistory(data.gunMilan, hasAI ? data.analysis : null);
       } else {
         const gunMilan = calculateGunMilan(partner1.rashi, partner2.rashi);
         setResult(gunMilan);
         setUsedFallback(true);
         toast.info("बेसिक गुण मिलान गणना दिखाई जा रही है।");
+        saveToHistory(gunMilan, null);
       }
     } catch (error) {
       console.error('Kundali match error:', error);
@@ -140,8 +144,32 @@ const KundaliMatch = () => {
       setResult(gunMilan);
       setUsedFallback(true);
       toast.info("⚠️ AI अनुपलब्ध — बेसिक गुण मिलान गणना दिखाई जा रही है।");
+      saveToHistory(gunMilan, null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveToHistory = async (gunMilan: GunMilanResult, analysis: string | null) => {
+    if (!session?.user?.id || !partner1.rashi || !partner2.rashi) return;
+    try {
+      await supabase.from('kundali_match_history').insert({
+        user_id: session.user.id,
+        partner1_name: partner1.name,
+        partner1_dob: partner1.dob,
+        partner1_rashi: partner1.rashi.name,
+        partner1_place: partner1.placeOfBirth || null,
+        partner2_name: partner2.name,
+        partner2_dob: partner2.dob,
+        partner2_rashi: partner2.rashi.name,
+        partner2_place: partner2.placeOfBirth || null,
+        total_score: gunMilan.total,
+        percentage: gunMilan.percentage,
+        gun_milan_data: gunMilan as any,
+        ai_analysis: analysis,
+      });
+    } catch (err) {
+      console.error('Error saving kundali history:', err);
     }
   };
 
