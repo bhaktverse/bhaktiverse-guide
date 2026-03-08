@@ -373,7 +373,7 @@ const PalmReading = () => {
       } else throw new Error('No analysis returned');
     } catch (error) {
       console.error('Palm analysis error:', error);
-      toast({ title: "Analysis failed", description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.", variant: "destructive" });
+      toast.error(error instanceof Error ? error.message : "Failed to analyze palm. Please try again.");
     } finally { setAnalyzing(false); }
   };
 
