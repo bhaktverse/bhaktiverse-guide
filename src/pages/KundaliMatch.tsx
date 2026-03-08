@@ -73,7 +73,7 @@ const KundaliMatch = () => {
     const { data } = await supabase
       .from('kundali_match_history')
       .select('id, partner1_name, partner1_rashi, partner2_name, partner2_rashi, total_score, percentage, ai_analysis, created_at')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
     if (data) setPastMatches(data);
