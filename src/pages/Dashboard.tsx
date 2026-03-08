@@ -93,6 +93,7 @@ const Dashboard = () => {
   const [todayDevotion, setTodayDevotion] = useState<DailyDevotion | null>(null);
   const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
   const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
