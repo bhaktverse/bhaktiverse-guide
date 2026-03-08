@@ -16,7 +16,7 @@ import PlaylistManager from '@/components/PlaylistManager';
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { 
   Play, 
   Pause, 
