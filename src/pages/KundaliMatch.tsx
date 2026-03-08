@@ -43,7 +43,7 @@ interface HistoryEntry {
 
 const KundaliMatch = () => {
   usePageTitle('Kundali Matching');
-  const { session } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [partner1, setPartner1] = useState<PartnerDetails>({
