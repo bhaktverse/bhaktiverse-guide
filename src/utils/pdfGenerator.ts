@@ -497,12 +497,15 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     { title: "Guru Ji's Blessing & Life Path", page: '3' },
     { title: 'Palm Line Analysis (Rekha Vigyan)', page: '4' },
     { title: 'Mount Analysis (Parvat Vigyan)', page: '4-5' },
-    { title: 'Category Predictions (7 Areas)', page: '5-8' },
+    { title: 'Hand Type Analysis (Tatva)', page: '5' },
+    { title: 'Secondary Lines (Dvitiyak Rekha)', page: '5-6' },
+    { title: 'Finger & Nail Analysis (Anguli)', page: '6' },
+    { title: 'Category Predictions (7 Areas)', page: '6-8' },
     { title: 'Lucky Elements (Shubh Tatva)', page: '8-9' },
     { title: 'Recommended Mantras', page: '9' },
-    { title: 'Special Yogas Detected', page: '9-10' },
-    { title: 'Remedies & Recommendations', page: '10' },
-    { title: "Guru Ji's Final Blessings", page: '10-11' },
+    { title: 'Special Yogas Detected', page: '9' },
+    { title: 'Remedies & Recommendations', page: '9-10' },
+    { title: "Guru Ji's Final Blessings", page: '10' },
   ];
 
   tocItems.forEach((item, i) => {
