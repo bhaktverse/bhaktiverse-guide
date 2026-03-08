@@ -412,11 +412,7 @@ const Community = () => {
       toast.success("Your post has been removed.");
     } catch (error) {
       console.error('Error deleting post:', error);
-      toast({
-        title: "Error",
-        description: "Could not delete post.",
-        variant: "destructive"
-      });
+      toast.error("Could not delete post.");
     }
   };
 
