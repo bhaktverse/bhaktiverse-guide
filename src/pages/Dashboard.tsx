@@ -495,12 +495,12 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-3 overflow-x-auto pb-1">
+              <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
                 {continueItems.map((item, idx) => (
                   <Button
                     key={idx}
                     variant="outline"
-                    className="flex-shrink-0 h-auto py-3 px-4 gap-3 hover:shadow-divine transition-all hover:-translate-y-0.5"
+                    className="flex-shrink-0 h-auto py-2.5 px-3 sm:py-3 sm:px-4 gap-2 sm:gap-3 hover:shadow-divine transition-all hover:-translate-y-0.5 snap-start"
                     onClick={() => navigate(item.path)}
                   >
                     <span className="text-2xl">{item.icon}</span>
