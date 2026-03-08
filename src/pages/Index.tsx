@@ -138,10 +138,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4 text-primary">Resources</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/premium" className="hover:text-primary transition-colors flex items-center gap-2">👑 Premium Plans</a></li>
-                <li><a href="/horoscope" className="hover:text-primary transition-colors flex items-center gap-2">🌟 Daily Horoscope</a></li>
-                <li><a href="/kundali-match" className="hover:text-primary transition-colors flex items-center gap-2">💑 Kundali Match</a></li>
-                <li><a href="/daily-devotion" className="hover:text-primary transition-colors flex items-center gap-2">🙏 Daily Devotion</a></li>
+                <li><Link to="/premium" className="hover:text-primary transition-colors flex items-center gap-2">👑 Premium Plans</Link></li>
+                <li><Link to="/horoscope" className="hover:text-primary transition-colors flex items-center gap-2">🌟 Daily Horoscope</Link></li>
+                <li><Link to="/kundali-match" className="hover:text-primary transition-colors flex items-center gap-2">💑 Kundali Match</Link></li>
+                <li><Link to="/daily-devotion" className="hover:text-primary transition-colors flex items-center gap-2">🙏 Daily Devotion</Link></li>
               </ul>
             </div>
           </div>
