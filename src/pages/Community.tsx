@@ -31,7 +31,7 @@ import {
   Mic,
   Loader2
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface CommunityPost {
   id: string;
