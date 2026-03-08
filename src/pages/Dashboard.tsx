@@ -353,7 +353,7 @@ const Dashboard = () => {
         <div className={`space-y-5 sm:space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         
         {/* Welcome Header */}
-        <div className="relative p-4 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
+        <div className="relative p-3 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -mr-16 sm:-mr-32 -mt-16 sm:-mt-32 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-24 sm:w-48 h-24 sm:h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full -ml-12 sm:-ml-24 -mb-12 sm:-mb-24 pointer-events-none" />
