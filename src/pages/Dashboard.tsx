@@ -565,12 +565,12 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {quickActions.map((action) => (
                     <Button
                       key={action.path}
                       variant="ghost"
-                      className="h-auto flex-col gap-2 p-3 sm:p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl min-w-0"
+                      className="h-auto flex-col gap-1.5 sm:gap-2 p-2 sm:p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl min-w-0"
                       onClick={() => navigate(action.path)}
                     >
                       <div className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
