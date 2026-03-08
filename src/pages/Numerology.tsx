@@ -176,6 +176,23 @@ const Numerology = () => {
   const [report, setReport] = useState<any>(null);
   const [lang, setLang] = useState<'hi' | 'en'>('hi');
   const resultsRef = React.useRef<HTMLDivElement>(null);
+  const [pastReports, setPastReports] = useState<any[]>([]);
+  const [pastReportsOpen, setPastReportsOpen] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.id) loadPastReports();
+  }, [session?.user?.id]);
+
+  const loadPastReports = async () => {
+    if (!session?.user?.id) return;
+    const { data } = await supabase
+      .from('numerology_reports')
+      .select('id, name, dob, birth_number, destiny_number, lucky_color, lucky_gemstone, created_at')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (data) setPastReports(data);
+  };
 
   const t = i18n[lang];
 
