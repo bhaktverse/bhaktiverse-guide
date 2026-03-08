@@ -161,12 +161,14 @@ const SaintChat = () => {
 
       if (error) throw error;
 
-      setMessages(prev => [...prev, {
+      const newMessages = [...prev, {
         id: (Date.now() + 1).toString(),
-        role: 'saint',
+        role: 'saint' as const,
         content: data?.response || "I'm experiencing some difficulty right now. Please try again.",
         timestamp: new Date()
-      }]);
+      }];
+      setMessages(newMessages);
+      persistSession(newMessages);
     } catch (error) {
       console.error('Chat error:', error);
       toast({ 
