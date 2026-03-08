@@ -688,11 +688,11 @@ const Dashboard = () => {
                 {/* Meditation */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-purple-500/10">
+                    <span className="font-medium flex items-center gap-2 min-w-0">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-purple-500/10 flex-shrink-0">
                         <Heart className="h-4 w-4 text-purple-500" />
                       </div>
-                      Meditation
+                      <span className="truncate">Meditation</span>
                     </span>
                     <span className="text-sm font-semibold text-muted-foreground">
                       {stats.meditationMinutes}/{stats.dailyGoals.meditation_minutes} min
