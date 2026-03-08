@@ -510,7 +510,7 @@ const PalmReading = () => {
 
   const generatePdfReport = async () => {
     if (!analysis) return;
-    if (!isPremiumUser) { toast({ title: "Premium Feature", description: "Upgrade to Premium to download PDF reports", variant: "destructive" }); navigate('/premium'); return; }
+    if (!isPremiumUser) { toast.error("Upgrade to Premium to download PDF reports"); navigate('/premium'); return; }
     setGeneratingPdf(true);
     try {
       await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob, undefined, lastSavedReadingId || undefined);
