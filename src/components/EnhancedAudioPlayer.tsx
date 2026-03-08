@@ -90,10 +90,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       setTimeout(() => {
         const currentIndex = playlist.findIndex(t => t.id === track?.id);
         if (currentIndex < playlist.length - 1) {
-          toast({
-            title: "Skipping unavailable track",
-            description: `"${track.title}" could not be played.`,
-          });
+          toast.info(`Skipping unavailable track: "${track.title}"`);
           onTrackChange(playlist[currentIndex + 1]);
         }
       }, 500);
