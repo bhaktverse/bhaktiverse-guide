@@ -21,7 +21,7 @@ import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Camera, Hand, Sparkles, AlertCircle, Loader2, CheckCircle2,
   Heart, Briefcase, Activity, Users, GraduationCap, Flame, Plane,
