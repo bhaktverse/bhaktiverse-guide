@@ -227,7 +227,7 @@ const Community = () => {
       const uniqueUserIds = [...new Set(transformedPosts.map(p => p.user_id))];
       if (uniqueUserIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from('profiles_public')
           .select('user_id, name, avatar_url')
           .in('user_id', uniqueUserIds);
 
