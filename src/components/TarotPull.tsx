@@ -40,7 +40,7 @@ const CARD_GRADIENTS: Record<string, string> = {
 };
 
 const TarotPull = ({ palmAnalysis, language = 'en', onPullComplete }: TarotPullProps) => {
-  const { toast } = useToast();
+  
   const [cards, setCards] = useState<TarotCard[]>([]);
   const [interpretation, setInterpretation] = useState<string>('');
   const [isPulling, setIsPulling] = useState(false);
