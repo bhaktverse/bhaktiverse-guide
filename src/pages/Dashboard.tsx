@@ -342,7 +342,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Navigation />
       
       <div className="container mx-auto px-4 py-6 pb-24 md:pb-8 max-w-7xl">
@@ -353,26 +353,26 @@ const Dashboard = () => {
         <div className={`space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         
         {/* Welcome Header */}
-        <div className="relative p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
+        <div className="relative p-4 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -mr-32 -mt-32 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full -ml-24 -mb-24 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -mr-16 sm:-mr-32 -mt-16 sm:-mt-32 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-24 sm:w-48 h-24 sm:h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full -ml-12 sm:-ml-24 -mb-12 sm:-mb-24 pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 md:h-20 md:w-20 shadow-divine border-4 border-primary/20 ring-4 ring-primary/10">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 shadow-divine border-2 sm:border-4 border-primary/20 ring-2 sm:ring-4 ring-primary/10 flex-shrink-0">
                 <AvatarImage src={userAvatarUrl || undefined} />
                 <AvatarFallback className="bg-gradient-temple text-white text-2xl font-bold">
                   {userName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <Clock className="h-4 w-4" />
-                  {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+               <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-1">
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                 </div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
-                  <span className="text-2xl sm:text-3xl mr-2">{greeting.icon}</span>
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
+                  <span className="text-xl sm:text-3xl mr-1 sm:mr-2">{greeting.icon}</span>
                   <span className="bg-gradient-temple bg-clip-text text-transparent">{greeting.text}</span>
                   <span className="text-foreground">, {userName}!</span>
                 </h1>
@@ -413,12 +413,12 @@ const Dashboard = () => {
             <div className="h-1 bg-gradient-temple" />
             <CardContent className="p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-3xl shadow-divine">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-2xl sm:text-3xl shadow-divine flex-shrink-0">
                     🙏
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg flex items-center gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base sm:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
                       <Flame className="h-5 w-5 text-primary" />
                       Daily Sadhana
                       {stats.currentStreak > 0 && (
@@ -438,7 +438,7 @@ const Dashboard = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   {[
                     { label: 'Chant 108', type: 'mantra_chant' as const, data: { count: 108, mantra: todayDevotion.mantra || 'Om' }, points: 10, icon: '📿' },
                     { label: 'Read 15 min', type: 'scripture_read' as const, data: { minutes: 15 }, points: 15, icon: '📖' },
@@ -448,7 +448,7 @@ const Dashboard = () => {
                       key={action.type}
                       variant="outline"
                       size="sm"
-                      className="flex-1 sm:flex-none gap-1 text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
+                      className="flex-1 min-w-[80px] sm:flex-none gap-1 text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
                       disabled={sadhanaLoading === action.type}
                       onClick={async () => {
                         if (!user) return;
@@ -570,11 +570,11 @@ const Dashboard = () => {
                     <Button
                       key={action.path}
                       variant="ghost"
-                      className="h-auto flex-col gap-2 p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl"
+                      className="h-auto flex-col gap-2 p-3 sm:p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl min-w-0"
                       onClick={() => navigate(action.path)}
                     >
-                      <div className="text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
-                      <span className="text-xs font-semibold text-foreground">{action.label}</span>
+                      <div className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
+                      <span className="text-[10px] sm:text-xs font-semibold text-foreground truncate w-full text-center">{action.label}</span>
                       <span className="text-[10px] text-muted-foreground hidden md:block">{action.description}</span>
                     </Button>
                   ))}
@@ -706,7 +706,7 @@ const Dashboard = () => {
             {/* Today's Wisdom Quote */}
             <Card className="bg-gradient-to-r from-card via-card-sacred to-card border-primary/20 shadow-lotus overflow-hidden">
               <CardContent className="p-6 relative">
-                <div className="absolute top-0 right-0 text-8xl opacity-5 -mt-4 -mr-4">✨</div>
+                <div className="absolute top-0 right-0 text-6xl sm:text-8xl opacity-5 -mt-4 -mr-4">✨</div>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 text-3xl animate-sacred-float">📿</div>
                   <div>
@@ -714,7 +714,7 @@ const Dashboard = () => {
                       <Sparkles className="h-4 w-4" />
                       Today's Spiritual Wisdom
                     </h3>
-                    <p className="text-foreground italic text-lg leading-relaxed">{todayQuote}</p>
+                    <p className="text-foreground italic text-base sm:text-lg leading-relaxed">{todayQuote}</p>
                   </div>
                 </div>
               </CardContent>
