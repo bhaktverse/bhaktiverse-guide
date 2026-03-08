@@ -419,7 +419,7 @@ const PalmReading = () => {
       if (data?.analysis) {
         setAnalysis(data.analysis);
         await saveToHistory(data.analysis, palmImages[0]);
-        toast({ title: "🙏 Palm Reading Complete", description: "Your detailed destiny reading is ready" });
+        toast.success("🙏 Palm Reading Complete — Your detailed destiny reading is ready");
       } else throw new Error('No analysis returned');
     } catch (error) {
       console.error('Palm analysis error:', error);
