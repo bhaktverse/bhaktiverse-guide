@@ -240,19 +240,57 @@ const Community = () => {
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newImages = Array.from(files).slice(0, 4 - pendingImages.length).map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+    setPendingImages(prev => [...prev, ...newImages]);
+  };
+
+  const removeImage = (index: number) => {
+    setPendingImages(prev => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const createPost = async () => {
-    if (!newPost.trim()) return;
+    if (!newPost.trim() && pendingImages.length === 0) return;
 
     try {
+      let mediaUrls: string[] = [];
+
+      // Upload images if any
+      if (pendingImages.length > 0) {
+        setUploadingImages(true);
+        for (const img of pendingImages) {
+          const ext = img.file.name.split('.').pop() || 'jpg';
+          const path = `posts/${user?.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('community-media')
+            .upload(path, img.file);
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from('community-media').getPublicUrl(path);
+          mediaUrls.push(urlData.publicUrl);
+        }
+        setUploadingImages(false);
+      }
+
+      const postType = mediaUrls.length > 0 ? 'image' : 'text';
+
       const { data: newPostData, error } = await supabase
         .from('community_posts')
         .insert([
           {
             user_id: user?.id,
             content: newPost,
-            post_type: 'text',
+            post_type: postType,
             tags: selectedTags,
-            visibility: 'public'
+            visibility: 'public',
+            media_urls: mediaUrls
           }
         ])
         .select('*')
@@ -269,6 +307,7 @@ const Community = () => {
       setPosts([transformedPost, ...posts]);
       setNewPost('');
       setSelectedTags([]);
+      setPendingImages([]);
       setShowCreatePost(false);
       
       toast({
@@ -278,6 +317,7 @@ const Community = () => {
       
     } catch (error) {
       console.error('Error creating post:', error);
+      setUploadingImages(false);
       toast({
         title: "Error",
         description: "Failed to create post. Please try again.",
