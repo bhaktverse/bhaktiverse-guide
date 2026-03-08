@@ -42,6 +42,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Horoscope = lazy(() => import("./pages/Horoscope"));
 const KundaliMatch = lazy(() => import("./pages/KundaliMatch"));
 const SharedPalmReading = lazy(() => import("./pages/SharedPalmReading"));
+const Favorites = lazy(() => import("./pages/Favorites"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
                 <Route path="/horoscope" element={<ProtectedRoute><Horoscope /></ProtectedRoute>} />
                 <Route path="/kundali-match" element={<ProtectedRoute><KundaliMatch /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                 <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
 
                 {/* CATCH-ALL */}

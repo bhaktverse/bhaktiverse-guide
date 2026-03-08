@@ -32,7 +32,8 @@ import {
   Activity,
   History,
   Loader2,
-  Settings
+  Settings,
+  Heart
 } from 'lucide-react';
 
 interface ProfileData {
@@ -594,6 +595,19 @@ const Profile = () => {
                     </Button>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Favorites Link */}
+            <Card className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => navigate('/favorites')}>
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <Heart className="h-6 w-6 text-destructive" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">My Favorites</h3>
+                  <p className="text-sm text-muted-foreground">View all bookmarked saints, scriptures, temples & audio</p>
+                </div>
               </CardContent>
             </Card>
           </div>
