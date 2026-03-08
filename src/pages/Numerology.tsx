@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
   Sparkles, Calendar, User, Loader2, Star, Heart, Zap, Crown, 
   Brain, Target, Compass, Gem, Palette, Sun, TrendingUp, 
-  ChevronRight, CheckCircle2, Database, Sparkle, Gift, Globe
+  ChevronRight, CheckCircle2, Database, Sparkle, Gift, Globe, History, ChevronDown
 } from "lucide-react";
 
 // i18n labels
@@ -175,6 +176,23 @@ const Numerology = () => {
   const [report, setReport] = useState<any>(null);
   const [lang, setLang] = useState<'hi' | 'en'>('hi');
   const resultsRef = React.useRef<HTMLDivElement>(null);
+  const [pastReports, setPastReports] = useState<any[]>([]);
+  const [pastReportsOpen, setPastReportsOpen] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.id) loadPastReports();
+  }, [session?.user?.id]);
+
+  const loadPastReports = async () => {
+    if (!session?.user?.id) return;
+    const { data } = await supabase
+      .from('numerology_reports')
+      .select('id, name, dob, birth_number, destiny_number, lucky_color, lucky_gemstone, created_at')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (data) setPastReports(data);
+  };
 
   const t = i18n[lang];
 
@@ -391,6 +409,36 @@ const Numerology = () => {
                   })}
                 </div>
               </div>
+
+              {/* Past Reports */}
+              {pastReports.length > 0 && (
+                <Collapsible open={pastReportsOpen} onOpenChange={setPastReportsOpen} className="mt-4">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between text-xs">
+                      <span className="flex items-center gap-1">
+                        <History className="h-3 w-3" />
+                        पिछली रिपोर्ट / Past Reports ({pastReports.length})
+                      </span>
+                      <ChevronDown className={`h-3 w-3 transition-transform ${pastReportsOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-2">
+                    {pastReports.map((r) => (
+                      <div key={r.id} className="p-2 bg-muted/30 rounded-lg text-xs">
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold">{r.name}</p>
+                          <span className="text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString('hi-IN') : ''}</span>
+                        </div>
+                        <div className="flex gap-2 mt-1 text-muted-foreground">
+                          {r.birth_number && <span>जन्मांक: {r.birth_number}</span>}
+                          {r.destiny_number && <span>भाग्यांक: {r.destiny_number}</span>}
+                          {r.lucky_gemstone && <span>💎 {r.lucky_gemstone}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </CardContent>
           </Card>
 

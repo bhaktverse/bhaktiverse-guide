@@ -31,10 +31,12 @@ const Premium = () => {
   const { toast } = useToast();
 
   const handleUpgrade = () => {
-    toast({
-      title: "🚀 Coming Soon!",
-      description: "Premium subscriptions launching soon! Contact support for early access.",
-    });
+    const message = encodeURIComponent("Hi! I'm interested in BhaktVerse Premium. Please share details.");
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
+  const handleEmailContact = () => {
+    window.location.href = 'mailto:support@bhaktverse.com?subject=Premium%20Subscription%20Inquiry&body=Namaste!%20I%20am%20interested%20in%20BhaktVerse%20Premium.';
   };
 
   useEffect(() => {
@@ -354,10 +356,15 @@ const Premium = () => {
                 Join thousands of devotees who have elevated their spiritual journey with BhaktVerse Premium. 
                 Experience unlimited divine guidance and exclusive features.
               </p>
-              <Button size="lg" className="bg-gradient-saffron hover:opacity-90" onClick={handleUpgrade}>
-                <Crown className="h-5 w-5 mr-2" />
-                Upgrade to Premium
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button size="lg" className="bg-gradient-saffron hover:opacity-90" onClick={handleUpgrade}>
+                  <Crown className="h-5 w-5 mr-2" />
+                  WhatsApp पर संपर्क करें
+                </Button>
+                <Button size="lg" variant="outline" onClick={handleEmailContact}>
+                  📧 Email Us
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

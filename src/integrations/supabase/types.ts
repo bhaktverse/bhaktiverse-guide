@@ -453,10 +453,12 @@ export type Database = {
           partner1_name: string
           partner1_place: string | null
           partner1_rashi: string | null
+          partner1_tob: string | null
           partner2_dob: string
           partner2_name: string
           partner2_place: string | null
           partner2_rashi: string | null
+          partner2_tob: string | null
           percentage: number | null
           total_score: number | null
           user_id: string
@@ -470,10 +472,12 @@ export type Database = {
           partner1_name: string
           partner1_place?: string | null
           partner1_rashi?: string | null
+          partner1_tob?: string | null
           partner2_dob: string
           partner2_name: string
           partner2_place?: string | null
           partner2_rashi?: string | null
+          partner2_tob?: string | null
           percentage?: number | null
           total_score?: number | null
           user_id: string
@@ -487,10 +491,12 @@ export type Database = {
           partner1_name?: string
           partner1_place?: string | null
           partner1_rashi?: string | null
+          partner1_tob?: string | null
           partner2_dob?: string
           partner2_name?: string
           partner2_place?: string | null
           partner2_rashi?: string | null
+          partner2_tob?: string | null
           percentage?: number | null
           total_score?: number | null
           user_id?: string

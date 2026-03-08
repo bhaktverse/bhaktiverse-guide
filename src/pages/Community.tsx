@@ -27,7 +27,8 @@ import {
   Search,
   Image,
   Video,
-  Mic
+  Mic,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -58,6 +59,8 @@ const Community = () => {
   const { toast } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -65,6 +68,7 @@ const Community = () => {
   const [filterTag, setFilterTag] = useState<string>('');
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [totalDevotees, setTotalDevotees] = useState(0);
+  const PAGE_SIZE = 20;
 
   const availableTags = [
     'devotion', 'experience', 'learning', 'ritual', 'festival', 'pilgrimage',
@@ -130,16 +134,18 @@ const Community = () => {
     };
   }, [user?.id]);
 
-  const loadPosts = async () => {
+  const loadPosts = async (append = false) => {
     try {
-      setLoading(true);
+      if (!append) setLoading(true);
+      
+      const offset = append ? posts.length : 0;
       
       const { data: communityPosts, error } = await supabase
         .from('community_posts')
         .select('*')
         .eq('visibility', 'public')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .range(offset, offset + PAGE_SIZE - 1);
 
       if (error) throw error;
 
@@ -148,7 +154,13 @@ const Community = () => {
         tags: Array.isArray(post.tags) ? post.tags.map(tag => String(tag)) : []
       })) || [];
 
-      setPosts(transformedPosts);
+      if (append) {
+        setPosts(prev => [...prev, ...transformedPosts]);
+      } else {
+        setPosts(transformedPosts);
+      }
+      
+      setHasMore(transformedPosts.length >= PAGE_SIZE);
 
       // Batch query profiles for real user names
       const uniqueUserIds = [...new Set(transformedPosts.map(p => p.user_id))];
@@ -546,6 +558,24 @@ const Community = () => {
                     </p>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Load More */}
+              {hasMore && filteredPosts.length > 0 && !searchQuery && !filterTag && (
+                <div className="text-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setLoadingMore(true);
+                      loadPosts(true).finally(() => setLoadingMore(false));
+                    }}
+                    disabled={loadingMore}
+                    className="gap-2"
+                  >
+                    {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {loadingMore ? 'Loading...' : 'और पोस्ट देखें / Load More'}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
