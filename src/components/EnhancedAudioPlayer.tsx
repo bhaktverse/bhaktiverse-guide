@@ -120,7 +120,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [repeatMode, track, toast, playlist, onTrackChange]);
+  }, [repeatMode, track, playlist, onTrackChange]);
 
   useEffect(() => {
     if (audioRef.current) {
