@@ -758,14 +758,14 @@ const Dashboard = () => {
             </Card>
 
             {/* Upcoming Events */}
-            <Card className="card-sacred">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
+            <Card className="card-sacred overflow-hidden">
+              <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Upcoming Events
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                 {upcomingEvents.length > 0 ? (
                   <div className="space-y-3">
                     {upcomingEvents.map((event, idx) => (
