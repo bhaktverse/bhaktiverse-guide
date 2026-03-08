@@ -82,10 +82,7 @@ export const useDownload = () => {
       // Clean up
       URL.revokeObjectURL(blobUrl);
 
-      toast({
-        title: "✅ Download Complete",
-        description: `"${filename}" has been downloaded successfully.`,
-      });
+      toast.success(`✅ "${filename}" has been downloaded successfully.`);
 
       return true;
     } catch (error) {
