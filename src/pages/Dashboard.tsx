@@ -652,7 +652,7 @@ const Dashboard = () => {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-4 sm:space-y-5 px-3 sm:px-6 pb-3 sm:pb-6">
                 {/* Mantras */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
