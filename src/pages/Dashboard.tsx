@@ -34,7 +34,8 @@ import {
   Gift,
   Crown,
   Scroll,
-  Play
+  Play,
+  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
