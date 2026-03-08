@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import CommentThread from '@/components/CommentThread';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Heart, 
