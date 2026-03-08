@@ -350,10 +350,10 @@ const Dashboard = () => {
         <Breadcrumbs className="mb-6" />
 
         {/* Animated Content Wrapper */}
-        <div className={`space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`space-y-5 sm:space-y-8 transition-all duration-700 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         
         {/* Welcome Header */}
-        <div className="relative p-4 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
+        <div className="relative p-3 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 shadow-divine overflow-hidden animate-fade-in">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -mr-16 sm:-mr-32 -mt-16 sm:-mt-32 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-24 sm:w-48 h-24 sm:h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full -ml-12 sm:-ml-24 -mb-12 sm:-mb-24 pointer-events-none" />
@@ -448,7 +448,7 @@ const Dashboard = () => {
                       key={action.type}
                       variant="outline"
                       size="sm"
-                      className="flex-1 min-w-[80px] sm:flex-none gap-1 text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
+                      className="flex-1 min-w-0 sm:min-w-[80px] sm:flex-none gap-1 text-[10px] sm:text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
                       disabled={sadhanaLoading === action.type}
                       onClick={async () => {
                         if (!user) return;
@@ -495,12 +495,12 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-3 overflow-x-auto pb-1">
+              <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
                 {continueItems.map((item, idx) => (
                   <Button
                     key={idx}
                     variant="outline"
-                    className="flex-shrink-0 h-auto py-3 px-4 gap-3 hover:shadow-divine transition-all hover:-translate-y-0.5"
+                    className="flex-shrink-0 h-auto py-2.5 px-3 sm:py-3 sm:px-4 gap-2 sm:gap-3 hover:shadow-divine transition-all hover:-translate-y-0.5 snap-start"
                     onClick={() => navigate(item.path)}
                   >
                     <span className="text-2xl">{item.icon}</span>
@@ -521,7 +521,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Featured Services - Palm Reading & Numerology */}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {mainServices.map((service) => (
                 <Card 
                   key={service.path}
@@ -529,14 +529,14 @@ const Dashboard = () => {
                   onClick={() => navigate(service.path)}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
-                  <CardContent className="p-6 relative z-10">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                        <service.icon className="h-7 w-7" />
+                  <CardContent className="p-4 sm:p-6 relative z-10">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-lg group-hover:scale-110 transition-transform flex-shrink-0`}>
+                        <service.icon className="h-5 w-5 sm:h-7 sm:w-7" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{service.label}</h3>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h3 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors">{service.label}</h3>
                           {service.badge && (
                             <Badge className={`text-xs ${service.badge === 'Most Popular' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : 'bg-green-500/20 text-green-600'}`}>
                               {service.badge}
@@ -565,12 +565,12 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {quickActions.map((action) => (
                     <Button
                       key={action.path}
                       variant="ghost"
-                      className="h-auto flex-col gap-2 p-3 sm:p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl min-w-0"
+                      className="h-auto flex-col gap-1.5 sm:gap-2 p-2 sm:p-4 hover:shadow-divine transition-all duration-300 hover:-translate-y-1 group rounded-xl min-w-0"
                       onClick={() => navigate(action.path)}
                     >
                       <div className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
@@ -609,7 +609,7 @@ const Dashboard = () => {
                           href={short.video_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-shrink-0 w-36 group cursor-pointer"
+                          className="flex-shrink-0 w-28 sm:w-36 group cursor-pointer"
                         >
                           <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-sm group-hover:shadow-divine transition-all duration-300 group-hover:-translate-y-1">
                             <AspectRatio ratio={9 / 16}>
@@ -656,11 +656,11 @@ const Dashboard = () => {
                 {/* Mantras */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-orange-500/10">
+                    <span className="font-medium flex items-center gap-2 min-w-0">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-orange-500/10 flex-shrink-0">
                         <Flame className="h-4 w-4 text-orange-500" />
                       </div>
-                      Mantras Chanted
+                      <span className="truncate">Mantras Chanted</span>
                     </span>
                     <span className="text-sm font-semibold text-muted-foreground">
                       {stats.totalMantras}/{stats.dailyGoals.mantras}
@@ -672,11 +672,11 @@ const Dashboard = () => {
                 {/* Reading */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-blue-500/10">
+                    <span className="font-medium flex items-center gap-2 min-w-0">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
                         <BookOpen className="h-4 w-4 text-blue-500" />
                       </div>
-                      Scripture Reading
+                      <span className="truncate">Scripture Reading</span>
                     </span>
                     <span className="text-sm font-semibold text-muted-foreground">
                       {stats.readingMinutes}/{stats.dailyGoals.reading_minutes} min
@@ -688,11 +688,11 @@ const Dashboard = () => {
                 {/* Meditation */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-purple-500/10">
+                    <span className="font-medium flex items-center gap-2 min-w-0">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-purple-500/10 flex-shrink-0">
                         <Heart className="h-4 w-4 text-purple-500" />
                       </div>
-                      Meditation
+                      <span className="truncate">Meditation</span>
                     </span>
                     <span className="text-sm font-semibold text-muted-foreground">
                       {stats.meditationMinutes}/{stats.dailyGoals.meditation_minutes} min
@@ -722,7 +722,7 @@ const Dashboard = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
             {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
               <CardHeader>
@@ -835,8 +835,8 @@ const Dashboard = () => {
             })()}
 
             {/* Premium CTA */}
-            <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
-              <CardContent className="p-5 text-center">
+            <Card className="col-span-2 lg:col-span-1 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
+              <CardContent className="p-4 sm:p-5 text-center">
                 <Crown className="h-10 w-10 mx-auto mb-3 text-amber-500" />
                 <h3 className="font-bold text-lg mb-1">Unlock Premium</h3>
                 <p className="text-sm text-muted-foreground mb-4">
