@@ -272,10 +272,7 @@ const Profile = () => {
         if (error) throw error;
       }
 
-      toast({
-        title: "Profile Updated 🙏",
-        description: "Your spiritual profile has been saved.",
-      });
+      toast.success("Profile Updated 🙏 — Your spiritual profile has been saved.");
     } catch (error) {
       console.error('Error saving profile:', error);
       toast({
