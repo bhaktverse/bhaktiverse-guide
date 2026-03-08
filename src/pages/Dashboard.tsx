@@ -11,6 +11,7 @@ import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DashboardSkeleton from "@/components/DashboardSkeleton";
+import ScrollToTop from "@/components/ScrollToTop";
 import { 
   Calendar, 
   BookOpen, 
