@@ -382,7 +382,7 @@ const PalmReading = () => {
     if (!file) return;
     if (!selectedLanguage) { toast.error("Please select your preferred language first"); return; }
     const reader = new FileReader();
-    reader.onloadend = () => { setPalmImages([reader.result as string]); toast({ title: "Palm image uploaded", description: "Ready for analysis" }); };
+    reader.onloadend = () => { setPalmImages([reader.result as string]); toast.success("Palm image uploaded — Ready for analysis"); };
     reader.readAsDataURL(file);
   };
 
