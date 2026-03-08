@@ -17,11 +17,7 @@ export const useDownload = () => {
 
   const downloadFile = async (url: string, filename: string): Promise<boolean> => {
     if (!url) {
-      toast({
-        title: "Download Failed",
-        description: "No file URL available",
-        variant: "destructive",
-      });
+      toast.error("No file URL available");
       return false;
     }
 
