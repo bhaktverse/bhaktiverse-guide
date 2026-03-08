@@ -697,6 +697,7 @@ const Community = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleLike(post.id)}
+                          aria-label={userLikes.has(post.id) ? 'Unlike post' : 'Like post'}
                           className={`hover:text-primary ${userLikes.has(post.id) ? 'text-destructive' : 'text-muted-foreground'}`}
                         >
                           <Heart className={`h-4 w-4 mr-1 ${userLikes.has(post.id) ? 'fill-current' : ''}`} />
