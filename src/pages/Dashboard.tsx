@@ -95,6 +95,7 @@ const Dashboard = () => {
   const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
   const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [aiCreditsUsed, setAiCreditsUsed] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) {
