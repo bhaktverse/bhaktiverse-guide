@@ -706,7 +706,7 @@ const Dashboard = () => {
             {/* Today's Wisdom Quote */}
             <Card className="bg-gradient-to-r from-card via-card-sacred to-card border-primary/20 shadow-lotus overflow-hidden">
               <CardContent className="p-6 relative">
-                <div className="absolute top-0 right-0 text-8xl opacity-5 -mt-4 -mr-4">✨</div>
+                <div className="absolute top-0 right-0 text-6xl sm:text-8xl opacity-5 -mt-4 -mr-4">✨</div>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 text-3xl animate-sacred-float">📿</div>
                   <div>
