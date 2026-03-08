@@ -662,7 +662,7 @@ const Dashboard = () => {
                       </div>
                       <span className="truncate">Mantras Chanted</span>
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0">
                       {stats.totalMantras}/{stats.dailyGoals.mantras}
                     </span>
                   </div>
