@@ -50,6 +50,7 @@ const MobileBottomNav = () => {
     { icon: Sun, label: 'Daily Devotion', path: '/daily-devotion' },
     { icon: Star, label: 'Horoscope', path: '/horoscope' },
     { icon: Heart, label: 'Kundali Match', path: '/kundali-match' },
+    { icon: Compass, label: 'Numerology', path: '/numerology' },
     { icon: MessageCircle, label: 'Community', path: '/community' },
     { icon: Crown, label: 'Premium', path: '/premium' },
     { icon: User, label: 'Profile', path: '/profile' },

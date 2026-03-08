@@ -424,7 +424,25 @@ const Numerology = () => {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-2 space-y-2">
                     {pastReports.map((r) => (
-                      <div key={r.id} className="p-2 bg-muted/30 rounded-lg text-xs">
+                      <div 
+                        key={r.id} 
+                        className="p-2 bg-muted/30 rounded-lg text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/30 border border-transparent transition-all"
+                        onClick={async () => {
+                          const { data } = await supabase
+                            .from('numerology_reports')
+                            .select('*')
+                            .eq('id', r.id)
+                            .single();
+                          if (data) {
+                            setReport(data);
+                            setName(data.name);
+                            setDob(data.dob);
+                            setPastReportsOpen(false);
+                            setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+                            toast.success('📜 पिछली रिपोर्ट लोड हो गई!');
+                          }
+                        }}
+                      >
                         <div className="flex items-center justify-between">
                           <p className="font-semibold">{r.name}</p>
                           <span className="text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString('hi-IN') : ''}</span>

@@ -359,17 +359,17 @@ const KundaliMatch = () => {
           {/* Match Button */}
           {!result && (
             <div className="text-center mt-8">
-              <Button
+          <Button
                 onClick={performMatching}
                 disabled={loading || !partner1.name || !partner1.dob || !partner2.name || !partner2.dob}
                 size="lg"
                 className="bg-gradient-to-r from-pink-500 to-red-500 text-white px-8 py-6 text-lg shadow-divine hover:shadow-divine-lg"
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    कुंडली मिलान हो रहा है...
-                  </>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="text-4xl animate-om-pulse">🕉️</div>
+                    <span className="text-sm">कुंडली मिलान हो रहा है...</span>
+                  </div>
                 ) : (
                   <>
                     <Heart className="mr-2 h-5 w-5" />
@@ -377,6 +377,7 @@ const KundaliMatch = () => {
                     <ChevronRight className="ml-2 h-5 w-5" />
                   </>
                 )}
+              </Button>
               </Button>
             </div>
           )}
