@@ -419,6 +419,84 @@ export type Database = {
         }
         Relationships: []
       }
+      horoscope_cache: {
+        Row: {
+          created_at: string | null
+          id: string
+          prediction_data: Json
+          prediction_date: string
+          rashi_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prediction_data: Json
+          prediction_date?: string
+          rashi_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prediction_data?: Json
+          prediction_date?: string
+          rashi_name?: string
+        }
+        Relationships: []
+      }
+      kundali_match_history: {
+        Row: {
+          ai_analysis: string | null
+          created_at: string | null
+          gun_milan_data: Json | null
+          id: string
+          partner1_dob: string
+          partner1_name: string
+          partner1_place: string | null
+          partner1_rashi: string | null
+          partner2_dob: string
+          partner2_name: string
+          partner2_place: string | null
+          partner2_rashi: string | null
+          percentage: number | null
+          total_score: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: string | null
+          created_at?: string | null
+          gun_milan_data?: Json | null
+          id?: string
+          partner1_dob: string
+          partner1_name: string
+          partner1_place?: string | null
+          partner1_rashi?: string | null
+          partner2_dob: string
+          partner2_name: string
+          partner2_place?: string | null
+          partner2_rashi?: string | null
+          percentage?: number | null
+          total_score?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: string | null
+          created_at?: string | null
+          gun_milan_data?: Json | null
+          id?: string
+          partner1_dob?: string
+          partner1_name?: string
+          partner1_place?: string | null
+          partner1_rashi?: string | null
+          partner2_dob?: string
+          partner2_name?: string
+          partner2_place?: string | null
+          partner2_rashi?: string | null
+          percentage?: number | null
+          total_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mantra_sessions: {
         Row: {
           completed: boolean | null
