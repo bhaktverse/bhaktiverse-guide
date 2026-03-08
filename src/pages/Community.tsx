@@ -73,7 +73,62 @@ const Community = () => {
 
   useEffect(() => {
     loadPosts();
-  }, []);
+
+    // Real-time subscription for new posts
+    const channel = supabase
+      .channel('community_posts_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'community_posts' },
+        async (payload) => {
+          const newPost = payload.new as any;
+          if (newPost.visibility !== 'public') return;
+          // Don't duplicate if it's our own post (already added optimistically)
+          if (newPost.user_id === user?.id) return;
+          
+          const transformed = {
+            ...newPost,
+            tags: Array.isArray(newPost.tags) ? newPost.tags.map((t: any) => String(t)) : []
+          };
+          setPosts(prev => [transformed, ...prev]);
+
+          // Fetch profile for new post author
+          if (!userProfiles[newPost.user_id]) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('user_id, name, avatar_url')
+              .eq('user_id', newPost.user_id)
+              .maybeSingle();
+            if (profile) {
+              setUserProfiles(prev => ({ ...prev, [profile.user_id]: profile }));
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'community_posts' },
+        (payload) => {
+          setPosts(prev => prev.filter(p => p.id !== payload.old.id));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'community_posts' },
+        (payload) => {
+          const updated = payload.new as any;
+          setPosts(prev => prev.map(p => p.id === updated.id ? {
+            ...updated,
+            tags: Array.isArray(updated.tags) ? updated.tags.map((t: any) => String(t)) : []
+          } : p));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const loadPosts = async () => {
     try {
