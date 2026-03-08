@@ -117,7 +117,7 @@ const FeaturesSection = () => {
             <Sparkles className="h-4 w-4 mr-2 text-primary" />
             Complete Spiritual Ecosystem
           </Badge>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="bg-gradient-temple bg-clip-text text-transparent">Everything You Need</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
