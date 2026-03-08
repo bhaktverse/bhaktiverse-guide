@@ -411,30 +411,30 @@ const Dashboard = () => {
         {todayDevotion && (
           <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-r from-card via-card to-primary/5">
             <div className="h-1 bg-gradient-temple" />
-            <CardContent className="p-5">
+            <CardContent className="p-3 sm:p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-2xl sm:text-3xl shadow-divine flex-shrink-0">
                     🙏
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-base sm:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
-                      <Flame className="h-5 w-5 text-primary" />
-                      Daily Sadhana
+                   <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-sm sm:text-base md:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
+                      <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                      <span>Daily Sadhana</span>
                       {stats.currentStreak > 0 && (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs">
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] sm:text-xs">
                           🔥 {stats.currentStreak} Day Streak
                         </Badge>
                       )}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
                       Today's Deity: <span className="font-semibold text-foreground">{todayDevotion.deity}</span>
                       {todayDevotion.color && (
                         <> • Color: <span className="font-semibold" style={{ color: todayDevotion.color === 'Red' ? '#ef4444' : todayDevotion.color === 'Yellow' ? '#eab308' : todayDevotion.color === 'Green' ? '#22c55e' : todayDevotion.color === 'White' ? '#94a3b8' : todayDevotion.color === 'Orange' ? '#f97316' : todayDevotion.color === 'Blue' ? '#3b82f6' : todayDevotion.color === 'Black' ? '#64748b' : 'inherit' }}>{todayDevotion.color}</span></>
                       )}
                     </p>
                     {todayDevotion.mantra && (
-                      <p className="text-xs text-primary font-medium mt-1 italic">🕉️ {todayDevotion.mantra}</p>
+                      <p className="text-[10px] sm:text-xs text-primary font-medium mt-1 italic truncate">🕉️ {todayDevotion.mantra}</p>
                     )}
                   </div>
                 </div>
@@ -640,29 +640,29 @@ const Dashboard = () => {
               </Card>
             )}
 
-            <Card className="card-sacred">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-primary" />
+            <Card className="card-sacred overflow-hidden">
+              <CardHeader className="p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                    <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                     Today's Spiritual Goals
                   </CardTitle>
-                  <Badge variant="outline" className="text-primary border-primary/30">
+                  <Badge variant="outline" className="text-primary border-primary/30 text-xs w-fit">
                     {overallProgress}% Complete
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-4 sm:space-y-5 px-3 sm:px-6 pb-3 sm:pb-6">
                 {/* Mantras */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-2">
                     <span className="font-medium flex items-center gap-2 min-w-0">
                       <div className="p-1.5 sm:p-2 rounded-lg bg-orange-500/10 flex-shrink-0">
                         <Flame className="h-4 w-4 text-orange-500" />
                       </div>
                       <span className="truncate">Mantras Chanted</span>
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0">
                       {stats.totalMantras}/{stats.dailyGoals.mantras}
                     </span>
                   </div>
@@ -671,14 +671,14 @@ const Dashboard = () => {
 
                 {/* Reading */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-2">
                     <span className="font-medium flex items-center gap-2 min-w-0">
                       <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
                         <BookOpen className="h-4 w-4 text-blue-500" />
                       </div>
                       <span className="truncate">Scripture Reading</span>
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0">
                       {stats.readingMinutes}/{stats.dailyGoals.reading_minutes} min
                     </span>
                   </div>
@@ -687,14 +687,14 @@ const Dashboard = () => {
 
                 {/* Meditation */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-2">
                     <span className="font-medium flex items-center gap-2 min-w-0">
                       <div className="p-1.5 sm:p-2 rounded-lg bg-purple-500/10 flex-shrink-0">
                         <Heart className="h-4 w-4 text-purple-500" />
                       </div>
                       <span className="truncate">Meditation</span>
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0">
                       {stats.meditationMinutes}/{stats.dailyGoals.meditation_minutes} min
                     </span>
                   </div>
@@ -727,26 +727,26 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
             {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-amber-500" />
+              <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                   Your Progress
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
-                  <div className="text-4xl font-bold text-amber-500">{stats.currentStreak}</div>
-                  <div className="text-sm text-muted-foreground">Day Streak 🔥</div>
+              <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl">
+                  <div className="text-2xl sm:text-4xl font-bold text-amber-500">{stats.currentStreak}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Day Streak 🔥</div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-muted/30 rounded-lg">
-                    <div className="text-xl font-bold text-primary">{stats.level}</div>
-                    <div className="text-xs text-muted-foreground">Level</div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="text-center p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <div className="text-lg sm:text-xl font-bold text-primary">{stats.level}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">Level</div>
                   </div>
-                  <div className="text-center p-3 bg-muted/30 rounded-lg">
-                    <div className="text-xl font-bold text-secondary">{stats.xp}</div>
-                    <div className="text-xs text-muted-foreground">XP</div>
+                  <div className="text-center p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <div className="text-lg sm:text-xl font-bold text-secondary">{stats.xp}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">XP</div>
                   </div>
                 </div>
                 
@@ -758,26 +758,26 @@ const Dashboard = () => {
             </Card>
 
             {/* Upcoming Events */}
-            <Card className="card-sacred">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
+            <Card className="card-sacred overflow-hidden">
+              <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   Upcoming Events
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                 {upcomingEvents.length > 0 ? (
                   <div className="space-y-3">
                     {upcomingEvents.map((event, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <Calendar className="h-4 w-4 text-primary" />
+                      <div key={idx} className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{event.name}</p>
-                          <p className="text-xs text-muted-foreground">{event.date}</p>
+                          <p className="font-medium text-xs sm:text-sm truncate">{event.name}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">{event.date}</p>
                         </div>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs flex-shrink-0">
                           {event.type}
                         </Badge>
                       </div>
@@ -815,7 +815,7 @@ const Dashboard = () => {
               return (
                 <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-secondary/5 overflow-hidden">
                   <div className="h-1 bg-gradient-temple" />
-                  <CardContent className="p-5 text-center">
+                  <CardContent className="p-3 sm:p-5 text-center">
                     <div className="text-4xl mb-3">🤚</div>
                     <h3 className="font-bold text-base mb-1">Time for a Re-scan!</h3>
                     <p className="text-sm text-muted-foreground mb-1">
@@ -840,9 +840,9 @@ const Dashboard = () => {
             {/* Premium CTA */}
             <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
               <CardContent className="p-4 sm:p-5 text-center">
-                <Crown className="h-10 w-10 mx-auto mb-3 text-amber-500" />
-                <h3 className="font-bold text-lg mb-1">Unlock Premium</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+                <Crown className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 sm:mb-3 text-amber-500" />
+                <h3 className="font-bold text-base sm:text-lg mb-1">Unlock Premium</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                   Get detailed readings, PDF reports, and exclusive features
                 </p>
                 <Button 
