@@ -1,109 +1,163 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
-
-## Current Critical Issues
-
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
-
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
-
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+# BhaktVerse Platform — Complete Audit & Improvement Plan
 
 ---
 
-## Implementation Plan
+## PHASE 1 — PLATFORM DISCOVERY
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+**BhaktVerse** is an AI-powered Hindu spiritual platform built with React + Vite + Supabase. It offers:
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
-
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
-
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
-
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
-
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
-
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
-
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
+- **18 pages**: Landing, Auth, Dashboard, Saints (list + AI chat), Scriptures (list + reader), Temples (list + detail), Audio Library, Community, Premium, Numerology, Palm Reading, Shared Palm Reading, Daily Devotion, Horoscope, Kundali Match, Spiritual Calendar, Profile, 404
+- **Navigation**: Sticky top navbar with dropdown groups (Services, Explore, Community) for desktop; fixed bottom nav with "More" sheet for mobile
+- **Auth**: Email/password sign-up and login via Supabase Auth
+- **Database**: 22 tables with RLS policies, role-based access via `has_role()` security definer function
+- **Edge Functions**: 12 deployed (palm reading, numerology, horoscope, saint chat, TTS, panchang, etc.)
+- **User roles**: `app_role` enum (admin, moderator, user) in `user_roles` table
+- **Gamification**: `spiritual_journey` table tracks XP, level, badges, karma
 
 ---
 
-## Technical Details
+## PHASE 2 — FEATURE AUDIT
 
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
+### Critical Bugs (Will Crash)
 
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
+| Issue | Location | Impact |
+|-------|----------|--------|
+| **`PremiumProvider` missing from `App.tsx`** | `App.tsx` line 33-80 | `Premium.tsx` calls `usePremium()` which throws "must be used within PremiumProvider" — instant crash when visiting `/premium` |
+| **`window.location.replace` for auth redirect** | `Auth.tsx` line 42 | Breaks SPA lifecycle, full page reload, loses React state |
+| **`window.location.href` for logout** | `MobileBottomNav.tsx` line 72, `Profile.tsx` line 302 | Same SPA-breaking full page reload |
 
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
-```
+### Partially Working
 
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
+- **Community**: Loads posts and resolves profile names correctly, but `totalDevotees` counts unique posters (not total users) — misleading metric
+- **Premium page**: Has UI for tiers but `handleUpgrade` just shows a toast — no actual payment integration
+- **Horoscope**: Requires user to manually select their rashi — no auto-detection from profile's `astro_profiles` data
 
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
+### Unused Components
 
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
+- `CameraPreviewWithGuide.tsx`, `PalmPositionGuide.tsx`, `PalmScanTutorial.tsx`, `DetailedCategoryCard.tsx` — imported nowhere
+- `src/components/ui/use-toast.ts` — duplicate re-export wrapper of `src/hooks/use-toast.ts`
 
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+### Working Features
+
+- Saints list + AI chat via edge function
+- Scripture browsing + chapter reader
+- Temple discovery + detail pages
+- Audio library with playlist management
+- Palm reading with PDF report + QR sharing
+- Numerology analysis
+- Spiritual calendar with events
+- Daily devotion by day-of-week
+- Community posts with profile resolution
+- User profile management
+- Dashboard with stats, streaks, journey tracking
+
+---
+
+## PHASE 3 — WORKFLOW ANALYSIS
+
+### Friction Points
+
+1. **No onboarding wizard** — after sign-up, user lands on Dashboard with zero data and no guidance on what to do first
+2. **Auth redirect breaks SPA** — `window.location.replace('/dashboard')` causes full reload, slow transition
+3. **No protected routes** — any page can be accessed without auth; pages individually check `user` and redirect, causing flash of content
+4. **Community post authors** — correctly resolved now, but no way to view another user's profile
+5. **Palm reading requires auth** but there's no pre-auth teaser — user hits a wall with no preview of what they'd get
+
+### Missing Steps
+
+- No email verification flow
+- No password reset UI (edge case: user forgets password)
+- No "complete your profile" nudge after registration
+
+---
+
+## PHASE 4 — UX/UI REVIEW
+
+| Area | Issue |
+|------|-------|
+| **NotFound page** | Unstyled — uses `bg-gray-100`, `text-blue-500` hardcoded colors instead of design tokens. No Navigation or branding. |
+| **No code splitting** | All 18 pages eagerly imported in `App.tsx` — large initial bundle |
+| **No global search** | Users must navigate to specific pages; no way to search across saints, scriptures, temples, audio from one place |
+| **Mobile nav** | Solid implementation with bottom bar + sheet, but "More" label is generic |
+| **Dark mode** | `next-themes` is installed but unclear if theme toggle exists in nav |
+
+---
+
+## PHASE 5 — ISSUE DETECTION
+
+| Category | Issue | Fix |
+|----------|-------|-----|
+| **Runtime crash** | Missing `PremiumProvider` in App.tsx | Wrap app in `<PremiumProvider>` inside `<AuthProvider>` |
+| **SPA violation** | 3 places use `window.location.replace/href` | Replace with `useNavigate()` / React Router |
+| **No route protection** | Protected pages check auth individually | Add a `<ProtectedRoute>` wrapper component |
+| **Dead code** | 4 unused components | Delete them |
+| **Duplicate file** | `src/components/ui/use-toast.ts` re-exports `src/hooks/use-toast.ts` | Consolidate imports |
+| **Performance** | Eager imports of all 18 pages | Add `React.lazy()` + `Suspense` |
+| **Security** | `palm_reading_history` has no public SELECT policy but `get-shared-reading` edge function uses service role to bypass — acceptable for sharing, but the edge function should validate the `readingId` format |
+
+---
+
+## PHASE 6 — MISSING FEATURES
+
+1. **Global search** — search across saints, scriptures, temples, audio, mantras
+2. **User onboarding wizard** — post-signup flow to set deities, language, daily goals
+3. **Protected route component** — prevents unauthorized access with redirect
+4. **Notification system** — in-app notifications for streaks, festivals, community replies
+5. **Favorites/bookmarks** — save saints, scriptures, audio tracks for quick access
+6. **Reading history** — "Continue where you left off" for scriptures
+7. **Theme toggle** — dark/light mode switch in navigation
+
+---
+
+## PHASE 7 — FEATURE ENHANCEMENTS
+
+1. **Horoscope auto-select** — if user has an `astro_profiles` entry, auto-select their rashi
+2. **Community** — add real comment threading (currently just a count, no comment UI for viewing)
+3. **Dashboard** — add "recommended for you" section based on activity history
+4. **Premium** — integrate Stripe for real payments instead of toast placeholder
+5. **Audio library** — add search/filter by deity, language, category (partially exists but could be stronger)
+
+---
+
+## PHASE 8 — IMPLEMENTATION PLAN
+
+### Implementation Phase 1 — Critical Fixes (Do First)
+
+1. **Add `PremiumProvider` to `App.tsx`** — wrap inside `AuthProvider`, prevents crash on `/premium`
+2. **Fix all `window.location` redirects** — replace with `useNavigate()` in Auth.tsx, MobileBottomNav.tsx, Profile.tsx
+3. **Restyle NotFound page** — use design tokens, add Navigation, branded 404
+
+### Implementation Phase 2 — Architecture Improvements
+
+4. **Add `React.lazy()` code splitting** for all 18 page routes with a spiritual-themed Suspense fallback
+5. **Create `<ProtectedRoute>` wrapper** — redirects unauthenticated users to `/auth` with return-path state
+6. **Delete unused components** — CameraPreviewWithGuide, PalmPositionGuide, PalmScanTutorial, DetailedCategoryCard
+7. **Remove duplicate `use-toast.ts`** wrapper
+
+### Implementation Phase 3 — Feature Upgrades
+
+8. **Add global search** — search bar in Navigation querying saints, scriptures, temples, audio
+9. **User onboarding wizard** — 3-step post-signup: language, favorite deities, daily goals
+10. **Horoscope auto-rashi detection** from astro_profiles
+
+### Implementation Phase 4 — Advanced
+
+11. **Stripe integration** for Premium subscriptions
+12. **In-app notification center** with bell icon in nav
+13. **Favorites/bookmarks system** with a new `user_favorites` table
+14. **Comment threading** in Community
+
+---
+
+## PHASE 9 — FUTURE OPTIMIZATION
+
+1. **AI personalization engine** — use activity history + spiritual level to curate dashboard content, audio playlists, and reading recommendations
+2. **Offline-first PWA** — service worker for caching scriptures, audio, and mantras for rural/low-connectivity users
+3. **Analytics dashboard** — admin-facing usage analytics (active users, popular content, AI query topics)
+4. **Content pre-fetching** — predictive loading based on navigation patterns
+5. **Real-time community** — Supabase Realtime subscriptions for live post updates and typing indicators
+6. **Multi-language AI responses** — edge functions already accept language param; expand to Tamil, Telugu, Bengali, Gujarati
+7. **Performance monitoring** — integrate web vitals tracking to catch regressions
 
