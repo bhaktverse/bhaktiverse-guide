@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 interface DailyDevotion {
   id: string;
