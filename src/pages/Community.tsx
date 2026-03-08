@@ -30,7 +30,8 @@ import {
   Image,
   Video,
   Mic,
-  Loader2
+  Loader2,
+  Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 
