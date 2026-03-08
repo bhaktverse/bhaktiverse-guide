@@ -501,7 +501,7 @@ const PalmReading = () => {
     try {
       const { data, error } = await supabase.functions.invoke('palm-daily-horoscope', { body: { palmAnalysis: analysis, language: selectedLanguage } });
       if (error) throw error;
-      if (data?.horoscope) { setHoroscope(data.horoscope); toast({ title: "🌟 Daily Horoscope Ready", description: "Your personalized predictions for today" }); }
+      if (data?.horoscope) { setHoroscope(data.horoscope); toast.success("🌟 Daily Horoscope Ready — Your personalized predictions for today"); }
     } catch (error) {
       console.error('Horoscope error:', error);
       toast({ title: "Failed to generate horoscope", description: error instanceof Error ? error.message : "Please try again", variant: "destructive" });
