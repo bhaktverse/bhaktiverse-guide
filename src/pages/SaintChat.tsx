@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, Mic, MicOff, Volume2, BookOpen, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Navigation from '@/components/Navigation';
 import Breadcrumbs from '@/components/Breadcrumbs';
@@ -47,7 +47,7 @@ const SaintChat = () => {
   const { saintId } = useParams<{ saintId: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
+  
   
   const [saint, setSaint] = useState<Saint | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -105,7 +105,7 @@ const SaintChat = () => {
     } catch (error) {
       console.error('Error loading saint:', error);
       setLoadError(true);
-      toast({ title: "Error", description: "Failed to load saint info", variant: "destructive" });
+      toast.error("Failed to load saint info");
     }
   };
 
@@ -173,11 +173,8 @@ const SaintChat = () => {
       persistSession(allMessages);
     } catch (error) {
       console.error('Chat error:', error);
-      toast({ 
-        title: "Response failed", 
-        description: "Could not get a response. Try again.",
-        variant: "destructive",
-        action: <Button size="sm" variant="outline" onClick={() => sendMessage(msgText)}>Retry</Button>
+      toast.error("Could not get a response. Try again.", {
+        action: { label: 'Retry', onClick: () => sendMessage(msgText) }
       });
       // No fallback message — let the user retry via the toast action
     } finally {
@@ -260,7 +257,7 @@ const SaintChat = () => {
                   content: `🙏 Namaste! I am ${saint.name}. I'm here to share wisdom from the ${saint.tradition} tradition. What guidance do you seek today?`,
                   timestamp: new Date()
                 }]);
-                toast({ title: "New Chat Started", description: "Previous conversation cleared." });
+                toast.success("New Chat Started — Previous conversation cleared.");
               }}
               className="gap-1 text-xs"
             >

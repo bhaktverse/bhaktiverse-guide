@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +49,7 @@ interface PlaylistManagerProps {
 
 const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlaylist }) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -108,17 +108,10 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
 
       setPlaylists(prev => [{ ...data, tracks: selectedTracks }, ...prev]);
       resetForm();
-      toast({
-        title: "🎵 Playlist Created!",
-        description: `"${newPlaylistName}" has been created successfully.`,
-      });
+      toast.success(`🎵 Playlist "${newPlaylistName}" has been created!`);
     } catch (error) {
       console.error('Error creating playlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create playlist. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to create playlist. Please try again.");
     }
   };
 
@@ -144,17 +137,10 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
           : p
       ));
       resetForm();
-      toast({
-        title: "✨ Playlist Updated!",
-        description: "Your changes have been saved.",
-      });
+      toast.success("✨ Playlist Updated! Your changes have been saved.");
     } catch (error) {
       console.error('Error updating playlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update playlist.",
-        variant: "destructive",
-      });
+      toast.error("Failed to update playlist.");
     }
   };
 
@@ -168,17 +154,10 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
       if (error) throw error;
 
       setPlaylists(prev => prev.filter(p => p.id !== playlistId));
-      toast({
-        title: "Playlist Deleted",
-        description: "The playlist has been removed.",
-      });
+      toast.success("Playlist has been removed.");
     } catch (error) {
       console.error('Error deleting playlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete playlist.",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete playlist.");
     }
   };
 
@@ -212,16 +191,9 @@ const PlaylistManager: React.FC<PlaylistManagerProps> = ({ allTracks, onPlayPlay
     const playlistTracks = allTracks.filter(track => playlist.tracks.includes(track.id));
     if (playlistTracks.length > 0) {
       onPlayPlaylist(playlistTracks);
-      toast({
-        title: "▶️ Now Playing",
-        description: `Playing "${playlist.name}" (${playlistTracks.length} tracks)`,
-      });
+      toast.success(`▶️ Playing "${playlist.name}" (${playlistTracks.length} tracks)`);
     } else {
-      toast({
-        title: "Empty Playlist",
-        description: "This playlist has no tracks.",
-        variant: "destructive",
-      });
+      toast.error("This playlist has no tracks.");
     }
   };
 

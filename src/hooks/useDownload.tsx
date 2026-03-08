@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface DownloadState {
   isDownloading: boolean;
@@ -8,7 +8,7 @@ interface DownloadState {
 }
 
 export const useDownload = () => {
-  const { toast } = useToast();
+  
   const [downloadState, setDownloadState] = useState<DownloadState>({
     isDownloading: false,
     progress: 0,
@@ -17,11 +17,7 @@ export const useDownload = () => {
 
   const downloadFile = async (url: string, filename: string): Promise<boolean> => {
     if (!url) {
-      toast({
-        title: "Download Failed",
-        description: "No file URL available",
-        variant: "destructive",
-      });
+      toast.error("No file URL available");
       return false;
     }
 
@@ -86,19 +82,12 @@ export const useDownload = () => {
       // Clean up
       URL.revokeObjectURL(blobUrl);
 
-      toast({
-        title: "✅ Download Complete",
-        description: `"${filename}" has been downloaded successfully.`,
-      });
+      toast.success(`✅ "${filename}" has been downloaded successfully.`);
 
       return true;
     } catch (error) {
       console.error('Download error:', error);
-      toast({
-        title: "Download Failed",
-        description: "Unable to download the file. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Unable to download the file. Please try again.");
       return false;
     } finally {
       setDownloadState({

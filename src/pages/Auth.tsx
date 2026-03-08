@@ -8,12 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,10 +33,7 @@ const Auth = () => {
   const performRedirect = (showToast = true) => {
     setRedirecting(true);
     if (showToast) {
-      toast({
-        title: "🙏 Welcome!",
-        description: "Redirecting to your spiritual dashboard...",
-      });
+      toast.success("🙏 Welcome! Redirecting to your spiritual dashboard...");
     }
     // Use setTimeout to ensure state updates render before navigate
     setTimeout(() => {
@@ -126,10 +123,7 @@ const Auth = () => {
 
       // Check if email confirmation is required
       if (data?.user && !data.session) {
-        toast({
-          title: "Registration Successful! 🕉️",
-          description: "Please check your email to confirm your account.",
-        });
+        toast.success("Registration Successful! 🕉️ Please check your email to confirm your account.");
         setLoading(false);
       } else if (data?.session) {
         // Auto-login successful - redirect will be handled by onAuthStateChange
@@ -285,10 +279,7 @@ const Auth = () => {
                           redirectTo: `${window.location.origin}/reset-password`,
                         });
                         if (error) throw error;
-                        toast({
-                          title: "Password Reset Email Sent 📧",
-                          description: "Check your inbox for the reset link.",
-                        });
+                        toast.success("Password Reset Email Sent 📧 — Check your inbox for the reset link.");
                       } catch (err: any) {
                         setError(err.message);
                       } finally {

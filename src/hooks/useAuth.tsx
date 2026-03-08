@@ -81,6 +81,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error && error.code !== '23505') {
         console.error('Error creating profile:', error);
       }
+
+      // Also create spiritual_journey row for gamification/premium pipeline
+      const { error: journeyError } = await supabase
+        .from('spiritual_journey')
+        .insert([
+          {
+            user_id: user.id,
+            level: 1,
+            experience_points: 0,
+            mantras_chanted: 0,
+            reports_generated: 0,
+            karma_score: 0
+          }
+        ]);
+
+      if (journeyError && journeyError.code !== '23505') {
+        console.error('Error creating spiritual journey:', journeyError);
+      }
     } catch (error) {
       console.error('Error creating profile:', error);
     }

@@ -7,7 +7,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Loader2, Hand, Star, Copy, Check, Share2 } from 'lucide-react';
 
 const SharedPalmReading = () => {
@@ -18,7 +18,7 @@ const SharedPalmReading = () => {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
 
   useEffect(() => {
     if (!readingId) return;
@@ -109,10 +109,10 @@ const SharedPalmReading = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      toast({ title: '🔗 Link Copied!', description: 'Share this link with friends and family.' });
+      toast.success('🔗 Link Copied! Share this link with friends and family.');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({ title: 'Copy failed', description: 'Please copy the URL manually.', variant: 'destructive' });
+      toast.error('Please copy the URL manually.');
     }
   };
 

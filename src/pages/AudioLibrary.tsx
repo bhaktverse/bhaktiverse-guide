@@ -16,7 +16,7 @@ import PlaylistManager from '@/components/PlaylistManager';
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { 
   Play, 
   Pause, 
@@ -51,7 +51,7 @@ const AudioLibrary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   usePageTitle('Spiritual Audio Library');
-  const { toast } = useToast();
+  
   const { downloadAudio, downloadState } = useDownload();
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const [loading, setLoading] = useState(true);

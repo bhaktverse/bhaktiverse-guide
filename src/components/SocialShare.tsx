@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Share2, Copy, Check, MessageCircle, Twitter, Facebook, Linkedin, Mail } from 'lucide-react';
 
 interface SocialShareProps {
@@ -17,7 +17,7 @@ interface SocialShareProps {
 }
 
 const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
-  const { toast } = useToast();
+  
   const [copied, setCopied] = useState(false);
 
   const shareUrl = window.location.href;
@@ -43,7 +43,7 @@ const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
           text: shareText,
           url: shareUrl,
         });
-        toast({ title: "Shared successfully!" });
+        toast.success("Shared successfully!");
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Share error:', error);
@@ -56,10 +56,10 @@ const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
     try {
       await navigator.clipboard.writeText(shareText);
       setCopied(true);
-      toast({ title: "Copied to clipboard!" });
+      toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
+      toast.error("Failed to copy");
     }
   };
 

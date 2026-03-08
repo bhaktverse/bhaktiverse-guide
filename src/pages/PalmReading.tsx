@@ -21,7 +21,7 @@ import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Camera, Hand, Sparkles, AlertCircle, Loader2, CheckCircle2,
   Heart, Briefcase, Activity, Users, GraduationCap, Flame, Plane,
@@ -187,7 +187,7 @@ const PalmReading = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   usePageTitle('AI Palm Reading');
-  const { toast } = useToast();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -315,7 +315,7 @@ const PalmReading = () => {
     try {
       await supabase.from('palm_reading_history' as never).delete().eq('id', id);
       setHistory(prev => prev.filter(item => item.id !== id));
-      toast({ title: "Reading deleted", description: "Palm reading removed from history" });
+      toast.success("Palm reading removed from history");
     } catch (error) { console.error('Error deleting:', error); }
   };
 
@@ -356,7 +356,7 @@ const PalmReading = () => {
           const existing = existingReadings[0] as PalmReadingRecord;
           setAnalysis(existing.analysis);
           setLastSavedReadingId(existing.id);
-          toast({ title: "📋 पिछली रीडिंग मिली", description: `${metaName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!` });
+          toast.success(`📋 पिछली रीडिंग मिली — ${metaName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!`);
           setAnalyzing(false);
           return;
         }
@@ -369,25 +369,25 @@ const PalmReading = () => {
       if (data?.analysis) {
         setAnalysis(data.analysis);
         await saveToHistory(data.analysis, images[0]);
-        toast({ title: "🙏 Palm Reading Complete", description: "Your detailed destiny reading is ready" });
+        toast.success("🙏 Palm Reading Complete — Your detailed destiny reading is ready");
       } else throw new Error('No analysis returned');
     } catch (error) {
       console.error('Palm analysis error:', error);
-      toast({ title: "Analysis failed", description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.", variant: "destructive" });
+      toast.error(error instanceof Error ? error.message : "Failed to analyze palm. Please try again.");
     } finally { setAnalyzing(false); }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!selectedLanguage) { toast({ title: "Select Language", description: "Please select your preferred language first", variant: "destructive" }); return; }
+    if (!selectedLanguage) { toast.error("Please select your preferred language first"); return; }
     const reader = new FileReader();
-    reader.onloadend = () => { setPalmImages([reader.result as string]); toast({ title: "Palm image uploaded", description: "Ready for analysis" }); };
+    reader.onloadend = () => { setPalmImages([reader.result as string]); toast.success("Palm image uploaded — Ready for analysis"); };
     reader.readAsDataURL(file);
   };
 
   const analyzePalm = async () => {
-    if (palmImages.length === 0) { toast({ title: "No palm scan", description: "Please complete the biometric scan first", variant: "destructive" }); return; }
+    if (palmImages.length === 0) { toast.error("Please complete the biometric scan first"); return; }
     setAnalyzing(true); setAnalysis(null); setAudioUrl(null); setShowReportView(false);
     try {
       // Check for existing recent reading with same name (dedup to save AI credits)
@@ -406,7 +406,7 @@ const PalmReading = () => {
           const existing = existingReadings[0] as PalmReadingRecord;
           setAnalysis(existing.analysis);
           setLastSavedReadingId(existing.id);
-          toast({ title: "📋 पिछली रीडिंग मिली", description: `${userName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!` });
+          toast.success(`📋 पिछली रीडिंग मिली — ${userName} की हाल की रीडिंग डेटाबेस से लोड हो गई। AI क्रेडिट बचाए गए!`);
           setAnalyzing(false);
           return;
         }
@@ -419,11 +419,11 @@ const PalmReading = () => {
       if (data?.analysis) {
         setAnalysis(data.analysis);
         await saveToHistory(data.analysis, palmImages[0]);
-        toast({ title: "🙏 Palm Reading Complete", description: "Your detailed destiny reading is ready" });
+        toast.success("🙏 Palm Reading Complete — Your detailed destiny reading is ready");
       } else throw new Error('No analysis returned');
     } catch (error) {
       console.error('Palm analysis error:', error);
-      toast({ title: "Analysis failed", description: error instanceof Error ? error.message : "Failed to analyze palm. Please try again.", variant: "destructive" });
+      toast.error(error instanceof Error ? error.message : "Failed to analyze palm. Please try again.");
     } finally { setAnalyzing(false); }
   };
 
@@ -440,7 +440,7 @@ const PalmReading = () => {
 
       // Use browser SpeechSynthesis API
       if (!('speechSynthesis' in window)) {
-        toast({ title: "Not supported", description: "Voice narration is not supported in this browser", variant: "destructive" });
+        toast.error("Voice narration is not supported in this browser");
         setNarrationLoading(false);
         return;
       }
@@ -457,14 +457,14 @@ const PalmReading = () => {
       utterance.rate = 0.9;
       utterance.pitch = 1.0;
       utterance.onend = () => { setIsNarrating(false); };
-      utterance.onerror = () => { setIsNarrating(false); toast({ title: "Narration error", description: "Voice narration encountered an error", variant: "destructive" }); };
+      utterance.onerror = () => { setIsNarrating(false); toast.error("Voice narration encountered an error"); };
       
       speechSynthRef.current = utterance;
       window.speechSynthesis.speak(utterance);
       setIsNarrating(true);
     } catch (error) {
       console.error('TTS error:', error);
-      toast({ title: "Voice generation failed", description: "Could not generate audio narration", variant: "destructive" });
+      toast.error("Could not generate audio narration");
     } finally { setNarrationLoading(false); }
   };
 
@@ -481,43 +481,43 @@ const PalmReading = () => {
   };
 
   const analyzeCompatibility = async () => {
-    if (!analysis || !selectedForCompatibility) { toast({ title: "Select readings", description: "Please select two palm readings to compare", variant: "destructive" }); return; }
+    if (!analysis || !selectedForCompatibility) { toast.error("Please select two palm readings to compare"); return; }
     setAnalyzingCompatibility(true);
     try {
       const { data, error } = await supabase.functions.invoke('palm-compatibility', {
         body: { palmAnalysis1: analysis, palmAnalysis2: selectedForCompatibility.analysis, language: selectedLanguage }
       });
       if (error) throw error;
-      if (data?.compatibility) { setCompatibilityResult(data.compatibility); toast({ title: "💕 Compatibility Analysis Complete", description: "Your relationship insights are ready" }); }
+      if (data?.compatibility) { setCompatibilityResult(data.compatibility); toast.success("💕 Compatibility Analysis Complete — Your relationship insights are ready"); }
     } catch (error) {
       console.error('Compatibility error:', error);
-      toast({ title: "Analysis failed", description: "Could not analyze compatibility", variant: "destructive" });
+      toast.error("Could not analyze compatibility");
     } finally { setAnalyzingCompatibility(false); }
   };
 
   const generateDailyHoroscope = async () => {
-    if (!analysis) { toast({ title: "Complete palm reading first", description: "Get a palm reading to generate personalized horoscope", variant: "destructive" }); return; }
+    if (!analysis) { toast.error("Get a palm reading first to generate personalized horoscope"); return; }
     setLoadingHoroscope(true); setHoroscope(null);
     try {
       const { data, error } = await supabase.functions.invoke('palm-daily-horoscope', { body: { palmAnalysis: analysis, language: selectedLanguage } });
       if (error) throw error;
-      if (data?.horoscope) { setHoroscope(data.horoscope); toast({ title: "🌟 Daily Horoscope Ready", description: "Your personalized predictions for today" }); }
+      if (data?.horoscope) { setHoroscope(data.horoscope); toast.success("🌟 Daily Horoscope Ready — Your personalized predictions for today"); }
     } catch (error) {
       console.error('Horoscope error:', error);
-      toast({ title: "Failed to generate horoscope", description: error instanceof Error ? error.message : "Please try again", variant: "destructive" });
+      toast.error(error instanceof Error ? error.message : "Please try again");
     } finally { setLoadingHoroscope(false); }
   };
 
   const generatePdfReport = async () => {
     if (!analysis) return;
-    if (!isPremiumUser) { toast({ title: "Premium Feature", description: "Upgrade to Premium to download PDF reports", variant: "destructive" }); navigate('/premium'); return; }
+    if (!isPremiumUser) { toast.error("Upgrade to Premium to download PDF reports"); navigate('/premium'); return; }
     setGeneratingPdf(true);
     try {
       await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob, undefined, lastSavedReadingId || undefined);
-      toast({ title: "📄 Report Downloaded", description: "Your beautiful PDF report has been saved" });
+      toast.success("📄 Report Downloaded — Your beautiful PDF report has been saved");
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast({ title: "Download failed", description: "Could not generate report. Please try again.", variant: "destructive" });
+      toast.error("Could not generate report. Please try again.");
     } finally { setGeneratingPdf(false); }
   };
 

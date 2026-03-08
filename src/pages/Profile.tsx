@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Breadcrumbs from '@/components/Breadcrumbs';
@@ -95,7 +95,7 @@ const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   usePageTitle('My Profile');
-  const { toast } = useToast();
+  
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -150,17 +150,10 @@ const Profile = () => {
         .eq('user_id', user.id);
 
       setAvatarUrl(newUrl);
-      toast({
-        title: "Avatar Updated 📷",
-        description: "Your profile picture has been saved."
-      });
+      toast.success("Avatar Updated 📷 — Your profile picture has been saved.");
     } catch (error) {
       console.error('Avatar upload error:', error);
-      toast({
-        title: "Upload Failed",
-        description: "Could not upload avatar. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Could not upload avatar. Please try again.");
     }
   };
 
@@ -279,17 +272,10 @@ const Profile = () => {
         if (error) throw error;
       }
 
-      toast({
-        title: "Profile Updated 🙏",
-        description: "Your spiritual profile has been saved.",
-      });
+      toast.success("Profile Updated 🙏 — Your spiritual profile has been saved.");
     } catch (error) {
       console.error('Error saving profile:', error);
-      toast({
-        title: "Save Failed",
-        description: "Could not save profile. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Could not save profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -298,10 +284,7 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "Logged Out",
-        description: "May your journey continue with blessings. 🙏",
-      });
+      toast.success("Logged Out — May your journey continue with blessings. 🙏");
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -676,19 +659,12 @@ const Profile = () => {
                           try {
                             const { data, error } = await supabase.functions.invoke('delete-user-data');
                             if (error) throw error;
-                            toast({
-                              title: "Account Deleted",
-                              description: "Your account and all data have been permanently removed. 🙏",
-                            });
+                            toast.success("Your account and all data have been permanently removed. 🙏");
                             await supabase.auth.signOut();
                             navigate('/');
                           } catch (error) {
                             console.error('Delete account error:', error);
-                            toast({
-                              title: "Error",
-                              description: "Could not delete account. Please try again or contact support.",
-                              variant: "destructive"
-                            });
+                            toast.error("Could not delete account. Please try again or contact support.");
                           } finally {
                             setDeleting(false);
                           }

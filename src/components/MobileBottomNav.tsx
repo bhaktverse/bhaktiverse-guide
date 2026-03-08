@@ -22,13 +22,13 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -70,10 +70,7 @@ const MobileBottomNav = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "Logged Out",
-        description: "May your journey continue with blessings. 🙏",
-      });
+      toast.success("Logged Out — May your journey continue with blessings. 🙏");
       setMoreOpen(false);
       navigate('/');
     } catch (error) {

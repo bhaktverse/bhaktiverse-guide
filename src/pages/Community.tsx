@@ -31,7 +31,7 @@ import {
   Mic,
   Loader2
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface CommunityPost {
   id: string;
@@ -59,7 +59,7 @@ const Community = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   usePageTitle('Spiritual Community');
-  const { toast } = useToast();
+  
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -232,11 +232,7 @@ const Community = () => {
       
     } catch (error) {
       console.error('Error loading community posts:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load community posts. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to load community posts. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -312,19 +308,12 @@ const Community = () => {
       setPendingImages([]);
       setShowCreatePost(false);
       
-      toast({
-        title: "Success! ✨",
-        description: "Your spiritual post has been shared with the community."
-      });
+      toast.success("Your spiritual post has been shared with the community! ✨");
       
     } catch (error) {
       console.error('Error creating post:', error);
       setUploadingImages(false);
-      toast({
-        title: "Error",
-        description: "Failed to create post. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to create post. Please try again.");
     }
   };
 
@@ -393,7 +382,7 @@ const Community = () => {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
-        toast({ title: "Link Copied! 📋", description: "Post link copied to clipboard." });
+        toast.success("Post link copied to clipboard! 📋");
       }
       // Increment shares_count
       await supabase
@@ -420,17 +409,10 @@ const Community = () => {
       if (error) throw error;
 
       setPosts(posts.filter(p => p.id !== postId));
-      toast({
-        title: "Post Deleted",
-        description: "Your post has been removed."
-      });
+      toast.success("Your post has been removed.");
     } catch (error) {
       console.error('Error deleting post:', error);
-      toast({
-        title: "Error",
-        description: "Could not delete post.",
-        variant: "destructive"
-      });
+      toast.error("Could not delete post.");
     }
   };
 
@@ -715,6 +697,7 @@ const Community = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleLike(post.id)}
+                          aria-label={userLikes.has(post.id) ? 'Unlike post' : 'Like post'}
                           className={`hover:text-primary ${userLikes.has(post.id) ? 'text-destructive' : 'text-muted-foreground'}`}
                         >
                           <Heart className={`h-4 w-4 mr-1 ${userLikes.has(post.id) ? 'fill-current' : ''}`} />
@@ -729,6 +712,7 @@ const Community = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label="Share post"
                           className="text-muted-foreground hover:text-primary"
                           onClick={() => sharePost(post)}
                         >
@@ -741,6 +725,7 @@ const Community = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => deletePost(post.id)}
+                          aria-label="Delete post"
                           className="text-muted-foreground hover:text-destructive"
                         >
                           Delete

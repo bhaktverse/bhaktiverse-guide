@@ -23,14 +23,14 @@ import {
   Infinity
 } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 
 const Premium = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   usePageTitle('Premium Membership');
   const { isPremium } = usePremium();
-  const { toast } = useToast();
+  
 
   const handleUpgrade = () => {
     const message = encodeURIComponent("Hi! I'm interested in BhaktVerse Premium. Please share details.");
