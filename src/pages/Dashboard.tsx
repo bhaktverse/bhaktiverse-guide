@@ -722,7 +722,9 @@ const Dashboard = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
+          <div className="space-y-4 sm:space-y-6 min-w-0">
+            {/* Progress & Events side by side on small-medium, stacked on mobile and lg */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
             {/* Streak & Level Card */}
             <Card className="card-sacred overflow-hidden">
               <CardHeader>
