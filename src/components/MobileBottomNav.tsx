@@ -91,7 +91,7 @@ const MobileBottomNav = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 text-muted-foreground"
+                    className="flex flex-col items-center gap-0.5 h-12 min-w-[48px] py-1.5 px-3 text-muted-foreground"
                   >
                     <Icon className="h-5 w-5" />
                     <span className="text-[10px] font-medium">{label}</span>
