@@ -30,6 +30,41 @@ interface MountAnalysis {
   rating?: number;
 }
 
+interface HandTypeAnalysis {
+  classification?: string;
+  tatvaElement?: string;
+  palmShape?: string;
+  fingerToPalmRatio?: string;
+  personalityProfile?: string;
+  strengths?: string[];
+  challenges?: string[];
+}
+
+interface SecondaryLines {
+  marriageLines?: { count?: number; depth?: string; position?: string; interpretation?: string };
+  childrenLines?: { count?: number; interpretation?: string };
+  healthLine?: { present?: boolean; description?: string; interpretation?: string };
+  travelLines?: { count?: number; description?: string; interpretation?: string };
+  intuitionLine?: { present?: boolean; description?: string; interpretation?: string };
+  girdleOfVenus?: { present?: boolean; description?: string; interpretation?: string };
+}
+
+interface FingerAnalysis {
+  thumbFlexibility?: { type?: string; meaning?: string };
+  fingerGaps?: { observed?: string; financialControl?: string };
+  ringVsIndex?: { dominant?: string; confidenceLevel?: string };
+  nailShape?: { type?: string; healthIndicator?: string };
+  fingerProportions?: { details?: string; personality?: string };
+}
+
+interface LineQualityDetails {
+  breaks?: string[];
+  islands?: string[];
+  forks?: string[];
+  crosses?: string[];
+  chains?: string[];
+}
+
 interface PalmAnalysis {
   language?: string;
   palmType?: string;
@@ -62,8 +97,14 @@ interface PalmAnalysis {
     mercury?: MountAnalysis;
     venus?: MountAnalysis;
     mars?: MountAnalysis;
+    marsUpper?: MountAnalysis;
+    marsLower?: MountAnalysis;
     moon?: MountAnalysis;
   };
+  handTypeAnalysis?: HandTypeAnalysis;
+  secondaryLines?: SecondaryLines;
+  fingerAnalysis?: FingerAnalysis;
+  lineQualityDetails?: LineQualityDetails;
   luckyElements?: {
     colors?: string[];
     gemstones?: string[];
@@ -456,12 +497,15 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     { title: "Guru Ji's Blessing & Life Path", page: '3' },
     { title: 'Palm Line Analysis (Rekha Vigyan)', page: '4' },
     { title: 'Mount Analysis (Parvat Vigyan)', page: '4-5' },
-    { title: 'Category Predictions (7 Areas)', page: '5-8' },
+    { title: 'Hand Type Analysis (Tatva)', page: '5' },
+    { title: 'Secondary Lines (Dvitiyak Rekha)', page: '5-6' },
+    { title: 'Finger & Nail Analysis (Anguli)', page: '6' },
+    { title: 'Category Predictions (7 Areas)', page: '6-8' },
     { title: 'Lucky Elements (Shubh Tatva)', page: '8-9' },
     { title: 'Recommended Mantras', page: '9' },
-    { title: 'Special Yogas Detected', page: '9-10' },
-    { title: 'Remedies & Recommendations', page: '10' },
-    { title: "Guru Ji's Final Blessings", page: '10-11' },
+    { title: 'Special Yogas Detected', page: '9' },
+    { title: 'Remedies & Recommendations', page: '9-10' },
+    { title: "Guru Ji's Final Blessings", page: '10' },
   ];
 
   tocItems.forEach((item, i) => {
@@ -668,6 +712,155 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
   addPageFooter();
 
+  // ========== HAND TYPE ANALYSIS ==========
+  if (analysis.handTypeAnalysis) {
+    checkPageBreak(50);
+    drawLotusDivider(yPos);
+
+    doc.setFontSize(14);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('HAND TYPE ANALYSIS (Tatva Vigyan)', margin, yPos);
+    yPos += 10;
+
+    const ht = analysis.handTypeAnalysis;
+    const htItems = [
+      { label: 'Classification', value: ht.classification || 'N/A' },
+      { label: 'Tatva Element', value: ht.tatvaElement || 'N/A' },
+      { label: 'Palm Shape', value: ht.palmShape || 'N/A' },
+      { label: 'Finger-to-Palm Ratio', value: ht.fingerToPalmRatio || 'N/A' },
+    ];
+
+    htItems.forEach(item => {
+      doc.setFontSize(9);
+      doc.setTextColor(...secondaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${item.label}:`, margin + 3, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textColor);
+      doc.text(getSafeText(item.value), margin + 45, yPos);
+      yPos += 6;
+    });
+
+    if (ht.personalityProfile) {
+      yPos += 2;
+      doc.setFontSize(9);
+      doc.setTextColor(...textColor);
+      doc.setFont('helvetica', 'italic');
+      yPos = addWrappedText(ht.personalityProfile, margin + 3, yPos, contentWidth - 6, 4);
+      yPos += 4;
+    }
+
+    if (ht.strengths && ht.strengths.length > 0) {
+      doc.setFontSize(9);
+      doc.setTextColor(...successColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Strengths:', margin + 3, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textColor);
+      doc.text(ht.strengths.map(s => getSafeText(s)).join(', ').substring(0, 90), margin + 25, yPos);
+      yPos += 6;
+    }
+
+    if (ht.challenges && ht.challenges.length > 0) {
+      doc.setFontSize(9);
+      doc.setTextColor(220, 150, 50);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Challenges:', margin + 3, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textColor);
+      doc.text(ht.challenges.map(c => getSafeText(c)).join(', ').substring(0, 90), margin + 28, yPos);
+      yPos += 6;
+    }
+
+    yPos += 5;
+  }
+
+  // ========== SECONDARY LINES ==========
+  if (analysis.secondaryLines) {
+    checkPageBreak(40);
+    drawLotusDivider(yPos);
+
+    doc.setFontSize(14);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SECONDARY LINES (Dvitiyak Rekha)', margin, yPos);
+    yPos += 10;
+
+    const sl = analysis.secondaryLines;
+    const secLineItems = [
+      { name: 'Marriage Lines', info: sl.marriageLines ? `Count: ${sl.marriageLines.count || 0}, Depth: ${getSafeText(sl.marriageLines.depth)}` : null, interp: sl.marriageLines?.interpretation },
+      { name: 'Children Lines', info: sl.childrenLines ? `Count: ${sl.childrenLines.count || 0}` : null, interp: sl.childrenLines?.interpretation },
+      { name: 'Health Line', info: sl.healthLine?.present ? getSafeText(sl.healthLine.description) : 'Not prominent', interp: sl.healthLine?.interpretation },
+      { name: 'Travel Lines', info: sl.travelLines ? `Count: ${sl.travelLines.count || 0}` : null, interp: sl.travelLines?.interpretation },
+      { name: 'Intuition Line', info: sl.intuitionLine?.present ? 'Present' : 'Not visible', interp: sl.intuitionLine?.interpretation },
+      { name: 'Girdle of Venus', info: sl.girdleOfVenus?.present ? 'Present' : 'Not visible', interp: sl.girdleOfVenus?.interpretation },
+    ];
+
+    secLineItems.forEach(item => {
+      if (!item.info && !item.interp) return;
+      checkPageBreak(12);
+      doc.setFontSize(9);
+      doc.setTextColor(...secondaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${item.name}:`, margin + 3, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textColor);
+      doc.text(getSafeText(item.info || '').substring(0, 50), margin + 35, yPos);
+      yPos += 5;
+      if (item.interp) {
+        doc.setFontSize(8);
+        doc.setTextColor(...mutedColor);
+        doc.setFont('helvetica', 'italic');
+        const lines = doc.splitTextToSize(getSafeText(item.interp).substring(0, 120), contentWidth - 10);
+        doc.text(lines.slice(0, 2), margin + 5, yPos);
+        yPos += lines.slice(0, 2).length * 4;
+      }
+      yPos += 2;
+    });
+
+    yPos += 5;
+  }
+
+  // ========== FINGER & NAIL ANALYSIS ==========
+  if (analysis.fingerAnalysis) {
+    checkPageBreak(35);
+    drawLotusDivider(yPos);
+
+    doc.setFontSize(14);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FINGER & NAIL ANALYSIS (Anguli Vigyan)', margin, yPos);
+    yPos += 10;
+
+    const fa = analysis.fingerAnalysis;
+    const fingerItems = [
+      { label: 'Thumb Flexibility', value: fa.thumbFlexibility ? `${getSafeText(fa.thumbFlexibility.type)} - ${getSafeText(fa.thumbFlexibility.meaning)}` : null },
+      { label: 'Finger Gaps', value: fa.fingerGaps ? `${getSafeText(fa.fingerGaps.observed)} (${getSafeText(fa.fingerGaps.financialControl)})` : null },
+      { label: 'Ring vs Index', value: fa.ringVsIndex ? `${getSafeText(fa.ringVsIndex.dominant)} - ${getSafeText(fa.ringVsIndex.confidenceLevel)}` : null },
+      { label: 'Nail Shape', value: fa.nailShape ? `${getSafeText(fa.nailShape.type)} - ${getSafeText(fa.nailShape.healthIndicator)}` : null },
+      { label: 'Proportions', value: fa.fingerProportions ? `${getSafeText(fa.fingerProportions.details)} (${getSafeText(fa.fingerProportions.personality)})` : null },
+    ];
+
+    fingerItems.forEach(item => {
+      if (!item.value) return;
+      checkPageBreak(8);
+      doc.setFontSize(9);
+      doc.setTextColor(...secondaryColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${item.label}:`, margin + 3, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...textColor);
+      const lines = doc.splitTextToSize(item.value.substring(0, 100), contentWidth - 45);
+      doc.text(lines.slice(0, 2), margin + 38, yPos);
+      yPos += lines.slice(0, 2).length * 5 + 2;
+    });
+
+    yPos += 5;
+  }
+
+  addPageFooter();
+
   // ========== CATEGORY PREDICTIONS ==========
   if (analysis.categories) {
     doc.addPage();
@@ -717,7 +910,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
         doc.setTextColor(...textColor);
         doc.setFont('helvetica', 'normal');
         
-        const maxChars = 3000;
+        const maxChars = 1500;
         const safePrediction = getSafeText(category.prediction);
         const truncatedPrediction = safePrediction.length > maxChars 
           ? safePrediction.substring(0, maxChars) + '...' 

@@ -34,10 +34,21 @@ import {
   Gift,
   Crown,
   Scroll,
-  Play
+  Play,
+  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+
+interface DailyDevotion {
+  id: string;
+  deity: string;
+  color: string | null;
+  mantra: string | null;
+  planet: string;
+  day_of_week: number;
+  benefits: string | null;
+}
 
 interface DashboardStats {
   currentStreak: number;
@@ -79,6 +90,8 @@ const Dashboard = () => {
   const [userName, setUserName] = useState("");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [animateIn, setAnimateIn] = useState(false);
+  const [todayDevotion, setTodayDevotion] = useState<DailyDevotion | null>(null);
+  const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -203,6 +216,17 @@ const Dashboard = () => {
         setBhaktiShorts(shorts);
       }
 
+      // Load today's devotion
+      const { data: devotion } = await supabase
+        .from('daily_devotions')
+        .select('*')
+        .eq('day_of_week', new Date().getDay())
+        .maybeSingle();
+
+      if (devotion) {
+        setTodayDevotion(devotion as DailyDevotion);
+      }
+
       // Load daily quote from spiritual_content
       const { data: quoteData } = await supabase
         .from('spiritual_content')
@@ -214,7 +238,6 @@ const Dashboard = () => {
         const randomQuote = quoteData[new Date().getDate() % quoteData.length];
         setTodayQuote(randomQuote.title ? `${randomQuote.content} — ${randomQuote.title}` : randomQuote.content);
       } else {
-        // Fallback universal quotes only if DB has no content
         const fallbackQuotes = [
           "The mind is everything. What you think you become. — Buddha",
           "The best way to find yourself is to lose yourself in service. — Gandhi",
@@ -349,6 +372,84 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Daily Sadhana Widget */}
+        {todayDevotion && (
+          <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-r from-card via-card to-primary/5">
+            <div className="h-1 bg-gradient-temple" />
+            <CardContent className="p-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-3xl shadow-divine">
+                    🙏
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <Flame className="h-5 w-5 text-primary" />
+                      Daily Sadhana
+                      {stats.currentStreak > 0 && (
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs">
+                          🔥 {stats.currentStreak} Day Streak
+                        </Badge>
+                      )}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Today's Deity: <span className="font-semibold text-foreground">{todayDevotion.deity}</span>
+                      {todayDevotion.color && (
+                        <> • Color: <span className="font-semibold" style={{ color: todayDevotion.color === 'Red' ? '#ef4444' : todayDevotion.color === 'Yellow' ? '#eab308' : todayDevotion.color === 'Green' ? '#22c55e' : todayDevotion.color === 'White' ? '#94a3b8' : todayDevotion.color === 'Orange' ? '#f97316' : todayDevotion.color === 'Blue' ? '#3b82f6' : todayDevotion.color === 'Black' ? '#64748b' : 'inherit' }}>{todayDevotion.color}</span></>
+                      )}
+                    </p>
+                    {todayDevotion.mantra && (
+                      <p className="text-xs text-primary font-medium mt-1 italic">🕉️ {todayDevotion.mantra}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  {[
+                    { label: 'Chant 108', type: 'mantra_chant' as const, data: { count: 108, mantra: todayDevotion.mantra || 'Om' }, points: 10, icon: '📿' },
+                    { label: 'Read 15 min', type: 'scripture_read' as const, data: { minutes: 15 }, points: 15, icon: '📖' },
+                    { label: 'Meditate', type: 'meditation' as const, data: { minutes: 10 }, points: 10, icon: '🧘' },
+                  ].map((action) => (
+                    <Button
+                      key={action.type}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 sm:flex-none gap-1 text-xs h-9 hover:bg-primary/10 hover:border-primary/30"
+                      disabled={sadhanaLoading === action.type}
+                      onClick={async () => {
+                        if (!user) return;
+                        setSadhanaLoading(action.type);
+                        try {
+                          await supabase.from('user_activities').insert({
+                            user_id: user.id,
+                            activity_type: action.type,
+                            activity_data: action.data,
+                            points_earned: action.points,
+                            streak_contribution: true,
+                          });
+                          // Update local stats
+                          setStats(prev => ({
+                            ...prev,
+                            totalMantras: action.type === 'mantra_chant' ? prev.totalMantras + 108 : prev.totalMantras,
+                            readingMinutes: action.type === 'scripture_read' ? prev.readingMinutes + 15 : prev.readingMinutes,
+                            meditationMinutes: action.type === 'meditation' ? prev.meditationMinutes + 10 : prev.meditationMinutes,
+                          }));
+                        } catch (e) {
+                          console.error('Sadhana action error:', e);
+                        } finally {
+                          setSadhanaLoading(null);
+                        }
+                      }}
+                    >
+                      {sadhanaLoading === action.type ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{action.icon}</span>}
+                      {action.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
