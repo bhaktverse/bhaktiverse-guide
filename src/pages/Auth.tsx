@@ -123,10 +123,7 @@ const Auth = () => {
 
       // Check if email confirmation is required
       if (data?.user && !data.session) {
-        toast({
-          title: "Registration Successful! 🕉️",
-          description: "Please check your email to confirm your account.",
-        });
+        toast.success("Registration Successful! 🕉️ Please check your email to confirm your account.");
         setLoading(false);
       } else if (data?.session) {
         // Auto-login successful - redirect will be handled by onAuthStateChange
