@@ -23,7 +23,7 @@ import {
   Infinity
 } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 
 const Premium = () => {
   const { user, loading: authLoading } = useAuth();
