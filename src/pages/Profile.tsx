@@ -153,11 +153,7 @@ const Profile = () => {
       toast.success("Avatar Updated 📷 — Your profile picture has been saved.");
     } catch (error) {
       console.error('Avatar upload error:', error);
-      toast({
-        title: "Upload Failed",
-        description: "Could not upload avatar. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Could not upload avatar. Please try again.");
     }
   };
 
