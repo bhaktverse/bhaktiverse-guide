@@ -90,7 +90,7 @@ const HeroSection = () => {
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl -z-10" />
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
               <span className="bg-gradient-temple bg-clip-text text-transparent">Bhakt</span>
               <span className="bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent">Verse</span>
             </h1>
