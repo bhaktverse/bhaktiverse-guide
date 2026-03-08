@@ -659,10 +659,7 @@ const Profile = () => {
                           try {
                             const { data, error } = await supabase.functions.invoke('delete-user-data');
                             if (error) throw error;
-                            toast({
-                              title: "Account Deleted",
-                              description: "Your account and all data have been permanently removed. 🙏",
-                            });
+                            toast.success("Your account and all data have been permanently removed. 🙏");
                             await supabase.auth.signOut();
                             navigate('/');
                           } catch (error) {
