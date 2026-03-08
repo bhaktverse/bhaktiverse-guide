@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -15,7 +16,7 @@ import { RASHIS, getRashiByDate, type RashiData } from "@/data/rashiData";
 import { 
   Sun, Moon, Star, Calendar, Clock, Sparkles, TrendingUp, 
   Heart, Briefcase, Activity, Shield, ChevronRight, Loader2,
-  Sunrise, Sunset, RefreshCw
+  Sunrise, Sunset, RefreshCw, Share2, Copy, Check
 } from "lucide-react";
 
 interface DailyPrediction {
@@ -39,8 +40,8 @@ const Horoscope = () => {
   const [selectedRashi, setSelectedRashi] = useState<RashiData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("daily");
   const [panchangData, setPanchangData] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     loadPanchang();
@@ -65,7 +66,6 @@ const Horoscope = () => {
         if (idx !== undefined && RASHIS[idx]) {
           setSelectedRashi(RASHIS[idx]);
           toast.success(`🌟 Auto-detected your rashi: ${RASHIS[idx].hindiName}`);
-          // Auto-trigger prediction
           setTimeout(() => generatePrediction(RASHIS[idx]), 500);
         }
       } else if (data?.dob) {
@@ -73,7 +73,6 @@ const Horoscope = () => {
         if (detected) {
           setSelectedRashi(detected);
           toast.success(`🌟 Detected rashi from DOB: ${detected.hindiName}`);
-          // Auto-trigger prediction
           setTimeout(() => generatePrediction(detected), 500);
         }
       }
@@ -91,9 +90,7 @@ const Horoscope = () => {
           longitude: 77.2090
         }
       });
-      if (data?.panchang) {
-        setPanchangData(data.panchang);
-      }
+      if (data?.panchang) setPanchangData(data.panchang);
     } catch (error) {
       console.error('Panchang load error:', error);
     }
@@ -115,7 +112,6 @@ const Horoscope = () => {
       });
 
       if (error) throw error;
-
       if (data?.prediction) {
         setPrediction(data.prediction);
         toast.success(`🌟 ${rashi.hindiName} राशिफल तैयार!`);
@@ -126,6 +122,22 @@ const Horoscope = () => {
       toast.error('राशिफल लोड करने में त्रुटि हुई। कृपया पुनः प्रयास करें।');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!selectedRashi || !prediction) return;
+    const shareText = `🌟 ${selectedRashi.hindiName} राशिफल - ${new Date().toLocaleDateString('hi-IN')}\n\n${prediction.overall}\n\n🎨 शुभ रंग: ${prediction.luckyColor}\n🔢 शुभ अंक: ${prediction.luckyNumber}\n🙏 मंत्र: ${prediction.mantraOfDay}\n\n— BhaktVerse`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${selectedRashi.hindiName} राशिफल`, text: shareText });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      toast.success("राशिफल कॉपी हो गया!");
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -146,8 +158,7 @@ const Horoscope = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-divine relative overflow-hidden">
-      {/* Animated Background */}
+    <div className="min-h-screen bg-gradient-divine relative overflow-hidden animate-fade-in">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000" />
@@ -204,7 +215,29 @@ const Horoscope = () => {
           </div>
         )}
 
-        {/* Rashi Selection Grid */}
+        {/* Horizontal Rashi Chip Bar — always visible */}
+        <div className="max-w-5xl mx-auto mb-8">
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex gap-2 pb-3">
+              {RASHIS.map((rashi) => (
+                <Button
+                  key={rashi.id}
+                  variant={selectedRashi?.id === rashi.id ? "default" : "outline"}
+                  size="sm"
+                  className={`flex-shrink-0 gap-1.5 ${selectedRashi?.id === rashi.id ? 'bg-gradient-temple text-primary-foreground shadow-divine' : ''}`}
+                  onClick={() => generatePrediction(rashi)}
+                  disabled={loading}
+                >
+                  <span className="text-lg">{rashi.symbol}</span>
+                  <span className="text-xs">{rashi.hindiName}</span>
+                </Button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </div>
+
+        {/* Full Rashi Grid — only when nothing selected */}
         {!selectedRashi && (
           <div className="max-w-5xl mx-auto">
             <h2 className="text-xl font-semibold text-center mb-6">अपनी राशि चुनें / Select Your Rashi</h2>
@@ -230,14 +263,14 @@ const Horoscope = () => {
         {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <div className="text-6xl animate-om-pulse mb-4">🕉️</div>
             <p className="text-muted-foreground animate-pulse">
               ग्रहों की स्थिति का विश्लेषण हो रहा है...
             </p>
           </div>
         )}
 
-        {/* Error/Retry State */}
+        {/* Error/Retry */}
         {selectedRashi && !prediction && !loading && (
           <div className="max-w-md mx-auto text-center py-16">
             <div className="text-6xl mb-4">⚠️</div>
@@ -267,24 +300,21 @@ const Horoscope = () => {
                       <h2 className="text-2xl font-bold">{selectedRashi.hindiName} राशिफल</h2>
                       <p className="text-muted-foreground">{selectedRashi.name} • {new Date().toLocaleDateString('hi-IN')}</p>
                       <div className="flex gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          {selectedRashi.element}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {selectedRashi.ruler} ({selectedRashi.rulerHindi})
-                        </Badge>
+                        <Badge variant="outline" className="text-xs">{selectedRashi.element}</Badge>
+                        <Badge variant="outline" className="text-xs">{selectedRashi.ruler} ({selectedRashi.rulerHindi})</Badge>
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={() => { setSelectedRashi(null); setPrediction(null); }}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Change Rashi
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleShare}>
+                      {copied ? <Check className="h-4 w-4 mr-1" /> : <Share2 className="h-4 w-4 mr-1" />}
+                      {copied ? 'Copied!' : 'Share'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
 
-            {/* Tabs for Different Views */}
             <Tabs defaultValue="daily" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="daily">सारांश / Overview</TabsTrigger>
@@ -293,7 +323,6 @@ const Horoscope = () => {
               </TabsList>
 
               <TabsContent value="daily" className="space-y-6">
-                {/* Overall Prediction */}
                 <Card className="card-sacred">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -306,7 +335,6 @@ const Horoscope = () => {
                   </CardContent>
                 </Card>
 
-                {/* Category Scores */}
                 <div className="grid md:grid-cols-2 gap-4">
                   {(['love', 'career', 'health', 'finance'] as const).map((cat) => {
                     const data = prediction[cat];
@@ -318,17 +346,14 @@ const Horoscope = () => {
                               {getCategoryIcon(cat)}
                               {cat === 'love' ? 'प्रेम' : cat === 'career' ? 'करियर' : cat === 'health' ? 'स्वास्थ्य' : 'धन'}
                             </span>
-                            <span className={`text-2xl font-bold ${getScoreColor(data.score)}`}>
-                              {data.score}%
-                            </span>
+                            <span className={`text-2xl font-bold ${getScoreColor(data.score)}`}>{data.score}%</span>
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <Progress value={data.score} className="h-2 mb-3" />
                           <p className="text-sm text-foreground mb-2">{data.prediction}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Shield className="h-3 w-3" />
-                            {data.tip}
+                            <Shield className="h-3 w-3" />{data.tip}
                           </p>
                         </CardContent>
                       </Card>
@@ -336,11 +361,8 @@ const Horoscope = () => {
                   })}
                 </div>
 
-                {/* Lucky Elements */}
                 <Card className="card-sacred">
-                  <CardHeader>
-                    <CardTitle>शुभ तत्व / Lucky Elements</CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle>शुभ तत्व / Lucky Elements</CardTitle></CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="text-center p-3 bg-muted/30 rounded-lg">
@@ -369,20 +391,16 @@ const Horoscope = () => {
               </TabsContent>
 
               <TabsContent value="detailed" className="space-y-6">
-                {/* Do's and Don'ts */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card className="card-sacred border-green-500/30">
                     <CardHeader>
-                      <CardTitle className="text-green-500 flex items-center gap-2">
-                        ✅ आज क्या करें
-                      </CardTitle>
+                      <CardTitle className="text-green-500 flex items-center gap-2">✅ आज क्या करें</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
                         {prediction.doToday.map((item, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm">
-                            <ChevronRight className="h-4 w-4 text-green-500 mt-0.5" />
-                            {item}
+                            <ChevronRight className="h-4 w-4 text-green-500 mt-0.5" />{item}
                           </li>
                         ))}
                       </ul>
@@ -391,16 +409,13 @@ const Horoscope = () => {
 
                   <Card className="card-sacred border-red-500/30">
                     <CardHeader>
-                      <CardTitle className="text-red-500 flex items-center gap-2">
-                        ❌ आज क्या न करें
-                      </CardTitle>
+                      <CardTitle className="text-red-500 flex items-center gap-2">❌ आज क्या न करें</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
                         {prediction.avoidToday.map((item, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm">
-                            <ChevronRight className="h-4 w-4 text-red-500 mt-0.5" />
-                            {item}
+                            <ChevronRight className="h-4 w-4 text-red-500 mt-0.5" />{item}
                           </li>
                         ))}
                       </ul>
@@ -408,7 +423,6 @@ const Horoscope = () => {
                   </Card>
                 </div>
 
-                {/* Cosmic Message */}
                 <Card className="card-sacred bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
@@ -423,13 +437,8 @@ const Horoscope = () => {
               </TabsContent>
 
               <TabsContent value="remedies" className="space-y-6">
-                {/* Daily Mantra */}
                 <Card className="card-sacred">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      🙏 आज का मंत्र
-                    </CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2">🙏 आज का मंत्र</CardTitle></CardHeader>
                   <CardContent>
                     <div className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg text-center">
                       <p className="text-xl font-semibold text-primary mb-2">{prediction.mantraOfDay}</p>
@@ -438,33 +447,21 @@ const Horoscope = () => {
                   </CardContent>
                 </Card>
 
-                {/* Rashi Deity */}
                 <Card className="card-sacred">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      ⛩️ आराध्य देवता
-                    </CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2">⛩️ आराध्य देवता</CardTitle></CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
                       <div className="text-4xl">🙏</div>
                       <div>
                         <h3 className="font-bold text-lg">{selectedRashi.deity}</h3>
-                        <p className="text-muted-foreground text-sm">
-                          {selectedRashi.luckyDay} को विशेष पूजा करें
-                        </p>
+                        <p className="text-muted-foreground text-sm">{selectedRashi.luckyDay} को विशेष पूजा करें</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Gemstone Recommendation */}
                 <Card className="card-sacred">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      💎 रत्न सुझाव
-                    </CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2">💎 रत्न सुझाव</CardTitle></CardHeader>
                   <CardContent>
                     <div className="p-4 bg-muted/30 rounded-lg">
                       <h3 className="font-bold text-lg mb-2">{selectedRashi.luckyGemstone}</h3>
