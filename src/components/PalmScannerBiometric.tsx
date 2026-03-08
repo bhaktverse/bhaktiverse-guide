@@ -123,10 +123,7 @@ const PalmScannerBiometric = ({
     setShowLanguageSelector(false);
     setImageSource('camera');
     
-    toast({
-      title: "✓ Palm Captured",
-      description: "Click 'Start Analysis' to get your divine reading",
-    });
+    toast.success("✓ Palm Captured — Click 'Start Analysis' to get your divine reading");
   };
 
   const handleCameraClose = () => {
