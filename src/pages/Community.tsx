@@ -27,7 +27,8 @@ import {
   Search,
   Image,
   Video,
-  Mic
+  Mic,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
