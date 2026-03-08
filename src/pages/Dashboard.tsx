@@ -92,6 +92,7 @@ const Dashboard = () => {
   const [animateIn, setAnimateIn] = useState(false);
   const [todayDevotion, setTodayDevotion] = useState<DailyDevotion | null>(null);
   const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
+  const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -222,6 +223,19 @@ const Dashboard = () => {
         .select('*')
         .eq('day_of_week', new Date().getDay())
         .maybeSingle();
+
+      // Load last palm reading date for re-scan reminder
+      const { data: lastPalm } = await supabase
+        .from('palm_reading_history')
+        .select('created_at')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastPalm?.created_at) {
+        setLastPalmReadingDate(lastPalm.created_at);
+      }
 
       if (devotion) {
         setTodayDevotion(devotion as DailyDevotion);
@@ -739,6 +753,36 @@ const Dashboard = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Palm Re-scan Reminder */}
+            {lastPalmReadingDate && (() => {
+              const daysSince = Math.floor((Date.now() - new Date(lastPalmReadingDate).getTime()) / (1000 * 60 * 60 * 24));
+              if (daysSince < 90) return null;
+              const monthsSince = Math.floor(daysSince / 30);
+              return (
+                <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-secondary/5 overflow-hidden">
+                  <div className="h-1 bg-gradient-temple" />
+                  <CardContent className="p-5 text-center">
+                    <div className="text-4xl mb-3">🤚</div>
+                    <h3 className="font-bold text-base mb-1">Time for a Re-scan!</h3>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Your last palm reading was <span className="font-semibold text-foreground">{monthsSince} months ago</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Compare how your spiritual growth is reflected in your palm lines
+                    </p>
+                    <Button
+                      size="sm"
+                      className="w-full gap-2"
+                      onClick={() => navigate('/palm-reading')}
+                    >
+                      <Hand className="h-4 w-4" />
+                      Re-scan & Compare
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             {/* Premium CTA */}
             <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 border-amber-500/30">
