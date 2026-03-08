@@ -45,6 +45,8 @@ const KundaliMatch = lazy(() => import("./pages/KundaliMatch"));
 const SharedPalmReading = lazy(() => import("./pages/SharedPalmReading"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 
 const queryClient = new QueryClient();
 
