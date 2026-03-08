@@ -188,8 +188,6 @@ const Temples = () => {
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'distance':
-          return (a.distance || 0) - (b.distance || 0);
         case 'rating':
           return b.rating - a.rating;
         case 'name':
