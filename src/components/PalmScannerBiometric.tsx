@@ -94,10 +94,7 @@ const PalmScannerBiometric = ({
       setShowLanguageSelector(false);
       setImageSource('upload');
       
-      toast({
-        title: "✓ Image Uploaded",
-        description: "Click 'Start Analysis' to get your palm reading",
-      });
+      toast.success("✓ Image Uploaded — Click 'Start Analysis' to get your palm reading");
     };
     reader.readAsDataURL(file);
     
