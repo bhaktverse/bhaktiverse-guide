@@ -97,6 +97,7 @@ const Profile = () => {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
     phone: '',
