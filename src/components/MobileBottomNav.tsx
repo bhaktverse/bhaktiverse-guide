@@ -28,7 +28,7 @@ import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
