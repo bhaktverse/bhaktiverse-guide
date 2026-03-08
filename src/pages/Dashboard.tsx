@@ -376,7 +376,7 @@ const Dashboard = () => {
                   <span className="bg-gradient-temple bg-clip-text text-transparent">{greeting.text}</span>
                   <span className="text-foreground">, {userName}!</span>
                 </h1>
-                <div className="flex items-center gap-3 mt-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                   <Badge variant="outline" className="bg-primary/10 border-primary/30">
                     <Crown className="h-3 w-3 mr-1" />
                     Level {stats.level}

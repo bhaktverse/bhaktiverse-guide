@@ -311,7 +311,7 @@ const Numerology = () => {
             </span>
             <Crown className="h-6 w-6 text-accent animate-pulse" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-4">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold bg-gradient-temple bg-clip-text text-transparent mb-4">
             {t.pageSubtitle}
             {t.pageSubtitleEn && <span className="block text-2xl md:text-4xl mt-2 opacity-90">{t.pageSubtitleEn}</span>}
           </h1>

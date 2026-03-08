@@ -90,7 +90,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-card border-t border-border/50 py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 md:gap-8">
             {/* Brand */}
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center space-x-3">

@@ -69,8 +69,8 @@ const HeroSection = () => {
       </div>
 
       {/* Gradient Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/4 left-1/4 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 md:w-80 h-40 sm:h-60 md:h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="max-w-5xl mx-auto">
@@ -86,11 +86,11 @@ const HeroSection = () => {
           {/* Main Hero Content */}
           <div className="animate-lotus-bloom">
             <div className="relative inline-block mb-8">
-              <div className="text-7xl md:text-8xl animate-om-pulse">🕉️</div>
+              <div className="text-5xl md:text-7xl lg:text-8xl animate-om-pulse">🕉️</div>
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl -z-10" />
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
               <span className="bg-gradient-temple bg-clip-text text-transparent">Bhakt</span>
               <span className="bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent">Verse</span>
             </h1>
