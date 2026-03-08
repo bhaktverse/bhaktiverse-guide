@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 interface DailyDevotion {
   id: string;
@@ -93,6 +94,7 @@ const Dashboard = () => {
   const [todayDevotion, setTodayDevotion] = useState<DailyDevotion | null>(null);
   const [sadhanaLoading, setSadhanaLoading] = useState<string | null>(null);
   const [lastPalmReadingDate, setLastPalmReadingDate] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -132,6 +134,12 @@ const Dashboard = () => {
         setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
         setUserAvatarUrl(profile.avatar_url || null);
         
+        // Check if onboarding needed (no favorite deities set)
+        const deities = profile.favorite_deities as any[];
+        if (!deities || deities.length === 0) {
+          setShowOnboarding(true);
+        }
+        
         if (profile.streak_data && typeof profile.streak_data === 'object') {
           const streakData = profile.streak_data as any;
           setStats(prevStats => ({
@@ -142,6 +150,7 @@ const Dashboard = () => {
         }
       } else {
         setUserName(user?.email?.split('@')[0] || 'Seeker');
+        setShowOnboarding(true);
       }
 
       // Load spiritual journey
@@ -281,6 +290,10 @@ const Dashboard = () => {
         <MobileBottomNav />
       </div>
     );
+  }
+
+  if (showOnboarding) {
+    return <OnboardingWizard onComplete={() => setShowOnboarding(false)} />;
   }
 
   const mantrasProgress = Math.min((stats.totalMantras / stats.dailyGoals.mantras) * 100, 100);

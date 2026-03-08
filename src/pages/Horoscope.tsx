@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { RASHIS, getRashiByDate, type RashiData } from "@/data/rashiData";
 import { 
@@ -34,6 +35,7 @@ interface DailyPrediction {
 
 const Horoscope = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedRashi, setSelectedRashi] = useState<RashiData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,39 @@ const Horoscope = () => {
 
   useEffect(() => {
     loadPanchang();
-  }, []);
+    autoDetectRashi();
+  }, [user]);
+
+  const autoDetectRashi = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('astro_profiles')
+        .select('rashi, dob')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data?.rashi) {
+        const zodiacMap: Record<string, number> = {
+          aries: 0, taurus: 1, gemini: 2, cancer: 3, leo: 4, virgo: 5,
+          libra: 6, scorpio: 7, sagittarius: 8, capricorn: 9, aquarius: 10, pisces: 11
+        };
+        const idx = zodiacMap[data.rashi];
+        if (idx !== undefined && RASHIS[idx]) {
+          setSelectedRashi(RASHIS[idx]);
+          toast.success(`🌟 Auto-detected your rashi: ${RASHIS[idx].hindiName}`);
+        }
+      } else if (data?.dob) {
+        const detected = getRashiByDate(new Date(data.dob));
+        if (detected) {
+          setSelectedRashi(detected);
+          toast.success(`🌟 Detected rashi from DOB: ${detected.hindiName}`);
+        }
+      }
+    } catch (err) {
+      console.error('Auto-detect rashi error:', err);
+    }
+  };
 
   const loadPanchang = async () => {
     try {
