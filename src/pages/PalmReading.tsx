@@ -218,6 +218,7 @@ const PalmReading = () => {
   const [showFullReading, setShowFullReading] = useState(false);
   const [isPremiumUser, setIsPremiumUser] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
+  const [lastSavedReadingId, setLastSavedReadingId] = useState<string | null>(null);
 
   // Auto-transition to report view when analysis completes
   useEffect(() => {
