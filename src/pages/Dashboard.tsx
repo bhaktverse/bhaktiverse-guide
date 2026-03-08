@@ -739,14 +739,14 @@ const Dashboard = () => {
                   <div className="text-xs sm:text-sm text-muted-foreground">Day Streak 🔥</div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-muted/30 rounded-lg">
-                    <div className="text-xl font-bold text-primary">{stats.level}</div>
-                    <div className="text-xs text-muted-foreground">Level</div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="text-center p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <div className="text-lg sm:text-xl font-bold text-primary">{stats.level}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">Level</div>
                   </div>
-                  <div className="text-center p-3 bg-muted/30 rounded-lg">
-                    <div className="text-xl font-bold text-secondary">{stats.xp}</div>
-                    <div className="text-xs text-muted-foreground">XP</div>
+                  <div className="text-center p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <div className="text-lg sm:text-xl font-bold text-secondary">{stats.xp}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">XP</div>
                   </div>
                 </div>
                 
