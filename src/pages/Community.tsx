@@ -156,7 +156,7 @@ const Community = () => {
 
   const loadTotalMembers = async () => {
     const { count } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('id', { count: 'exact', head: true });
     if (count !== null) setTotalMembers(count);
   };
