@@ -750,15 +750,32 @@ const Community = () => {
                         </Button>
                       </div>
                       {post.user_id === user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deletePost(post.id)}
-                          aria-label="Delete post"
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          Delete
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Delete post"
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently remove your post and all its comments. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deletePost(post.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                     
