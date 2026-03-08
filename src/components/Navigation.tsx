@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import GlobalSearch from '@/components/GlobalSearch';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +65,7 @@ const Navigation = () => {
               <>
                 {/* Desktop Navigation Links */}
                 <div className="hidden md:flex items-center space-x-1">
+                  <GlobalSearch />
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/dashboard" className={navLinkClass('/dashboard')}>
                       <Home className="h-4 w-4" />
