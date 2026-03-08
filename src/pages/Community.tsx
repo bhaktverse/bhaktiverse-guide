@@ -460,6 +460,25 @@ const Community = () => {
     }
   };
 
+  const updatePost = async () => {
+    if (!editingPost || !editContent.trim()) return;
+    const sanitizedContent = editContent.replace(/<[^>]*>/g, '').trim();
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ content: sanitizedContent, tags: editTags, updated_at: new Date().toISOString() })
+        .eq('id', editingPost.id)
+        .eq('user_id', user?.id);
+      if (error) throw error;
+      setPosts(prev => prev.map(p => p.id === editingPost.id ? { ...p, content: sanitizedContent, tags: editTags } : p));
+      setEditingPost(null);
+      toast.success("Post updated!");
+    } catch (error) {
+      console.error('Error updating post:', error);
+      toast.error("Could not update post.");
+    }
+  };
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
