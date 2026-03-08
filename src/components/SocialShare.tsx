@@ -50,6 +50,7 @@ const SocialShare = ({ title, text, palmType, score, readingId }: SocialSharePro
   };
 
   const handleNativeShare = async () => {
+    await ensureMarkedShared();
     if (navigator.share) {
       try {
         await navigator.share({
