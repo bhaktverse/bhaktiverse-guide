@@ -811,6 +811,7 @@ const Community = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                       )}
                     </div>
                     
