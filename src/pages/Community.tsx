@@ -79,6 +79,10 @@ const Community = () => {
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
   const [totalBlessings, setTotalBlessings] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const [editingPost, setEditingPost] = useState<CommunityPost | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const POST_MAX_LENGTH = 2000;
   const PAGE_SIZE = 20;
 
   // Centralized helper for untyped post_likes table
