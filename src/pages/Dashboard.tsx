@@ -39,6 +39,16 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
+interface DailyDevotion {
+  id: string;
+  deity: string;
+  color: string | null;
+  mantra: string | null;
+  planet: string;
+  day_of_week: number;
+  benefits: string | null;
+}
+
 interface DashboardStats {
   currentStreak: number;
   longestStreak: number;
