@@ -61,6 +61,8 @@ const Community = () => {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [pendingImages, setPendingImages] = useState<{ file: File; preview: string }[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [newPost, setNewPost] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
