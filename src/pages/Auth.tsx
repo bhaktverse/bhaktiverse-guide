@@ -263,11 +263,41 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-temple hover:opacity-90 transition-all duration-300 shadow-glow"
-                    disabled={loading}
+                    disabled={loading || googleLoading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Enter Sacred Space
                   </Button>
+
+                  <button
+                    type="button"
+                    className="w-full text-xs text-muted-foreground hover:text-primary underline transition-colors text-center"
+                    onClick={async () => {
+                      if (!formData.email) {
+                        setError('Please enter your email address first');
+                        return;
+                      }
+                      setLoading(true);
+                      setError(null);
+                      try {
+                        const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        if (error) throw error;
+                        toast({
+                          title: "Password Reset Email Sent 📧",
+                          description: "Check your inbox for the reset link.",
+                        });
+                      } catch (err: any) {
+                        setError(err.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    Forgot your password?
+                  </button>
 
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/50" /></div>
