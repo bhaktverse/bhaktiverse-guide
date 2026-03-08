@@ -574,7 +574,7 @@ const Dashboard = () => {
                       onClick={() => navigate(action.path)}
                     >
                       <div className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform">{action.emoji}</div>
-                      <span className="text-xs font-semibold text-foreground">{action.label}</span>
+                      <span className="text-[10px] sm:text-xs font-semibold text-foreground truncate w-full text-center">{action.label}</span>
                       <span className="text-[10px] text-muted-foreground hidden md:block">{action.description}</span>
                     </Button>
                   ))}
