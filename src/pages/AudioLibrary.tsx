@@ -14,6 +14,7 @@ import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import PlaylistManager from '@/components/PlaylistManager';
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
+import { useFavorites } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Play, 
