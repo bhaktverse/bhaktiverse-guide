@@ -1,109 +1,128 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# BhaktVerse Platform Audit — Round 4 (Senior Expert Review)
 
-## Current Critical Issues
+All Round 1-3 items have been verified as implemented. This audit focuses on remaining gaps found through deep code inspection.
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
+---
 
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
+## Critical: Database Triggers Still Not Persisting
 
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+The `<db-triggers>` context shows **"There are no triggers in the database"** — again. Despite four separate migration attempts to create `trg_update_likes_count`, `trg_update_comments_count`, `trg_notify_on_comment`, and `trg_notify_on_reply`, none exist. This means:
+- **Likes count** never updates via trigger (only optimistic UI)
+- **Comments count** never updates (always stale)
+- **Notifications for comments/replies** never fire
+
+**Root Cause**: The migration SQL creates triggers referencing functions (`update_likes_count`, `update_comments_count`, `notify_on_comment`, `notify_on_reply`) that exist as DB functions. The triggers should work. The issue is likely that migrations keep getting rolled back or the CREATE TRIGGER statements fail silently.
+
+**Fix**: Combine all trigger creation into a single robust migration with explicit `DO $$ BEGIN ... EXCEPTION WHEN ... END $$` guards, and verify with `supabase--read_query` after deployment.
+
+---
+
+## Issue 1: `post_likes` Queried with `as any` Type Cast
+
+**File**: `src/pages/Community.tsx` lines 199-200, 298-307
+**Problem**: `supabase.from('post_likes' as any)` — the `post_likes` table is not reflected in `src/integrations/supabase/types.ts`. While this works at runtime, it bypasses TypeScript safety and will show linting warnings. The types file is auto-generated from the Supabase schema, so it should already include `post_likes` if the table exists.
+**Fix**: The types file needs to be regenerated. Since we can't edit it directly, we need to trigger a regeneration by running a no-op migration or asking the user to refresh types. Alternatively, leave `as any` as a pragmatic workaround (no runtime impact).
+
+---
+
+## Issue 2: `delete-user-data` Edge Function Includes `horoscope_cache` in Delete List
+
+**File**: `supabase/functions/delete-user-data/index.ts` line 58
+**Problem**: `horoscope_cache` is in the table array but skipped with a `continue`. This is confusing dead code. Also, `user_roles` is missing from the delete list — when a user deletes their account, their role assignments persist as orphaned rows.
+**Fix**: Remove `horoscope_cache` from the array. Add `user_roles` to the list before `profiles`.
+
+---
+
+## Issue 3: Dashboard Makes 10+ Sequential DB Queries
+
+**File**: `src/pages/Dashboard.tsx` lines 125-358
+**Problem**: `loadDashboardData()` makes ~12 sequential `await` calls: profile, journey, activities, events, shorts, devotion, palm history, API usage, chat sessions (with nested saint lookups), scripture progress (with nested scripture lookup), and quotes. This creates a waterfall of network requests, making the dashboard slow on mobile/poor connections.
+**Fix**: Use `Promise.all()` to parallelize independent queries. Group into 3 parallel batches:
+1. `profile + journey + activities + API usage` (user-specific, fast)
+2. `events + shorts + devotion + quotes` (public data, cacheable)
+3. `palm history + chat sessions + scripture progress` (user-specific, resumption data)
+
+**UI**: No change — just faster load. The existing `DashboardSkeleton` already handles the loading state.
+
+---
+
+## Issue 4: Community "Active This Week" Is Actually "Active in Current Page"
+
+**File**: `src/pages/Community.tsx` line 189
+**Problem**: `setActiveDevotees(uniqueUserIds.length)` counts unique authors in the currently loaded page (max 20 posts). The label says "Active This Week" but it's really "Authors on this page." After paginating, it could show 3 one moment and 7 the next.
+**Fix**: Query `community_posts` with a `created_at >= 7 days ago` filter and count distinct `user_id`. Run as a separate lightweight query:
+```ts
+const { data } = await supabase.rpc('count_active_devotees_this_week');
+```
+Or simpler: query posts from last 7 days with `select('user_id')` and count unique IDs.
+
+---
+
+## Issue 5: No Image Upload in Community Post Creation
+
+**File**: `src/pages/Community.tsx` lines 471-511
+**Problem**: The create post dialog only has a text area and tag selector. There's no way to attach images despite `media_urls` JSONB column existing and the media gallery renderer being implemented. The `community-media` storage bucket exists and is public.
+**Fix**: Add an image upload button to the create post dialog. On file select, upload to `community-media/posts/{user_id}/{timestamp}.{ext}`, get public URL, store in a local array, and include in the insert as `media_urls`. Show image previews below the textarea before posting.
+
+**UI**: Add a row of action icons (📷 Image, 🎥 Video, 🎙️ Audio) below the textarea. On click, open file picker. Show thumbnails of selected images with an X to remove.
+
+---
+
+## Issue 6: Community Comment Count Display Doesn't Refresh After Adding Comment
+
+**File**: `src/pages/Community.tsx` line 624-627 and `src/components/CommentThread.tsx`
+**Problem**: Even if the DB trigger works, the `comments_count` in the post card footer won't update because the Community page only fetches posts once and doesn't re-fetch after a comment is added. The realtime subscription listens for `UPDATE` on `community_posts` (line 121-131), which should catch the trigger-updated count — but only if the trigger actually fires.
+**Fix**: Once triggers are confirmed working, the realtime subscription should handle this. As a belt-and-suspenders approach, have `CommentThread` call `onCountChange?.(newCount)` after adding a comment, and update the local post state.
+
+---
+
+## Issue 7: Horoscope & Numerology Pages Use Different Toast Libraries
+
+**Files**: `src/pages/Horoscope.tsx` uses `import { toast } from "sonner"`, while `src/pages/Community.tsx` uses `import { useToast } from '@/hooks/use-toast'`.
+**Problem**: Inconsistent toast usage across the app. Both `sonner` and `shadcn/ui toast` are installed. Some pages use one, some the other. This isn't a bug but creates inconsistent UX (different toast styles/positions).
+**Fix**: Standardize on one. Since `sonner` is simpler and already widely used, migrate remaining `useToast` calls to `sonner`. Or keep both — low priority.
+
+---
+
+## Issue 8: Missing SEO Meta Tags on Key Pages
+
+**Problem**: The app has `robots.txt` allowing all crawlers but no dynamic `<title>` or `<meta>` tags per page. Every page shows the same title from `index.html`. For a public-facing spiritual platform, pages like Saints, Temples, Scriptures, and the landing page should have proper SEO.
+**Fix**: Add `document.title` updates in `useEffect` for each page. For example:
+- `/saints` → "Saints & Spiritual Leaders | BhaktVerse"
+- `/temples` → "Sacred Temples of India | BhaktVerse"
+- `/scriptures` → "Holy Scriptures & Books | BhaktVerse"
+
+---
+
+## Issue 9: MobileBottomNav Rendered Twice on Some Pages
+
+**Files**: `src/components/Navigation.tsx` line 173 renders `<MobileBottomNav />` when user is logged in. But many pages also render `<MobileBottomNav />` directly (Dashboard line 933, Community line 759, Profile line 725, SaintChat line 389, etc.).
+**Problem**: Two `MobileBottomNav` components render simultaneously for logged-in users, causing double bottom nav or wasted DOM nodes (one hidden, one visible).
+**Fix**: Remove `MobileBottomNav` from `Navigation.tsx` and keep it only in individual pages, OR remove it from all pages and keep only in `Navigation.tsx`. The latter is cleaner — single source of truth.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+### Phase 1: Critical Database Fix
+| # | Change | Files |
+|---|--------|-------|
+| 1 | Create robust migration with error-guarded trigger creation, then verify with `read_query` | Migration SQL |
+| 2 | Remove `horoscope_cache` from delete list, add `user_roles` | `delete-user-data/index.ts` |
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
+### Phase 2: Performance & Data Integrity
+| # | Change | Files |
+|---|--------|-------|
+| 3 | Parallelize Dashboard DB queries with `Promise.all()` | `Dashboard.tsx` |
+| 4 | Fix "Active This Week" to query last 7 days | `Community.tsx` |
+| 5 | Add image upload to Community post creation | `Community.tsx` |
 
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
-
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
-
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
-
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
-
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
-
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
-
----
-
-## Technical Details
-
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
-
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
-
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
-```
-
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
-
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
-
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
-
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+### Phase 3: Polish
+| # | Change | Files |
+|---|--------|-------|
+| 6 | Remove duplicate `MobileBottomNav` from `Navigation.tsx` | `Navigation.tsx` |
+| 7 | Add `document.title` for SEO on all public pages | Multiple page files |
+| 8 | Remove `as any` casts for `post_likes` if types regenerate | `Community.tsx` |
 
