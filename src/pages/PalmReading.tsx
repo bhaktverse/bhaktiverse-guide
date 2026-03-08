@@ -504,7 +504,7 @@ const PalmReading = () => {
       if (data?.horoscope) { setHoroscope(data.horoscope); toast.success("🌟 Daily Horoscope Ready — Your personalized predictions for today"); }
     } catch (error) {
       console.error('Horoscope error:', error);
-      toast({ title: "Failed to generate horoscope", description: error instanceof Error ? error.message : "Please try again", variant: "destructive" });
+      toast.error(error instanceof Error ? error.message : "Please try again");
     } finally { setLoadingHoroscope(false); }
   };
 
