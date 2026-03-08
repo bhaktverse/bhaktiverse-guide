@@ -43,7 +43,7 @@ const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
           text: shareText,
           url: shareUrl,
         });
-        toast({ title: "Shared successfully!" });
+        toast.success("Shared successfully!");
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Share error:', error);
