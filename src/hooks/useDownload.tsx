@@ -87,11 +87,7 @@ export const useDownload = () => {
       return true;
     } catch (error) {
       console.error('Download error:', error);
-      toast({
-        title: "Download Failed",
-        description: "Unable to download the file. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Unable to download the file. Please try again.");
       return false;
     } finally {
       setDownloadState({
