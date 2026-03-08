@@ -30,6 +30,7 @@ interface Saint {
 const Saints = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  usePageTitle('Saints & Spiritual Leaders');
   const [saints, setSaints] = useState<Saint[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
