@@ -133,6 +133,12 @@ const Dashboard = () => {
         setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
         setUserAvatarUrl(profile.avatar_url || null);
         
+        // Check if onboarding needed (no favorite deities set)
+        const deities = profile.favorite_deities as any[];
+        if (!deities || deities.length === 0) {
+          setShowOnboarding(true);
+        }
+        
         if (profile.streak_data && typeof profile.streak_data === 'object') {
           const streakData = profile.streak_data as any;
           setStats(prevStats => ({
@@ -143,6 +149,7 @@ const Dashboard = () => {
         }
       } else {
         setUserName(user?.email?.split('@')[0] || 'Seeker');
+        setShowOnboarding(true);
       }
 
       // Load spiritual journey
