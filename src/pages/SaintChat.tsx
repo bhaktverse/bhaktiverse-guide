@@ -105,7 +105,7 @@ const SaintChat = () => {
     } catch (error) {
       console.error('Error loading saint:', error);
       setLoadError(true);
-      toast({ title: "Error", description: "Failed to load saint info", variant: "destructive" });
+      toast.error("Failed to load saint info");
     }
   };
 
