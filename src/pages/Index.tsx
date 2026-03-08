@@ -118,10 +118,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4 text-primary">Spiritual Guidance</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/saints" className="hover:text-primary transition-colors flex items-center gap-2">🧘‍♂️ Saint Conversations</a></li>
-                <li><a href="/scriptures" className="hover:text-primary transition-colors flex items-center gap-2">📚 Scripture Study</a></li>
-                <li><a href="/palm-reading" className="hover:text-primary transition-colors flex items-center gap-2">🤚 Palm Reading</a></li>
-                <li><a href="/numerology" className="hover:text-primary transition-colors flex items-center gap-2">🔮 Numerology</a></li>
+                <li><Link to="/saints" className="hover:text-primary transition-colors flex items-center gap-2">🧘‍♂️ Saint Conversations</Link></li>
+                <li><Link to="/scriptures" className="hover:text-primary transition-colors flex items-center gap-2">📚 Scripture Study</Link></li>
+                <li><Link to="/palm-reading" className="hover:text-primary transition-colors flex items-center gap-2">🤚 Palm Reading</Link></li>
+                <li><Link to="/numerology" className="hover:text-primary transition-colors flex items-center gap-2">🔮 Numerology</Link></li>
               </ul>
             </div>
             
