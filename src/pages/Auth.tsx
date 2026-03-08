@@ -15,6 +15,7 @@ const Auth = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
