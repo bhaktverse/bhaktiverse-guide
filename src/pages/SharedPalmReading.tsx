@@ -7,7 +7,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Loader2, Hand, Star, Copy, Check, Share2 } from 'lucide-react';
 
 const SharedPalmReading = () => {
