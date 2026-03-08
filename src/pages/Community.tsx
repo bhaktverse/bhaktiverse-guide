@@ -145,6 +145,19 @@ const Community = () => {
     if (count !== null) setTotalMembers(count);
   };
 
+  const loadActiveThisWeek = async () => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const { data } = await supabase
+      .from('community_posts')
+      .select('user_id')
+      .gte('created_at', weekAgo.toISOString());
+    if (data) {
+      const uniqueIds = new Set(data.map(d => d.user_id));
+      setActiveDevotees(uniqueIds.size);
+    }
+  };
+
   const loadPosts = async (append = false) => {
     try {
       if (!append) setLoading(true);
