@@ -15,6 +15,7 @@ import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import CommentThread from '@/components/CommentThread';
+import ScrollToTop from '@/components/ScrollToTop';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Heart, 
@@ -1002,6 +1003,7 @@ const Community = () => {
         </DialogContent>
       </Dialog>
 
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import ScrollToTop from "@/components/ScrollToTop";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from '@/hooks/useFavorites';
@@ -79,7 +80,7 @@ const Temples = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTradition, setSelectedTradition] = useState("all");
-  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'name'>('distance');
+  const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
   const [showMap, setShowMap] = useState(false);
   const { isFavorited, toggleFavorite } = useFavorites('temple');
 
@@ -188,8 +189,6 @@ const Temples = () => {
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'distance':
-          return (a.distance || 0) - (b.distance || 0);
         case 'rating':
           return b.rating - a.rating;
         case 'name':
@@ -257,12 +256,11 @@ const Temples = () => {
                 </SelectContent>
               </Select>
               
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'distance' | 'rating' | 'name')}>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'rating' | 'name')}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="distance">Sort by Distance</SelectItem>
                   <SelectItem value="rating">Sort by Rating</SelectItem>
                   <SelectItem value="name">Sort by Name</SelectItem>
                 </SelectContent>
@@ -392,21 +390,7 @@ const Temples = () => {
                   
                   <Button variant="ghost" size="sm" onClick={(e) => {
                     e.stopPropagation();
-                    // Handle share
-                  }}>
-                    <Share className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button variant="ghost" size="sm" onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle photo gallery
-                  }}>
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button variant="ghost" size="sm" onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle event calendar
+                    navigate(`/temples/${temple.id}`);
                   }}>
                     <Calendar className="h-4 w-4" />
                   </Button>
@@ -429,6 +413,7 @@ const Temples = () => {
         )}
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

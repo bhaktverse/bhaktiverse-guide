@@ -11,7 +11,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 50000) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { palmAnalysis1, palmAnalysis2, language } = await req.json();
 
     if (!palmAnalysis1 || !palmAnalysis2) {
@@ -300,7 +304,7 @@ Provide comprehensive compatibility analysis with deep insights, honest assessme
   } catch (error) {
     console.error("Compatibility error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Service temporarily unavailable" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

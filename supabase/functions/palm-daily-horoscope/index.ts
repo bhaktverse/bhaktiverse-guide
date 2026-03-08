@@ -33,7 +33,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 50000) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { palmAnalysis, language } = await req.json();
 
     if (!palmAnalysis) {
@@ -163,7 +167,7 @@ Generate JSON with these fields:
 
   } catch (error) {
     console.error("Horoscope error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+    return new Response(JSON.stringify({ error: "Service temporarily unavailable" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

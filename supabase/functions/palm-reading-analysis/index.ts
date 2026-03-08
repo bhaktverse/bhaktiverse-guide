@@ -63,7 +63,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 5000000) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const requestBody = await req.json();
     const { imageData, language = 'en', userName, userDob, userTimeOfBirth } = requestBody;
 

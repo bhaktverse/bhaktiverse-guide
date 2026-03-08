@@ -11,7 +11,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 50000) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const { name, dob, language = 'hi' } = await req.json();
     
     if (!name || !dob) {
@@ -249,7 +253,7 @@ Provide detailed ${isHindi ? 'Hindi' : 'English'} devotional analysis. Return ON
 
   } catch (error) {
     console.error('Error in numerology-analysis:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -7,7 +7,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
@@ -118,30 +118,30 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4 text-primary">Spiritual Guidance</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/saints" className="hover:text-primary transition-colors flex items-center gap-2">🧘‍♂️ Saint Conversations</a></li>
-                <li><a href="/scriptures" className="hover:text-primary transition-colors flex items-center gap-2">📚 Scripture Study</a></li>
-                <li><a href="/palm-reading" className="hover:text-primary transition-colors flex items-center gap-2">🤚 Palm Reading</a></li>
-                <li><a href="/numerology" className="hover:text-primary transition-colors flex items-center gap-2">🔮 Numerology</a></li>
+                <li><Link to="/saints" className="hover:text-primary transition-colors flex items-center gap-2">🧘‍♂️ Saint Conversations</Link></li>
+                <li><Link to="/scriptures" className="hover:text-primary transition-colors flex items-center gap-2">📚 Scripture Study</Link></li>
+                <li><Link to="/palm-reading" className="hover:text-primary transition-colors flex items-center gap-2">🤚 Palm Reading</Link></li>
+                <li><Link to="/numerology" className="hover:text-primary transition-colors flex items-center gap-2">🔮 Numerology</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4 text-primary">Community</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/community" className="hover:text-primary transition-colors flex items-center gap-2">👥 Discussion Forums</a></li>
-                <li><a href="/temples" className="hover:text-primary transition-colors flex items-center gap-2">🏛️ Temple Connect</a></li>
-                <li><a href="/audio-library" className="hover:text-primary transition-colors flex items-center gap-2">🎵 Audio Library</a></li>
-                <li><a href="/spiritual-calendar" className="hover:text-primary transition-colors flex items-center gap-2">📅 Spiritual Calendar</a></li>
+                <li><Link to="/community" className="hover:text-primary transition-colors flex items-center gap-2">👥 Discussion Forums</Link></li>
+                <li><Link to="/temples" className="hover:text-primary transition-colors flex items-center gap-2">🏛️ Temple Connect</Link></li>
+                <li><Link to="/audio-library" className="hover:text-primary transition-colors flex items-center gap-2">🎵 Audio Library</Link></li>
+                <li><Link to="/spiritual-calendar" className="hover:text-primary transition-colors flex items-center gap-2">📅 Spiritual Calendar</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4 text-primary">Resources</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/premium" className="hover:text-primary transition-colors flex items-center gap-2">👑 Premium Plans</a></li>
-                <li><a href="/horoscope" className="hover:text-primary transition-colors flex items-center gap-2">🌟 Daily Horoscope</a></li>
-                <li><a href="/kundali-match" className="hover:text-primary transition-colors flex items-center gap-2">💑 Kundali Match</a></li>
-                <li><a href="/daily-devotion" className="hover:text-primary transition-colors flex items-center gap-2">🙏 Daily Devotion</a></li>
+                <li><Link to="/premium" className="hover:text-primary transition-colors flex items-center gap-2">👑 Premium Plans</Link></li>
+                <li><Link to="/horoscope" className="hover:text-primary transition-colors flex items-center gap-2">🌟 Daily Horoscope</Link></li>
+                <li><Link to="/kundali-match" className="hover:text-primary transition-colors flex items-center gap-2">💑 Kundali Match</Link></li>
+                <li><Link to="/daily-devotion" className="hover:text-primary transition-colors flex items-center gap-2">🙏 Daily Devotion</Link></li>
               </ul>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import ScrollToTop from '@/components/ScrollToTop';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Saint {
@@ -194,6 +195,7 @@ const Saints = () => {
         )}
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

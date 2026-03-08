@@ -13,7 +13,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 50000) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const { text, voice = 'alloy', language = 'hi', textType = 'general' } = await req.json();
 
     if (!text) {
@@ -70,7 +74,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in spiritual-audio-tts:', error);
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: 'Service temporarily unavailable' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

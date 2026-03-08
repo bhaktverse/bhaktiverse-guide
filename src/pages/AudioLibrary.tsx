@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import ScrollToTop from '@/components/ScrollToTop';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import PlaylistManager from '@/components/PlaylistManager';
@@ -398,6 +399,7 @@ const AudioLibrary = () => {
         </div>
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );
