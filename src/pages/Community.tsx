@@ -76,7 +76,12 @@ const Community = () => {
   const [totalMembers, setTotalMembers] = useState(0);
   const [activeDevotees, setActiveDevotees] = useState(0);
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
+  const [totalBlessings, setTotalBlessings] = useState(0);
+  const [totalComments, setTotalComments] = useState(0);
   const PAGE_SIZE = 20;
+
+  // Centralized helper for untyped post_likes table
+  const postLikesTable = () => supabase.from('post_likes' as any) as any;
 
   const availableTags = [
     'devotion', 'experience', 'learning', 'ritual', 'festival', 'pilgrimage',
