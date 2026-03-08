@@ -694,7 +694,7 @@ const Dashboard = () => {
                       </div>
                       <span className="truncate">Meditation</span>
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
+                    <span className="text-xs sm:text-sm font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0">
                       {stats.meditationMinutes}/{stats.dailyGoals.meditation_minutes} min
                     </span>
                   </div>
