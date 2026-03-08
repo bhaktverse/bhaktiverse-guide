@@ -366,13 +366,13 @@ const Dashboard = () => {
                   {userName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <Clock className="h-4 w-4" />
-                  {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+               <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-1">
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                 </div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
-                  <span className="text-2xl sm:text-3xl mr-2">{greeting.icon}</span>
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
+                  <span className="text-xl sm:text-3xl mr-1 sm:mr-2">{greeting.icon}</span>
                   <span className="bg-gradient-temple bg-clip-text text-transparent">{greeting.text}</span>
                   <span className="text-foreground">, {userName}!</span>
                 </h1>
