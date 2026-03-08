@@ -25,10 +25,15 @@ serve(async (req) => {
       );
     }
 
+    // Input validation: cap palmAnalysis size to prevent prompt injection
+    const safeAnalysis1 = JSON.stringify(palmAnalysis1).slice(0, 5000);
+    const safeAnalysis2 = JSON.stringify(palmAnalysis2).slice(0, 5000);
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "OpenAI API key not configured" }),
+        JSON.stringify({ error: "Service temporarily unavailable" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
