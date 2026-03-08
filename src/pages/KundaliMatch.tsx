@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Navigation from "@/components/Navigation";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -41,6 +42,7 @@ interface HistoryEntry {
 }
 
 const KundaliMatch = () => {
+  usePageTitle('Kundali Matching');
   const { session } = useAuth();
   const navigate = useNavigate();
   

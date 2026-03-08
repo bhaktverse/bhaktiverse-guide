@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import Navigation from '@/components/Navigation';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -10,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Hand, Star, Copy, Check, Share2 } from 'lucide-react';
 
 const SharedPalmReading = () => {
+  usePageTitle('Palm Reading Result');
   const { readingId } = useParams<{ readingId: string }>();
   const [reading, setReading] = useState<any>(null);
   const [loading, setLoading] = useState(true);

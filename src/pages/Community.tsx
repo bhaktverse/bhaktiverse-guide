@@ -630,6 +630,9 @@ const Community = () => {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
                     />
+                    {searchQuery && (
+                      <p className="text-xs text-muted-foreground mt-1 pl-1">Searching within loaded posts</p>
+                    )}
                   </div>
                   <Select value={filterTag || 'all'} onValueChange={(v) => setFilterTag(v === 'all' ? '' : v)}>
                     <SelectTrigger className="w-full md:w-[160px]">

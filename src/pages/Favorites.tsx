@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,7 @@ interface FavoriteItem {
 }
 
 const Favorites = () => {
+  usePageTitle('My Favorites');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { favorites, loading: favsLoading, toggleFavorite } = useFavorites();

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const ScriptureReader = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { scriptureId } = useParams();
+  usePageTitle('Scripture Reader');
   const [scripture, setScripture] = useState<Scripture | null>(null);
   const [currentChapter, setCurrentChapter] = useState(1);
   const [chapters, setChapters] = useState<Chapter[]>([]);
