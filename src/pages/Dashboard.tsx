@@ -360,7 +360,7 @@ const Dashboard = () => {
           
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 md:h-20 md:w-20 shadow-divine border-4 border-primary/20 ring-4 ring-primary/10">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 shadow-divine border-2 sm:border-4 border-primary/20 ring-2 sm:ring-4 ring-primary/10 flex-shrink-0">
                 <AvatarImage src={userAvatarUrl || undefined} />
                 <AvatarFallback className="bg-gradient-temple text-white text-2xl font-bold">
                   {userName.charAt(0).toUpperCase()}
