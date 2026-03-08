@@ -32,8 +32,10 @@ const HeroSection = () => {
         scriptures: scripturesRes.count || 0,
         audio: audioRes.count || 0,
       });
+      setStatsLoaded(true);
     } catch (e) {
       console.error('Stats load error:', e);
+      setStatsLoaded(true);
     }
   };
 
