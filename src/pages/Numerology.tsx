@@ -933,6 +933,7 @@ const Numerology = () => {
         </div>
       </main>
 
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

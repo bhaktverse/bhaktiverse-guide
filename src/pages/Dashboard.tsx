@@ -837,6 +837,7 @@ const Dashboard = () => {
         </div> {/* End animated wrapper */}
       </div>
 
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

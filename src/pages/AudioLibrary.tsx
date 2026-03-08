@@ -399,6 +399,7 @@ const AudioLibrary = () => {
         </div>
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

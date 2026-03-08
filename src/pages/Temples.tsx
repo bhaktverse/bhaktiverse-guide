@@ -413,6 +413,7 @@ const Temples = () => {
         )}
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

@@ -418,6 +418,7 @@ const Scriptures = () => {
         )}
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

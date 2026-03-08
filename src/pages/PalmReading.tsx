@@ -709,6 +709,7 @@ const PalmReading = () => {
         </div>
       </div>
 
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

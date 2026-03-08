@@ -1003,6 +1003,7 @@ const Community = () => {
         </DialogContent>
       </Dialog>
 
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );

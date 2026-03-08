@@ -195,6 +195,7 @@ const Saints = () => {
         )}
       </div>
       
+      <ScrollToTop />
       <MobileBottomNav />
     </div>
   );
