@@ -8,17 +8,31 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { Share2, Copy, Check, MessageCircle, Twitter, Facebook, Linkedin, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SocialShareProps {
   title: string;
   text: string;
   palmType?: string;
   score?: number;
+  readingId?: string | null;
 }
 
-const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
+const SocialShare = ({ title, text, palmType, score, readingId }: SocialShareProps) => {
   
   const [copied, setCopied] = useState(false);
+  const [markedShared, setMarkedShared] = useState(false);
+
+  // Mark reading as shared in DB (once per session)
+  const ensureMarkedShared = async () => {
+    if (!readingId || markedShared) return;
+    try {
+      await supabase.from('palm_reading_history' as never).update({ is_shared: true } as never).eq('id', readingId);
+      setMarkedShared(true);
+    } catch (e) {
+      console.error('Failed to mark reading as shared:', e);
+    }
+  };
 
   const shareUrl = window.location.href;
   
