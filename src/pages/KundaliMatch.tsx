@@ -168,13 +168,20 @@ const KundaliMatch = () => {
         toast.info("बेसिक गुण मिलान गणना दिखाई जा रही है।");
         saveToHistory(gunMilan, null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Kundali match error:', error);
-      const gunMilan = calculateGunMilan(partner1.rashi!, partner2.rashi!);
-      setResult(gunMilan);
-      setUsedFallback(true);
-      toast.info("⚠️ AI अनुपलब्ध — बेसिक गुण मिलान गणना दिखाई जा रही है।");
-      saveToHistory(gunMilan, null);
+      const statusCode = error?.status || error?.code;
+      if (statusCode === 429 || error?.message?.includes('429')) {
+        toast.error("Daily limit reached! Upgrade to Premium for unlimited access.", {
+          action: { label: 'Upgrade', onClick: () => navigate('/premium') }
+        });
+      } else {
+        const gunMilan = calculateGunMilan(partner1.rashi!, partner2.rashi!);
+        setResult(gunMilan);
+        setUsedFallback(true);
+        toast.info("⚠️ AI अनुपलब्ध — बेसिक गुण मिलान गणना दिखाई जा रही है।");
+        saveToHistory(gunMilan, null);
+      }
     } finally {
       setLoading(false);
     }

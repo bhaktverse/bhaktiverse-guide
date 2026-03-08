@@ -235,7 +235,14 @@ const Numerology = () => {
       }
     } catch (error: any) {
       console.error('Numerology analysis error:', error);
-      toast.error(t.analysisError);
+      const statusCode = error?.status || error?.code;
+      if (statusCode === 429 || error?.message?.includes('429')) {
+        toast.error("Daily limit reached! Upgrade to Premium for unlimited access.", {
+          action: { label: 'Upgrade', onClick: () => navigate('/premium') }
+        });
+      } else {
+        toast.error(t.analysisError);
+      }
     } finally {
       setLoading(false);
     }
