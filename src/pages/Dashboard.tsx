@@ -144,71 +144,89 @@ const Dashboard = () => {
       ]);
 
       // Process profile
-      const profile = profileRes.data;
-      if (profile) {
-        setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
-        setUserAvatarUrl(profile.avatar_url || null);
-        const deities = profile.favorite_deities as any[];
-        if (!deities || deities.length === 0) setShowOnboarding(true);
-        if (profile.streak_data && typeof profile.streak_data === 'object') {
-          const streakData = profile.streak_data as any;
-          setStats(prev => ({ ...prev, currentStreak: streakData.current_streak || 0, longestStreak: streakData.longest_streak || 0 }));
+      try {
+        const profile = profileRes.data;
+        if (profile) {
+          setUserName(profile.name || user?.email?.split('@')[0] || 'Seeker');
+          setUserAvatarUrl(profile.avatar_url || null);
+          const deities = profile.favorite_deities as any[];
+          if (!deities || deities.length === 0) setShowOnboarding(true);
+          if (profile.streak_data && typeof profile.streak_data === 'object') {
+            const streakData = profile.streak_data as any;
+            setStats(prev => ({ ...prev, currentStreak: streakData.current_streak || 0, longestStreak: streakData.longest_streak || 0 }));
+          }
+        } else {
+          setUserName(user?.email?.split('@')[0] || 'Seeker');
+          setShowOnboarding(true);
         }
-      } else {
-        setUserName(user?.email?.split('@')[0] || 'Seeker');
-        setShowOnboarding(true);
-      }
+      } catch (e) { console.error('Profile processing failed:', e); }
 
       // Process journey
-      if (journeyRes.data) {
-        setStats(prev => ({ ...prev, level: journeyRes.data.level || 1, xp: journeyRes.data.experience_points || 0 }));
-      }
+      try {
+        if (journeyRes.data) {
+          setStats(prev => ({ ...prev, level: journeyRes.data.level || 1, xp: journeyRes.data.experience_points || 0 }));
+        }
+      } catch (e) { console.error('Journey processing failed:', e); }
 
       // Process activities
-      if (activitiesRes.data) {
-        const activities = activitiesRes.data;
-        const todayMantras = activities.filter(a => a.activity_type === 'mantra_chant').reduce((sum, a) => sum + ((a.activity_data as any)?.count || 0), 0);
-        const todayReading = activities.filter(a => a.activity_type === 'scripture_read').reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
-        const todayMeditation = activities.filter(a => a.activity_type === 'meditation').reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
-        setStats(prev => ({ ...prev, totalMantras: todayMantras, readingMinutes: todayReading, meditationMinutes: todayMeditation }));
-      }
+      try {
+        if (activitiesRes.data) {
+          const activities = activitiesRes.data;
+          const todayMantras = activities.filter(a => a.activity_type === 'mantra_chant').reduce((sum, a) => sum + ((a.activity_data as any)?.count || 0), 0);
+          const todayReading = activities.filter(a => a.activity_type === 'scripture_read').reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
+          const todayMeditation = activities.filter(a => a.activity_type === 'meditation').reduce((sum, a) => sum + ((a.activity_data as any)?.minutes || 0), 0);
+          setStats(prev => ({ ...prev, totalMantras: todayMantras, readingMinutes: todayReading, meditationMinutes: todayMeditation }));
+        }
+      } catch (e) { console.error('Activities processing failed:', e); }
 
       // Process usage
-      if (usageRes.data) {
-        setAiCreditsUsed(usageRes.data.reduce((sum, row) => sum + row.call_count, 0));
-      }
+      try {
+        if (usageRes.data) {
+          setAiCreditsUsed(usageRes.data.reduce((sum, row) => sum + row.call_count, 0));
+        }
+      } catch (e) { console.error('Usage processing failed:', e); }
 
       // Process palm
-      if (lastPalmRes.data?.created_at) setLastPalmReadingDate(lastPalmRes.data.created_at);
+      try {
+        if (lastPalmRes.data?.created_at) setLastPalmReadingDate(lastPalmRes.data.created_at);
+      } catch (e) { console.error('Palm processing failed:', e); }
 
       // Process events
-      if (eventsRes.data) {
-        setUpcomingEvents(eventsRes.data.map(event => ({
-          name: event.title,
-          date: new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-          type: event.event_type
-        })));
-      }
+      try {
+        if (eventsRes.data) {
+          setUpcomingEvents(eventsRes.data.map(event => ({
+            name: event.title,
+            date: new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+            type: event.event_type
+          })));
+        }
+      } catch (e) { console.error('Events processing failed:', e); }
 
       // Process shorts
-      if (shortsRes.data) setBhaktiShorts(shortsRes.data);
+      try {
+        if (shortsRes.data) setBhaktiShorts(shortsRes.data);
+      } catch (e) { console.error('Shorts processing failed:', e); }
 
       // Process devotion
-      if (devotionRes.data) setTodayDevotion(devotionRes.data as DailyDevotion);
+      try {
+        if (devotionRes.data) setTodayDevotion(devotionRes.data as DailyDevotion);
+      } catch (e) { console.error('Devotion processing failed:', e); }
 
       // Process quote
-      const quoteData = quoteRes.data;
-      if (quoteData && quoteData.length > 0) {
-        const randomQuote = quoteData[new Date().getDate() % quoteData.length];
-        setTodayQuote(randomQuote.title ? `${randomQuote.content} — ${randomQuote.title}` : randomQuote.content);
-      } else {
-        const fallbackQuotes = [
-          "The mind is everything. What you think you become. — Buddha",
-          "The best way to find yourself is to lose yourself in service. — Gandhi",
-          "Truth is one, paths are many. — Hindu Proverb",
-        ];
-        setTodayQuote(fallbackQuotes[new Date().getDate() % fallbackQuotes.length]);
-      }
+      try {
+        const quoteData = quoteRes.data;
+        if (quoteData && quoteData.length > 0) {
+          const randomQuote = quoteData[new Date().getDate() % quoteData.length];
+          setTodayQuote(randomQuote.title ? `${randomQuote.content} — ${randomQuote.title}` : randomQuote.content);
+        } else {
+          const fallbackQuotes = [
+            "The mind is everything. What you think you become. — Buddha",
+            "The best way to find yourself is to lose yourself in service. — Gandhi",
+            "Truth is one, paths are many. — Hindu Proverb",
+          ];
+          setTodayQuote(fallbackQuotes[new Date().getDate() % fallbackQuotes.length]);
+        }
+      } catch (e) { console.error('Quote processing failed:', e); }
 
       // Batch 3: Continue Your Journey items (depends on user, has nested queries)
       const items: any[] = [];
