@@ -128,10 +128,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4 text-primary">Community</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/community" className="hover:text-primary transition-colors flex items-center gap-2">👥 Discussion Forums</a></li>
-                <li><a href="/temples" className="hover:text-primary transition-colors flex items-center gap-2">🏛️ Temple Connect</a></li>
-                <li><a href="/audio-library" className="hover:text-primary transition-colors flex items-center gap-2">🎵 Audio Library</a></li>
-                <li><a href="/spiritual-calendar" className="hover:text-primary transition-colors flex items-center gap-2">📅 Spiritual Calendar</a></li>
+                <li><Link to="/community" className="hover:text-primary transition-colors flex items-center gap-2">👥 Discussion Forums</Link></li>
+                <li><Link to="/temples" className="hover:text-primary transition-colors flex items-center gap-2">🏛️ Temple Connect</Link></li>
+                <li><Link to="/audio-library" className="hover:text-primary transition-colors flex items-center gap-2">🎵 Audio Library</Link></li>
+                <li><Link to="/spiritual-calendar" className="hover:text-primary transition-colors flex items-center gap-2">📅 Spiritual Calendar</Link></li>
               </ul>
             </div>
             
