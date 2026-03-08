@@ -411,7 +411,7 @@ const Dashboard = () => {
         {todayDevotion && (
           <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-r from-card via-card to-primary/5">
             <div className="h-1 bg-gradient-temple" />
-            <CardContent className="p-5">
+            <CardContent className="p-3 sm:p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-temple flex items-center justify-center text-2xl sm:text-3xl shadow-divine flex-shrink-0">
