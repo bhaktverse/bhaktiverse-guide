@@ -440,7 +440,7 @@ const PalmReading = () => {
     if (!isPremiumUser) { toast({ title: "Premium Feature", description: "Upgrade to Premium to download PDF reports", variant: "destructive" }); navigate('/premium'); return; }
     setGeneratingPdf(true);
     try {
-      await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob);
+      await generatePalmReadingPDF(analysis, userName, selectedLanguage, userDob, undefined, lastSavedReadingId || undefined);
       toast({ title: "📄 Report Downloaded", description: "Your beautiful PDF report has been saved" });
     } catch (error) {
       console.error('PDF generation error:', error);
