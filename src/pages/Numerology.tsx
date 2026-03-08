@@ -174,6 +174,7 @@ const Numerology = () => {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<any>(null);
   const [lang, setLang] = useState<'hi' | 'en'>('hi');
+  const resultsRef = React.useRef<HTMLDivElement>(null);
 
   const t = i18n[lang];
 
