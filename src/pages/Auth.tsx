@@ -370,6 +370,12 @@ const Auth = () => {
                       disabled={loading}
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    By signing up, you agree to our{' '}
+                    <a href="/terms" target="_blank" className="text-primary hover:underline">Terms of Service</a>
+                    {' '}and{' '}
+                    <a href="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</a>.
+                  </p>
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-temple hover:opacity-90 transition-all duration-300 shadow-glow"
