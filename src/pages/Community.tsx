@@ -313,11 +313,7 @@ const Community = () => {
     } catch (error) {
       console.error('Error creating post:', error);
       setUploadingImages(false);
-      toast({
-        title: "Error",
-        description: "Failed to create post. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to create post. Please try again.");
     }
   };
 
