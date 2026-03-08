@@ -540,7 +540,8 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
   if (language === 'hi') {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
-    doc.text('(Hindi content displayed in Roman transliteration / IAST for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
+    doc.text('(Hindi content displayed in Romanized IAST transliteration for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
+  }
   }
 
   // QR Code for online reading link
