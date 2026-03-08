@@ -919,6 +919,54 @@ const Community = () => {
         </div>
       </div>
       
+      {/* Edit Post Dialog */}
+      <Dialog open={!!editingPost} onOpenChange={(open) => { if (!open) setEditingPost(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Post</DialogTitle>
+            <DialogDescription>Update your post content or tags</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value.slice(0, POST_MAX_LENGTH))}
+                className="min-h-[100px]"
+                maxLength={POST_MAX_LENGTH}
+              />
+              <p className={`text-xs mt-1 text-right ${editContent.length > POST_MAX_LENGTH * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {editContent.length}/{POST_MAX_LENGTH}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">Tags:</p>
+              <div className="flex flex-wrap gap-1">
+                {availableTags.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={editTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer text-xs"
+                    onClick={() => {
+                      if (editTags.includes(tag)) {
+                        setEditTags(editTags.filter(t => t !== tag));
+                      } else {
+                        setEditTags([...editTags, tag]);
+                      }
+                    }}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <Button onClick={updatePost} className="w-full" disabled={!editContent.trim()}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Update Post
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <MobileBottomNav />
     </div>
   );
