@@ -32,7 +32,7 @@ import {
   ImagePlus,
   X
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface UserMetadata {
   name?: string;
