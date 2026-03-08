@@ -561,9 +561,48 @@ const Community = () => {
                             </div>
                           </div>
                           
-                          <Button onClick={createPost} className="w-full">
-                            <Send className="h-4 w-4 mr-2" />
-                            Share with Community
+                          {/* Image upload */}
+                          <div className="flex items-center gap-2">
+                            <label className="cursor-pointer inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                              <Image className="h-4 w-4" />
+                              <span>Add Photos</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={handleImageSelect}
+                                disabled={pendingImages.length >= 4}
+                              />
+                            </label>
+                            {pendingImages.length > 0 && (
+                              <span className="text-xs text-muted-foreground">{pendingImages.length}/4</span>
+                            )}
+                          </div>
+
+                          {/* Image previews */}
+                          {pendingImages.length > 0 && (
+                            <div className="flex gap-2 flex-wrap">
+                              {pendingImages.map((img, i) => (
+                                <div key={i} className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
+                                  <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                                  <button
+                                    onClick={() => removeImage(i)}
+                                    className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <Button onClick={createPost} className="w-full" disabled={uploadingImages}>
+                            {uploadingImages ? (
+                              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</>
+                            ) : (
+                              <><Send className="h-4 w-4 mr-2" />Share with Community</>
+                            )}
                           </Button>
                         </div>
                       </DialogContent>
