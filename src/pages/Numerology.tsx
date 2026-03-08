@@ -203,6 +203,11 @@ const Numerology = () => {
 
       setReport(data);
       
+      // Auto-scroll to results on mobile
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+      
       if (data.cached) {
         toast.success(`✨ ${t.cachedReport}`);
       } else {
