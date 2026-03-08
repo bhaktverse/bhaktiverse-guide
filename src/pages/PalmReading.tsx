@@ -414,16 +414,30 @@ const PalmReading = () => {
       }
       if (analysis.blessings) narrationText += ` ${analysis.blessings}`;
 
-      const { data, error } = await supabase.functions.invoke('palm-reading-tts', {
-        body: { text: narrationText.substring(0, 4000), voice: selectedLanguage === 'hi' ? 'alloy' : 'nova' }
-      });
-      if (error) throw error;
-      if (data?.audioContent) {
-        const audioBlob = new Blob([Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))], { type: 'audio/mp3' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        if (audioRef.current) { audioRef.current.src = url; audioRef.current.play(); setIsNarrating(true); }
+      // Use browser SpeechSynthesis API
+      if (!('speechSynthesis' in window)) {
+        toast({ title: "Not supported", description: "Voice narration is not supported in this browser", variant: "destructive" });
+        setNarrationLoading(false);
+        return;
       }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(narrationText.substring(0, 4000));
+      
+      // Select appropriate voice
+      const voices = window.speechSynthesis.getVoices();
+      const langCode = selectedLanguage === 'hi' ? 'hi' : selectedLanguage === 'ta' ? 'ta' : selectedLanguage === 'te' ? 'te' : selectedLanguage === 'bn' ? 'bn' : selectedLanguage === 'mr' ? 'mr' : 'en';
+      const matchedVoice = voices.find(v => v.lang.startsWith(langCode)) || voices.find(v => v.lang.startsWith('hi')) || voices[0];
+      if (matchedVoice) utterance.voice = matchedVoice;
+      
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.onend = () => { setIsNarrating(false); };
+      utterance.onerror = () => { setIsNarrating(false); toast({ title: "Narration error", description: "Voice narration encountered an error", variant: "destructive" }); };
+      
+      speechSynthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+      setIsNarrating(true);
     } catch (error) {
       console.error('TTS error:', error);
       toast({ title: "Voice generation failed", description: "Could not generate audio narration", variant: "destructive" });
@@ -431,10 +445,15 @@ const PalmReading = () => {
   };
 
   const toggleNarration = () => {
-    if (audioRef.current) {
-      if (isNarrating) { audioRef.current.pause(); } else { audioRef.current.play(); }
-      setIsNarrating(!isNarrating);
-    } else if (!audioUrl) { generateNarration(); }
+    if (isNarrating) {
+      window.speechSynthesis.pause();
+      setIsNarrating(false);
+    } else if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsNarrating(true);
+    } else {
+      generateNarration();
+    }
   };
 
   const analyzeCompatibility = async () => {
