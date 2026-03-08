@@ -336,8 +336,9 @@ const Profile = () => {
     );
   }
 
-  const xpToNextLevel = (journeyData.level * 200);
-  const xpProgress = Math.min((journeyData.experience_points % 200) / 200 * 100, 100);
+  const xpInCurrentLevel = journeyData.experience_points % 200;
+  const xpToNextLevel = 200;
+  const xpProgress = Math.min((xpInCurrentLevel / xpToNextLevel) * 100, 100);
 
   return (
     <div className="min-h-screen bg-background">
