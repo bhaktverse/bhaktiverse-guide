@@ -656,11 +656,11 @@ const Dashboard = () => {
                 {/* Mantras */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-orange-500/10">
+                    <span className="font-medium flex items-center gap-2 min-w-0">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-orange-500/10 flex-shrink-0">
                         <Flame className="h-4 w-4 text-orange-500" />
                       </div>
-                      Mantras Chanted
+                      <span className="truncate">Mantras Chanted</span>
                     </span>
                     <span className="text-sm font-semibold text-muted-foreground">
                       {stats.totalMantras}/{stats.dailyGoals.mantras}
