@@ -496,7 +496,7 @@ const PalmReading = () => {
   };
 
   const generateDailyHoroscope = async () => {
-    if (!analysis) { toast({ title: "Complete palm reading first", description: "Get a palm reading to generate personalized horoscope", variant: "destructive" }); return; }
+    if (!analysis) { toast.error("Get a palm reading first to generate personalized horoscope"); return; }
     setLoadingHoroscope(true); setHoroscope(null);
     try {
       const { data, error } = await supabase.functions.invoke('palm-daily-horoscope', { body: { palmAnalysis: analysis, language: selectedLanguage } });
