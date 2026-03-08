@@ -34,7 +34,7 @@ const NotificationCenter = () => {
 
   const loadNotifications = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', user.id)
