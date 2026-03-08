@@ -53,28 +53,28 @@ const Favorites = () => {
       promises.push(
         supabase.from('saints').select('id, name, tradition, image_url').in('id', grouped['saint']).then(({ data }) => {
           data?.forEach(s => { detailsMap[s.id] = { title: s.name, subtitle: s.tradition || undefined, image: s.image_url || undefined }; });
-        })
+        }) as Promise<void>
       );
     }
     if (grouped['scripture']?.length) {
       promises.push(
         supabase.from('scriptures').select('id, title, author').in('id', grouped['scripture']).then(({ data }) => {
           data?.forEach(s => { detailsMap[s.id] = { title: s.title, subtitle: s.author || undefined }; });
-        })
+        }) as Promise<void>
       );
     }
     if (grouped['temple']?.length) {
       promises.push(
         supabase.from('temples').select('id, name, primary_deity').in('id', grouped['temple']).then(({ data }) => {
           data?.forEach(t => { detailsMap[t.id] = { title: t.name, subtitle: t.primary_deity || undefined }; });
-        })
+        }) as Promise<void>
       );
     }
     if (grouped['audio']?.length) {
       promises.push(
         supabase.from('audio_library').select('id, title, artist').in('id', grouped['audio']).then(({ data }) => {
           data?.forEach(a => { detailsMap[a.id] = { title: a.title, subtitle: a.artist || undefined }; });
-        })
+        }) as Promise<void>
       );
     }
 

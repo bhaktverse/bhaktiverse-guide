@@ -80,6 +80,7 @@ const App = () => (
                 <Route path="/horoscope" element={<ProtectedRoute><Horoscope /></ProtectedRoute>} />
                 <Route path="/kundali-match" element={<ProtectedRoute><KundaliMatch /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                 <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
 
                 {/* CATCH-ALL */}
