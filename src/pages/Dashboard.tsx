@@ -264,6 +264,69 @@ const Dashboard = () => {
         setTodayDevotion(devotion as DailyDevotion);
       }
 
+      // Load "Continue Your Journey" items
+      const items: any[] = [];
+      
+      // Recent saint chat sessions
+      const { data: chatSessions } = await supabase
+        .from('ai_chat_sessions')
+        .select('id, context_data, last_activity')
+        .eq('user_id', user?.id)
+        .eq('session_type', 'saint_specific')
+        .order('last_activity', { ascending: false })
+        .limit(2);
+      
+      if (chatSessions) {
+        for (const session of chatSessions) {
+          const saintId = (session.context_data as any)?.saint_id;
+          if (saintId) {
+            const { data: saint } = await supabase
+              .from('saints')
+              .select('name')
+              .eq('id', saintId)
+              .maybeSingle();
+            if (saint) {
+              const timeAgo = getTimeAgo(session.last_activity || '');
+              items.push({
+                icon: '🧘',
+                title: `Chat with ${saint.name}`,
+                subtitle: timeAgo,
+                path: `/saints/${saintId}/chat`
+              });
+            }
+          }
+        }
+      }
+
+      // Recent scripture progress
+      const { data: scriptureProgress } = await supabase
+        .from('user_progress')
+        .select('content_id, progress_percentage, last_accessed')
+        .eq('user_id', user?.id)
+        .eq('content_type', 'scripture')
+        .eq('completed', false)
+        .order('last_accessed', { ascending: false })
+        .limit(1);
+      
+      if (scriptureProgress && scriptureProgress.length > 0) {
+        const sp = scriptureProgress[0];
+        const { data: scripture } = await supabase
+          .from('scriptures')
+          .select('title')
+          .eq('id', sp.content_id)
+          .maybeSingle();
+        if (scripture) {
+          items.push({
+            icon: '📖',
+            title: scripture.title,
+            subtitle: `${sp.progress_percentage}% done`,
+            path: `/scriptures/${sp.content_id}`
+          });
+        }
+      }
+
+      setContinueItems(items.slice(0, 3));
+
       // Load daily quote from spiritual_content
       const { data: quoteData } = await supabase
         .from('spiritual_content')
