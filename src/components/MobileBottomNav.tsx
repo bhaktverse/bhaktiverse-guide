@@ -17,23 +17,26 @@ import {
   LogOut,
   Star,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Search
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Primary nav items (always visible)
   const primaryNavItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
+    { icon: Search, label: 'Search', path: '__search__' },
     { icon: Hand, label: 'Palm', path: '/palm-reading' },
-    { icon: Compass, label: 'Astro', path: '/numerology' },
     { icon: Music, label: 'Audio', path: '/audio-library' },
     { icon: Menu, label: 'More', path: null }, // Opens sheet
   ];
