@@ -308,10 +308,7 @@ const Community = () => {
       setPendingImages([]);
       setShowCreatePost(false);
       
-      toast({
-        title: "Success! ✨",
-        description: "Your spiritual post has been shared with the community."
-      });
+      toast.success("Your spiritual post has been shared with the community! ✨");
       
     } catch (error) {
       console.error('Error creating post:', error);
