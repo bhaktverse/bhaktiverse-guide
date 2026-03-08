@@ -59,6 +59,7 @@ const AudioLibrary = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
   const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
+  const { isFavorited, toggleFavorite } = useFavorites('audio');
 
   useEffect(() => {
     loadTracks();
