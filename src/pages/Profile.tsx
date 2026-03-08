@@ -234,43 +234,19 @@ const Profile = () => {
     setSaving(true);
 
     try {
-      // First check if profile exists
-      const { data: existingProfile } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .upsert({
+          user_id: user.id,
+          name: profileData.name,
+          phone: profileData.phone,
+          preferred_language: profileData.preferred_language,
+          spiritual_level: profileData.spiritual_level as any,
+          notification_preferences: profileData.notification_preferences,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
 
-      if (existingProfile) {
-        // Update existing profile
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            name: profileData.name,
-            phone: profileData.phone,
-            preferred_language: profileData.preferred_language,
-            spiritual_level: profileData.spiritual_level as any,
-            notification_preferences: profileData.notification_preferences,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-        
-        if (error) throw error;
-      } else {
-        // Insert new profile
-        const { error } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            name: profileData.name,
-            phone: profileData.phone,
-            preferred_language: profileData.preferred_language,
-            spiritual_level: profileData.spiritual_level as any,
-            notification_preferences: profileData.notification_preferences
-          });
-        
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast.success("Profile Updated 🙏 — Your spiritual profile has been saved.");
     } catch (error) {

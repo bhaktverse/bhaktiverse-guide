@@ -269,10 +269,26 @@ const Community = () => {
     }
   };
 
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newImages = Array.from(files).slice(0, 4 - pendingImages.length).map(file => ({
+
+    const validFiles = Array.from(files).filter(file => {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.error(`${file.name}: Only JPEG, PNG, WebP, GIF allowed`);
+        return false;
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.error(`${file.name}: Max 5MB per image`);
+        return false;
+      }
+      return true;
+    });
+
+    const newImages = validFiles.slice(0, 4 - pendingImages.length).map(file => ({
       file,
       preview: URL.createObjectURL(file)
     }));

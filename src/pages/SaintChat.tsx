@@ -152,6 +152,9 @@ const SaintChat = () => {
     setInputMessage('');
     setLoading(true);
 
+    // Persist user message immediately (before API call) so it's not lost on failure
+    persistSession(updatedMessages);
+
     try {
       const { data, error } = await supabase.functions.invoke('saint-chat', {
         body: {

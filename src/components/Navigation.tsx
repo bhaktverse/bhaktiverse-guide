@@ -159,21 +159,25 @@ const Navigation = () => {
                 <div className="hidden md:flex items-center space-x-2">
                   <ThemeToggle />
                   <NotificationCenter />
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/profile" className={`hover:text-primary ${isActive('/profile') ? 'text-primary' : ''}`}>
-                      <User className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    <LogOut className="h-4 w-4 mr-1" />
-                    Logout
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className={`hover:text-primary ${isActive('/profile') || isActive('/favorites') ? 'text-primary' : ''}`}>
+                        <User className="h-4 w-4" />
+                        <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                        <User className="h-4 w-4 mr-2" /> My Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/favorites')} className="cursor-pointer">
+                        <Heart className="h-4 w-4 mr-2" /> Favorites
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                        <LogOut className="h-4 w-4 mr-2" /> Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Mobile Menu Button */}

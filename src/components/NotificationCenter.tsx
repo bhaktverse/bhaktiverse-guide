@@ -80,7 +80,7 @@ const NotificationCenter = () => {
 
   const clearAll = async () => {
     if (!user) return;
-    await (supabase as any).from('notifications').delete().eq('user_id', user.id);
+    await supabase.from('notifications').delete().eq('user_id', user.id);
     setNotifications([]);
   };
 

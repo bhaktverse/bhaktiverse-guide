@@ -68,14 +68,14 @@ const Horoscope = () => {
         if (idx !== undefined && RASHIS[idx]) {
           setSelectedRashi(RASHIS[idx]);
           toast.success(`🌟 Auto-detected your rashi: ${RASHIS[idx].hindiName}`);
-          setTimeout(() => generatePrediction(RASHIS[idx]), 500);
+          // Don't auto-generate — let user click to save API credits
         }
       } else if (data?.dob) {
         const detected = getRashiByDate(new Date(data.dob));
         if (detected) {
           setSelectedRashi(detected);
           toast.success(`🌟 Detected rashi from DOB: ${detected.hindiName}`);
-          setTimeout(() => generatePrediction(detected), 500);
+          // Don't auto-generate — let user click to save API credits
         }
       }
     } catch (err) {
