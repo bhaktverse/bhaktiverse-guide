@@ -30,7 +30,7 @@ const Premium = () => {
   const navigate = useNavigate();
   usePageTitle('Premium Membership');
   const { isPremium } = usePremium();
-  const { toast } = useToast();
+  
 
   const handleUpgrade = () => {
     const message = encodeURIComponent("Hi! I'm interested in BhaktVerse Premium. Please share details.");

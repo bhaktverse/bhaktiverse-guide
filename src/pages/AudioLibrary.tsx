@@ -51,7 +51,7 @@ const AudioLibrary = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   usePageTitle('Spiritual Audio Library');
-  const { toast } = useToast();
+  
   const { downloadAudio, downloadState } = useDownload();
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const [loading, setLoading] = useState(true);

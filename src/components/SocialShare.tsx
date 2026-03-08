@@ -56,10 +56,10 @@ const SocialShare = ({ title, text, palmType, score }: SocialShareProps) => {
     try {
       await navigator.clipboard.writeText(shareText);
       setCopied(true);
-      toast({ title: "Copied to clipboard!" });
+      toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
+      toast.error("Failed to copy");
     }
   };
 

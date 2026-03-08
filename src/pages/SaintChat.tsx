@@ -257,7 +257,7 @@ const SaintChat = () => {
                   content: `🙏 Namaste! I am ${saint.name}. I'm here to share wisdom from the ${saint.tradition} tradition. What guidance do you seek today?`,
                   timestamp: new Date()
                 }]);
-                toast({ title: "New Chat Started", description: "Previous conversation cleared." });
+                toast.success("New Chat Started — Previous conversation cleared.");
               }}
               className="gap-1 text-xs"
             >
