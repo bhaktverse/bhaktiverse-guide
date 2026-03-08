@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Share2, Copy, Check, MessageCircle, Twitter, Facebook, Linkedin, Mail } from 'lucide-react';
 
 interface SocialShareProps {
