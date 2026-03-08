@@ -387,7 +387,7 @@ const PalmReading = () => {
   };
 
   const analyzePalm = async () => {
-    if (palmImages.length === 0) { toast({ title: "No palm scan", description: "Please complete the biometric scan first", variant: "destructive" }); return; }
+    if (palmImages.length === 0) { toast.error("Please complete the biometric scan first"); return; }
     setAnalyzing(true); setAnalysis(null); setAudioUrl(null); setShowReportView(false);
     try {
       // Check for existing recent reading with same name (dedup to save AI credits)
