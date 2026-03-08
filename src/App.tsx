@@ -26,6 +26,7 @@ import PalmReading from "./pages/PalmReading";
 import Profile from "./pages/Profile";
 import Horoscope from "./pages/Horoscope";
 import KundaliMatch from "./pages/KundaliMatch";
+import SharedPalmReading from "./pages/SharedPalmReading";
 
 const queryClient = new QueryClient();
 
