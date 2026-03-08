@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import GlobalSearch from '@/components/GlobalSearch';
 import { 
   DropdownMenu,
   DropdownMenuContent,
