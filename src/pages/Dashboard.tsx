@@ -516,9 +516,9 @@ const Dashboard = () => {
           </Card>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
             
             {/* Featured Services - Palm Reading & Numerology */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
