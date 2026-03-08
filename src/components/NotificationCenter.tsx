@@ -74,7 +74,7 @@ const NotificationCenter = () => {
 
   const markAllRead = async () => {
     if (!user) return;
-    await (supabase as any).from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
