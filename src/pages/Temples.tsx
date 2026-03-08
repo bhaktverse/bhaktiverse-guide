@@ -74,6 +74,7 @@ interface Temple {
 const Temples = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Sacred Temples of India');
   const [temples, setTemples] = useState<Temple[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

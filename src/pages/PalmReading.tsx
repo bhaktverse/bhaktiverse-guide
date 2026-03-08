@@ -186,6 +186,7 @@ const LANGUAGES = [
 const PalmReading = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('AI Palm Reading');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);

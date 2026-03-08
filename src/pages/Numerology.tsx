@@ -171,6 +171,7 @@ const i18n = {
 const Numerology = () => {
   const { session } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Vedic Numerology');
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);

@@ -45,6 +45,7 @@ interface Scripture {
 const Scriptures = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Holy Scriptures & Books');
   const [scriptures, setScriptures] = useState<Scripture[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

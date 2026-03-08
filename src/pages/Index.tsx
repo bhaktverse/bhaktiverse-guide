@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('AI-Powered Spiritual Platform');
   const [featuredPosts, setFeaturedPosts] = useState<any[]>([]);
 
   useEffect(() => {

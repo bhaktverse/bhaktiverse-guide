@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 const Premium = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Premium Membership');
   const { isPremium } = usePremium();
   const { toast } = useToast();
 

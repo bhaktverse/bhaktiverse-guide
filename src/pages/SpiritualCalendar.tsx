@@ -47,6 +47,7 @@ interface TithiInfo {
 const SpiritualCalendar = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('Spiritual Calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [events, setEvents] = useState<SpiritualEvent[]>([]);

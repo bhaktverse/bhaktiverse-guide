@@ -94,6 +94,7 @@ const DarkModeSwitch = () => {
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  usePageTitle('My Profile');
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);

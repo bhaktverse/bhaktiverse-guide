@@ -69,6 +69,7 @@ interface DashboardStats {
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
+  usePageTitle('Dashboard');
   const navigate = useNavigate();
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
