@@ -69,7 +69,7 @@ const MobileBottomNav = () => {
         description: "May your journey continue with blessings. 🙏",
       });
       setMoreOpen(false);
-      window.location.href = '/';
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
     }

@@ -37,9 +37,9 @@ const Auth = () => {
         description: "Redirecting to your spiritual dashboard...",
       });
     }
-    // Use setTimeout to ensure state updates render before redirect
+    // Use setTimeout to ensure state updates render before navigate
     setTimeout(() => {
-      window.location.replace('/dashboard');
+      navigate(from, { replace: true });
     }, 500);
   };
 
