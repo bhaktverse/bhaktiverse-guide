@@ -382,7 +382,7 @@ const Community = () => {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
-        toast({ title: "Link Copied! 📋", description: "Post link copied to clipboard." });
+        toast.success("Post link copied to clipboard! 📋");
       }
       // Increment shares_count
       await supabase
