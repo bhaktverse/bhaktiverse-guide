@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, Mic, MicOff, Volume2, BookOpen, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { toast } from 'sonner';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import Navigation from '@/components/Navigation';
@@ -48,7 +49,6 @@ const SaintChat = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   
-  
   const [saint, setSaint] = useState<Saint | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -56,6 +56,8 @@ const SaintChat = () => {
   const [loadError, setLoadError] = useState(false);
   const [showTeachings, setShowTeachings] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  usePageTitle(saint ? `Chat with ${saint.name}` : 'Saint Chat');
 
   useEffect(() => {
     if (!authLoading && !user) { navigate('/auth'); return; }

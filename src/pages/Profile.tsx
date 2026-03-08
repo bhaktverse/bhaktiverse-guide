@@ -341,6 +341,11 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold">{profileData.name || 'Spiritual Seeker'}</h1>
+                {(!profileData.name || profileData.name === 'Spiritual Seeker') && (
+                  <p className="text-muted-foreground italic text-sm flex items-center gap-1 cursor-pointer hover:text-primary transition-colors" onClick={() => document.getElementById('name')?.focus()}>
+                    ✏️ Tap to set your spiritual name
+                  </p>
+                )}
                 <p className="text-muted-foreground">{user?.email}</p>
                 <div className="flex gap-2 mt-2">
                   <Badge variant="outline" className="bg-primary/10 border-primary/30">

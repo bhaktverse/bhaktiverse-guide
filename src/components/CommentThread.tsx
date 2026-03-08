@@ -35,7 +35,7 @@ const CommentThread = ({ postId, onCountChange }: CommentThreadProps) => {
 
   const loadComments = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('post_comments')
       .select('*')
       .eq('post_id', postId)
@@ -84,7 +84,7 @@ const CommentThread = ({ postId, onCountChange }: CommentThreadProps) => {
     const text = parentId ? replyText : newComment;
     if (!text.trim()) return;
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('post_comments')
       .insert({ post_id: postId, user_id: user.id, content: text.trim(), parent_comment_id: parentId });
 
@@ -99,7 +99,7 @@ const CommentThread = ({ postId, onCountChange }: CommentThreadProps) => {
   };
 
   const deleteComment = async (id: string) => {
-    await (supabase as any).from('post_comments').delete().eq('id', id);
+    await supabase.from('post_comments').delete().eq('id', id);
     loadComments();
     toast.success('Comment deleted');
   };

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -75,7 +76,12 @@ const Community = () => {
   const [totalMembers, setTotalMembers] = useState(0);
   const [activeDevotees, setActiveDevotees] = useState(0);
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
+  const [totalBlessings, setTotalBlessings] = useState(0);
+  const [totalComments, setTotalComments] = useState(0);
   const PAGE_SIZE = 20;
+
+  // Centralized helper for untyped post_likes table
+  const postLikesTable = () => supabase.from('post_likes' as any) as any;
 
   const availableTags = [
     'devotion', 'experience', 'learning', 'ritual', 'festival', 'pilgrimage',
@@ -86,6 +92,7 @@ const Community = () => {
     loadPosts();
     loadTotalMembers();
     loadActiveThisWeek();
+    loadCommunityStats();
 
     const channel = supabase
       .channel('community_posts_realtime')
@@ -162,6 +169,17 @@ const Community = () => {
     }
   };
 
+  const loadCommunityStats = async () => {
+    const { data } = await supabase
+      .from('community_posts')
+      .select('likes_count, comments_count')
+      .eq('visibility', 'public');
+    if (data) {
+      setTotalBlessings(data.reduce((sum, p) => sum + (p.likes_count || 0), 0));
+      setTotalComments(data.reduce((sum, p) => sum + (p.comments_count || 0), 0));
+    }
+  };
+
   const loadPosts = async (append = false) => {
     try {
       if (!append) setLoading(true);
@@ -214,8 +232,7 @@ const Community = () => {
           : transformedPosts.map(p => p.id);
         
         if (allPostIds.length > 0) {
-          const { data: likes } = await supabase
-            .from('post_likes' as any)
+          const { data: likes } = await postLikesTable()
             .select('post_id')
             .eq('user_id', user.id)
             .in('post_id', allPostIds);
@@ -342,15 +359,13 @@ const Community = () => {
 
     try {
       if (isLiked) {
-        const { error } = await supabase
-          .from('post_likes' as any)
+        const { error } = await postLikesTable()
           .delete()
           .eq('user_id', user.id)
           .eq('post_id', postId);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('post_likes' as any)
+        const { error } = await postLikesTable()
           .insert({ user_id: user.id, post_id: postId });
         if (error) throw error;
       }
@@ -400,6 +415,20 @@ const Community = () => {
 
   const deletePost = async (postId: string) => {
     try {
+      // Clean up storage files before deleting the post
+      const post = posts.find(p => p.id === postId);
+      if (post?.media_urls?.length) {
+        const storagePaths = post.media_urls
+          .map(url => {
+            const match = url.match(/community-media\/(.+)$/);
+            return match ? match[1] : null;
+          })
+          .filter(Boolean) as string[];
+        if (storagePaths.length > 0) {
+          await supabase.storage.from('community-media').remove(storagePaths);
+        }
+      }
+
       const { error } = await supabase
         .from('community_posts')
         .delete()
@@ -721,15 +750,32 @@ const Community = () => {
                         </Button>
                       </div>
                       {post.user_id === user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deletePost(post.id)}
-                          aria-label="Delete post"
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          Delete
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Delete post"
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently remove your post and all its comments. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deletePost(post.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                     
@@ -790,16 +836,12 @@ const Community = () => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {posts.reduce((sum, p) => sum + (p.likes_count || 0), 0)}
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{totalBlessings}</div>
                   <p className="text-sm text-muted-foreground">Blessings Shared</p>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-accent">
-                    {posts.reduce((sum, p) => sum + (p.comments_count || 0), 0)}
-                  </div>
+                  <div className="text-2xl font-bold text-accent">{totalComments}</div>
                   <p className="text-sm text-muted-foreground">Comments</p>
                 </div>
               </CardContent>
