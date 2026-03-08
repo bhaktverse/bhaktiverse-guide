@@ -166,13 +166,41 @@ const transliterationMap: Record<string, string> = {
   'में': 'Mein', 'है': 'Hai', 'और': 'Aur', 'के': 'Ke', 'को': 'Ko',
   'से': 'Se', 'पर': 'Par', 'बहुत': 'Bahut', 'अच्छा': 'Achha',
   'खुश': 'Khush', 'प्यार': 'Pyaar',
+  // Expanded spiritual terms
+  'भक्ति': 'Bhakti', 'मोक्ष': 'Moksha', 'साधना': 'Sadhana', 'ध्यान': 'Dhyan',
+  'तपस्या': 'Tapasya', 'सेवा': 'Seva', 'दान': 'Daan', 'व्रत': 'Vrat',
+  'उपवास': 'Upvas', 'संस्कार': 'Sanskar', 'वेद': 'Veda', 'पुराण': 'Puran',
+  'गीता': 'Geeta', 'रामायण': 'Ramayana', 'महाभारत': 'Mahabharat',
+  'शिव': 'Shiva', 'विष्णु': 'Vishnu', 'ब्रह्मा': 'Brahma', 'लक्ष्मी': 'Lakshmi',
+  'सरस्वती': 'Saraswati', 'गणेश': 'Ganesh', 'हनुमान': 'Hanuman', 'कृष्ण': 'Krishna',
+  'राम': 'Ram', 'दुर्गा': 'Durga', 'काली': 'Kali', 'पार्वती': 'Parvati',
+  'ज्योतिष': 'Jyotish', 'कुंडली': 'Kundali', 'ग्रहण': 'Grahan', 'अमावस्या': 'Amavasya',
+  'पूर्णिमा': 'Poornima', 'एकादशी': 'Ekadashi', 'चतुर्थी': 'Chaturthi',
+  'प्रदोष': 'Pradosh', 'संक्रांति': 'Sankranti', 'नवरात्रि': 'Navratri',
+  'दिवाली': 'Diwali', 'होली': 'Holi', 'मकर': 'Makar', 'कुम्भ': 'Kumbh',
+  'मीन': 'Meen', 'मेष': 'Mesh', 'वृषभ': 'Vrishabh', 'मिथुन': 'Mithun',
+  'कर्क': 'Kark', 'सिंह': 'Singh', 'कन्या': 'Kanya', 'तुला': 'Tula',
+  'वृश्चिक': 'Vrishchik', 'धनु': 'Dhanu',
+  'अग्नि': 'Agni', 'वायु': 'Vayu', 'जल': 'Jal', 'पृथ्वी': 'Prithvi', 'आकाश': 'Akash',
+  'चक्र': 'Chakra', 'कुंडलिनी': 'Kundalini', 'प्राण': 'Prana', 'नाड़ी': 'Nadi',
+  'अंगूठा': 'Angutha', 'अंगुली': 'Anguli', 'तर्जनी': 'Tarjani', 'मध्यमा': 'Madhyama',
+  'अनामिका': 'Anamika', 'कनिष्ठा': 'Kanishtha',
+  'सफलता': 'Safalta', 'समृद्धि': 'Samriddhi', 'शांति': 'Shanti', 'सुख': 'Sukh',
+  'आनंद': 'Anand', 'कल्याण': 'Kalyan', 'मंगलकारी': 'Mangalkari',
+  'उपाय': 'Upay', 'रत्न': 'Ratna', 'यंत्र': 'Yantra', 'तंत्र': 'Tantra',
+  'रुद्राक्ष': 'Rudraksha', 'तुलसी': 'Tulsi', 'चंदन': 'Chandan',
+  'का': 'Ka', 'की': 'Ki', 'कि': 'Ki', 'ये': 'Ye', 'वो': 'Vo',
+  'यह': 'Yah', 'वह': 'Vah', 'कैसे': 'Kaise', 'क्या': 'Kya',
+  'नहीं': 'Nahin', 'हां': 'Haan', 'अभी': 'Abhi', 'कभी': 'Kabhi',
+  'जब': 'Jab', 'तब': 'Tab', 'अगर': 'Agar', 'तो': 'To', 'लेकिन': 'Lekin',
 };
 
 function transliterate(text: string): string {
   if (!text) return '';
   let result = text;
-  // Replace known Hindi words first
-  for (const [hindi, roman] of Object.entries(transliterationMap)) {
+  // Sort by length descending so longer words match first (e.g., "श्री" before "श")
+  const sortedEntries = Object.entries(transliterationMap).sort((a, b) => b[0].length - a[0].length);
+  for (const [hindi, roman] of sortedEntries) {
     result = result.replace(new RegExp(hindi, 'g'), roman);
   }
   // Character-level Devanagari to Latin
@@ -198,9 +226,9 @@ function transliterate(text: string): string {
   result = result
     .replace(/[\u0900-\u097F]/g, '')
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    .replace(/[^\x20-\x7E\n\r\t]/g, '') // Only keep printable ASCII
-    .replace(/&\s*&[=\w?@]*\s*/g, '') // Remove jsPDF encoding artifacts like "& &= &B &?"
-    .replace(/&[=\w?@]+/g, '') // Remove remaining isolated encoding artifacts
+    .replace(/[^\x20-\x7E\n\r\t]/g, '')
+    .replace(/&\s*&[=\w?@]*\s*/g, '')
+    .replace(/&[=\w?@]+/g, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
   return result;
@@ -212,7 +240,11 @@ function getSafeText(text: string | undefined | null, fallback: string = ''): st
   return transliterated || fallback;
 }
 
-// Calculate zodiac sign from DOB
+function truncate(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text;
+  return text.substring(0, maxLen - 3) + '...';
+}
+
 function getZodiacFromDob(dob: string): { sign: string; hindiSign: string } {
   if (!dob) return { sign: '', hindiSign: '' };
   const date = new Date(dob);
@@ -248,6 +280,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 15;
   const contentWidth = pageWidth - (margin * 2);
+  const bottomMargin = pageHeight - 25;
   let yPos = margin;
   let currentPage = 1;
 
@@ -263,59 +296,40 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   const readingId = `BV-${Date.now().toString(36).toUpperCase()}`;
   const zodiac = userDob ? getZodiacFromDob(userDob) : null;
 
-  const addWrappedText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number): number => {
-    const safeText = getSafeText(text, 'Analysis not available');
-    const lines = doc.splitTextToSize(safeText, maxWidth);
-    doc.text(lines, x, y);
-    return y + (lines.length * lineHeight);
-  };
+  // ===== CORE HELPERS =====
 
-  const checkPageBreak = (neededSpace: number): void => {
-    if (yPos + neededSpace > pageHeight - 25) {
-      doc.addPage();
-      currentPage++;
-      yPos = margin + 5;
-      drawBorder();
-      addPageFooter();
-    }
-  };
-
-  // Draw Swastik symbol at a given position
   const drawSwastik = (cx: number, cy: number, size: number) => {
     doc.setDrawColor(...saffronColor);
     doc.setLineWidth(0.8);
     const s = size;
-    // Horizontal & vertical lines
     doc.line(cx - s, cy, cx + s, cy);
     doc.line(cx, cy - s, cx, cy + s);
-    // Four arms (clockwise)
-    doc.line(cx + s, cy, cx + s, cy - s); // right → up
-    doc.line(cx - s, cy, cx - s, cy + s); // left → down
-    doc.line(cx, cy - s, cx - s, cy - s); // top → left
-    doc.line(cx, cy + s, cx + s, cy + s); // bottom → right
-  };
-
-  // Draw Om symbol using text
-  const drawOmHeader = (y: number) => {
-    doc.setFontSize(16);
-    doc.setTextColor(...saffronColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('|| Om ||', pageWidth / 2, y, { align: 'center' });
+    doc.line(cx + s, cy, cx + s, cy - s);
+    doc.line(cx - s, cy, cx - s, cy + s);
+    doc.line(cx, cy - s, cx - s, cy - s);
+    doc.line(cx, cy + s, cx + s, cy + s);
   };
 
   const drawBorder = () => {
-    // Outer gold double border
     doc.setDrawColor(...goldColor);
     doc.setLineWidth(2);
     doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
     doc.setLineWidth(0.5);
     doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
-
-    // Swastik at all 4 corners
     drawSwastik(18, 18, 3);
     drawSwastik(pageWidth - 18, 18, 3);
     drawSwastik(18, pageHeight - 18, 3);
     drawSwastik(pageWidth - 18, pageHeight - 18, 3);
+  };
+
+  const addWatermark = () => {
+    doc.saveGraphicsState();
+    doc.setFontSize(50);
+    doc.setTextColor(240, 235, 225);
+    doc.setFont('helvetica', 'bold');
+    // Rotate text for watermark effect — approximate with positioned text
+    doc.text('BhaktVerse', pageWidth / 2, pageHeight / 2, { align: 'center', angle: 45 });
+    doc.restoreGraphicsState();
   };
 
   const addPageFooter = () => {
@@ -323,20 +337,57 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     doc.setTextColor(...mutedColor);
     doc.setFont('helvetica', 'normal');
     doc.text(`Reading ID: ${readingId}`, margin, pageHeight - 8);
-    doc.text(`BhaktVerse AI Palm Reading Report`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.text('BhaktVerse AI Palm Reading Report', pageWidth / 2, pageHeight - 8, { align: 'center' });
+  };
+
+  const drawOmHeader = (y: number) => {
+    doc.setFontSize(16);
+    doc.setTextColor(...saffronColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('|| Om ||', pageWidth / 2, y, { align: 'center' });
+  };
+
+  const checkPageBreak = (neededSpace: number): void => {
+    if (yPos + neededSpace > bottomMargin) {
+      addPageFooter();
+      doc.addPage();
+      currentPage++;
+      yPos = margin + 5;
+      drawBorder();
+      addWatermark();
+    }
+  };
+
+  // Page-aware wrapped text — splits text into lines and checks page breaks during rendering
+  const addWrappedTextSafe = (text: string, x: number, maxWidth: number, lineHeight: number, maxChars?: number): void => {
+    const safeText = getSafeText(text, 'Analysis not available');
+    const capped = maxChars ? truncate(safeText, maxChars) : safeText;
+    const lines: string[] = doc.splitTextToSize(capped, maxWidth);
+
+    for (let i = 0; i < lines.length; i++) {
+      checkPageBreak(lineHeight + 2);
+      doc.text(lines[i], x, yPos);
+      yPos += lineHeight;
+    }
   };
 
   const addSectionDivider = () => {
     doc.setDrawColor(...goldColor);
     doc.setLineWidth(0.5);
-    const lineY = yPos;
-    doc.line(margin + 20, lineY, pageWidth - margin - 20, lineY);
+    doc.line(margin + 20, yPos, pageWidth - margin - 20, yPos);
     const cx = pageWidth / 2;
     doc.setFillColor(...goldColor);
-    doc.circle(cx, lineY, 1.5, 'F');
-    doc.circle(cx - 8, lineY, 0.8, 'F');
-    doc.circle(cx + 8, lineY, 0.8, 'F');
+    doc.circle(cx, yPos, 1.5, 'F');
+    doc.circle(cx - 8, yPos, 0.8, 'F');
+    doc.circle(cx + 8, yPos, 0.8, 'F');
     yPos += 6;
+  };
+
+  const addThinDivider = () => {
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.line(margin + 10, yPos, pageWidth - margin - 10, yPos);
+    yPos += 4;
   };
 
   const drawRatingBar = (x: number, y: number, rating: number, width: number = 50) => {
@@ -350,68 +401,60 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     doc.roundedRect(x, y, fillWidth, barHeight, 2, 2, 'F');
   };
 
-  // Draw lotus divider
-  const drawLotusDivider = (y: number) => {
-    doc.setDrawColor(...saffronColor);
-    doc.setLineWidth(0.3);
-    const cx = pageWidth / 2;
-    // Petals (simple arcs using ellipses)
-    doc.setFillColor(255, 200, 150);
-    for (let i = -2; i <= 2; i++) {
-      doc.ellipse(cx + i * 6, y, 3, 1.5, 'F');
-    }
-    doc.setFillColor(...saffronColor);
-    doc.circle(cx, y, 1.2, 'F');
-    yPos = y + 5;
+  const addSectionHeader = (title: string) => {
+    checkPageBreak(40);
+    addThinDivider();
+    yPos += 2;
+    doc.setFontSize(14);
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, margin, yPos);
+    yPos += 10;
   };
 
   // ========== PAGE 1: COVER PAGE ==========
   doc.setFillColor(255, 250, 240);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   drawBorder();
+  addWatermark();
 
-  // "Shri Ganeshaya Namah" header
   doc.setFontSize(11);
   doc.setTextColor(...deepRed);
   doc.setFont('helvetica', 'bold');
   doc.text('|| Shri Ganeshaya Namah ||', pageWidth / 2, 28, { align: 'center' });
 
-  // Om symbol
   drawOmHeader(42);
 
-  // Planetary symbols
   doc.setFontSize(10);
   doc.setTextColor(...goldColor);
-  const symbols = '* * * * * * *';
-  doc.text(symbols, pageWidth / 2, 52, { align: 'center' });
+  doc.text('* * * * * * *', pageWidth / 2, 52, { align: 'center' });
 
   doc.setFontSize(28);
   doc.setTextColor(...primaryColor);
   doc.setFont('helvetica', 'bold');
   doc.text('AI GURU PALM READING', pageWidth / 2, 70, { align: 'center' });
-  
+
   doc.setFontSize(14);
   doc.setTextColor(...secondaryColor);
   doc.text('Vedic Kundali-Style Analysis Report', pageWidth / 2, 83, { align: 'center' });
 
-  // User info box - prominent
+  // User info box
   doc.setFillColor(255, 243, 224);
-  doc.roundedRect(margin + 15, 95, contentWidth - 30, zodiac ? 75 : 65, 5, 5, 'F');
+  const infoBoxH = zodiac ? 75 : 65;
+  doc.roundedRect(margin + 15, 95, contentWidth - 30, infoBoxH, 5, 5, 'F');
   doc.setDrawColor(...goldColor);
   doc.setLineWidth(1);
-  doc.roundedRect(margin + 15, 95, contentWidth - 30, zodiac ? 75 : 65, 5, 5, 'S');
+  doc.roundedRect(margin + 15, 95, contentWidth - 30, infoBoxH, 5, 5, 'S');
 
   const safeUserName = getSafeText(userName, 'Seeker');
   let infoY = 110;
 
-  // Name as headline
   doc.setFontSize(16);
   doc.setTextColor(...deepRed);
   doc.setFont('helvetica', 'bold');
   doc.text(safeUserName, pageWidth / 2, infoY, { align: 'center' });
   infoY += 10;
 
-  // Zodiac
   if (zodiac) {
     doc.setFontSize(11);
     doc.setTextColor(...secondaryColor);
@@ -429,9 +472,9 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   infoY += 7;
 
   if (analysis.nakshatra) {
-    const safeNakshatra = getSafeText(analysis.nakshatra);
-    if (safeNakshatra) {
-      doc.text(`Nakshatra: ${safeNakshatra}`, pageWidth / 2, infoY, { align: 'center' });
+    const sn = getSafeText(analysis.nakshatra);
+    if (sn) {
+      doc.text(`Nakshatra: ${sn}`, pageWidth / 2, infoY, { align: 'center' });
       infoY += 7;
     }
   }
@@ -444,23 +487,25 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   const scoreBoxY = zodiac ? 180 : 170;
   if (analysis.overallScore || analysis.confidenceScore) {
     doc.setFillColor(232, 245, 233);
-    doc.roundedRect(margin + 25, scoreBoxY, (contentWidth - 50) / 2 - 5, 35, 3, 3, 'F');
-    doc.roundedRect(pageWidth / 2 + 5, scoreBoxY, (contentWidth - 50) / 2 - 5, 35, 3, 3, 'F');
-    
+    const halfW = (contentWidth - 50) / 2 - 5;
+    doc.roundedRect(margin + 25, scoreBoxY, halfW, 35, 3, 3, 'F');
+    doc.roundedRect(pageWidth / 2 + 5, scoreBoxY, halfW, 35, 3, 3, 'F');
+
     doc.setFontSize(12);
     doc.setTextColor(...successColor);
     doc.setFont('helvetica', 'bold');
-    doc.text('Overall Score', margin + 25 + (contentWidth - 50) / 4 - 2.5, scoreBoxY + 13, { align: 'center' });
+    const c1 = margin + 25 + halfW / 2;
+    const c2 = pageWidth / 2 + 5 + halfW / 2;
+    doc.text('Overall Score', c1, scoreBoxY + 13, { align: 'center' });
     doc.setFontSize(18);
-    doc.text(`${analysis.overallScore || 8.0}/10`, margin + 25 + (contentWidth - 50) / 4 - 2.5, scoreBoxY + 28, { align: 'center' });
-    
+    doc.text(`${analysis.overallScore || 8.0}/10`, c1, scoreBoxY + 28, { align: 'center' });
+
     doc.setFontSize(12);
-    doc.text('Confidence', pageWidth / 2 + 5 + (contentWidth - 50) / 4 - 2.5, scoreBoxY + 13, { align: 'center' });
+    doc.text('Confidence', c2, scoreBoxY + 13, { align: 'center' });
     doc.setFontSize(18);
-    doc.text(`${analysis.confidenceScore || 85}%`, pageWidth / 2 + 5 + (contentWidth - 50) / 4 - 2.5, scoreBoxY + 28, { align: 'center' });
+    doc.text(`${analysis.confidenceScore || 85}%`, c2, scoreBoxY + 28, { align: 'center' });
   }
 
-  // Date
   doc.setFontSize(10);
   doc.setTextColor(...mutedColor);
   doc.setFont('helvetica', 'normal');
@@ -469,7 +514,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   if (language === 'hi') {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
-    doc.text('(Transliterated from Hindi for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
+    doc.text('(Hindi content displayed in Roman transliteration / IAST for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
   }
 
   doc.setFontSize(8);
@@ -481,6 +526,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   doc.addPage();
   currentPage++;
   drawBorder();
+  addWatermark();
   drawOmHeader(22);
   yPos = 30;
 
@@ -489,7 +535,6 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   doc.setFont('helvetica', 'bold');
   doc.text('TABLE OF CONTENTS', pageWidth / 2, yPos, { align: 'center' });
   yPos += 12;
-
   addSectionDivider();
 
   const tocItems = [
@@ -512,14 +557,14 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     doc.setFontSize(11);
     doc.setTextColor(...textColor);
     doc.setFont('helvetica', 'normal');
-    
-    const titleWidth = doc.getTextWidth(`${i + 1}. ${item.title}`);
-    doc.text(`${i + 1}. ${item.title}`, margin + 5, yPos);
-    
+    const titleTxt = `${i + 1}. ${item.title}`;
+    const titleWidth = doc.getTextWidth(titleTxt);
+    doc.text(titleTxt, margin + 5, yPos);
+
     doc.setTextColor(...primaryColor);
     doc.setFont('helvetica', 'bold');
     doc.text(item.page, pageWidth - margin - 5, yPos, { align: 'right' });
-    
+
     doc.setTextColor(...mutedColor);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
@@ -530,7 +575,6 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
       doc.text('.', dotX, yPos);
       dotX += 2;
     }
-    
     yPos += 8;
   });
 
@@ -540,6 +584,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   doc.addPage();
   currentPage++;
   drawBorder();
+  addWatermark();
   drawOmHeader(22);
   yPos = 30;
 
@@ -548,63 +593,61 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   doc.setFont('helvetica', 'bold');
   doc.text('REPORT SUMMARY DASHBOARD', pageWidth / 2, yPos, { align: 'center' });
   yPos += 12;
-
   addSectionDivider();
 
   // Category rating bars
   if (analysis.categories) {
     const cats = Object.entries(analysis.categories);
     const colWidth = (contentWidth - 10) / 2;
-    
+
     cats.forEach(([key, category], i) => {
       if (!category) return;
       const col = i % 2;
       const x = margin + (col * (colWidth + 10));
-      
       if (col === 0 && i > 0) yPos += 14;
-      const rowY = col === 0 ? yPos : yPos;
-      
+      const rowY = yPos;
+
       doc.setFontSize(9);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(CATEGORY_TITLES[key] || key, x, rowY);
-      
+
       doc.setTextColor(...primaryColor);
       doc.text(`${category.rating || 8}/10`, x + colWidth - 15, rowY);
-      
       drawRatingBar(x, rowY + 2, category.rating || 8, colWidth - 20);
     });
-    
     yPos += 20;
   }
 
   yPos += 10;
-  drawLotusDivider(yPos);
+  addThinDivider();
 
-  // Greeting & Destiny on same page
+  // Greeting
   if (analysis.greeting) {
     checkPageBreak(40);
-    doc.setFillColor(255, 248, 240);
     const safeGreeting = getSafeText(analysis.greeting, 'Welcome to your personalized palm reading.');
-    const greetingLines = doc.splitTextToSize(safeGreeting, contentWidth - 20);
-    const greetingHeight = Math.max(greetingLines.length * 5 + 20, 35);
+    const greetingLines: string[] = doc.splitTextToSize(safeGreeting, contentWidth - 20);
+    const greetingHeight = Math.min(greetingLines.length * 5 + 20, 50);
+
+    doc.setFillColor(255, 248, 240);
     doc.roundedRect(margin, yPos, contentWidth, greetingHeight, 3, 3, 'F');
     doc.setDrawColor(...goldColor);
     doc.roundedRect(margin, yPos, contentWidth, greetingHeight, 3, 3, 'S');
-    
+
     doc.setFontSize(11);
     doc.setTextColor(...secondaryColor);
     doc.setFont('helvetica', 'bold');
-    doc.text('GURU JI\'S BLESSING', margin + 10, yPos + 8);
-    
+    doc.text("GURU JI'S BLESSING", margin + 10, yPos + 8);
+
     doc.setFontSize(10);
     doc.setTextColor(...textColor);
     doc.setFont('helvetica', 'italic');
-    doc.text(greetingLines, margin + 10, yPos + 18);
-    
+    doc.text(greetingLines.slice(0, 5), margin + 10, yPos + 18);
+
     yPos += greetingHeight + 10;
   }
 
+  // Destiny
   if (analysis.overallDestiny) {
     checkPageBreak(50);
     doc.setFontSize(14);
@@ -615,7 +658,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     doc.setFontSize(10);
     doc.setTextColor(...textColor);
     doc.setFont('helvetica', 'normal');
-    yPos = addWrappedText(analysis.overallDestiny, margin, yPos, contentWidth, 5);
+    addWrappedTextSafe(analysis.overallDestiny, margin, contentWidth, 5, 600);
     yPos += 10;
   }
 
@@ -623,52 +666,42 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
   // ========== LINE ANALYSIS ==========
   if (analysis.lineAnalysis) {
-    checkPageBreak(20);
-    drawLotusDivider(yPos);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PALM LINE ANALYSIS (Rekha Vigyan)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('PALM LINE ANALYSIS (Rekha Vigyan)');
 
     Object.entries(analysis.lineAnalysis).forEach(([key, line]) => {
       if (!line) return;
-      checkPageBreak(35);
-      
+      checkPageBreak(30);
+
       const lineName = LINE_NAMES[key] || key;
-      
       doc.setFillColor(248, 248, 255);
       doc.roundedRect(margin, yPos, contentWidth, 8, 2, 2, 'F');
-      
+
       doc.setFontSize(10);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(lineName, margin + 3, yPos + 6);
-      
+
       if (line.rating) {
         doc.setTextColor(...primaryColor);
         doc.text(`${line.rating}/10`, pageWidth - margin - 15, yPos + 6);
         drawRatingBar(pageWidth - margin - 65, yPos + 2, line.rating, 40);
       }
-      
       yPos += 12;
-      
+
       if (line.observed) {
         doc.setFontSize(9);
         doc.setTextColor(...textColor);
         doc.setFont('helvetica', 'normal');
-        yPos = addWrappedText(line.observed, margin + 3, yPos, contentWidth - 6, 4);
+        addWrappedTextSafe(line.observed, margin + 3, contentWidth - 6, 4, 200);
         yPos += 2;
       }
-      
+
       if (line.meaning) {
         doc.setFontSize(9);
         doc.setTextColor(...mutedColor);
         doc.setFont('helvetica', 'italic');
-        yPos = addWrappedText(`Meaning: ${getSafeText(line.meaning)}`, margin + 3, yPos, contentWidth - 6, 4);
+        addWrappedTextSafe(`Meaning: ${getSafeText(line.meaning)}`, margin + 3, contentWidth - 6, 4, 200);
       }
-      
       yPos += 6;
     });
   }
@@ -677,36 +710,25 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
   // ========== MOUNT ANALYSIS ==========
   if (analysis.mountAnalysis) {
-    checkPageBreak(20);
-    drawLotusDivider(yPos);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MOUNT ANALYSIS (Parvat Vigyan)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('MOUNT ANALYSIS (Parvat Vigyan)');
 
     Object.entries(analysis.mountAnalysis).forEach(([key, mount]) => {
       if (!mount) return;
-      checkPageBreak(20);
-      
+      checkPageBreak(10);
+
       const mountName = MOUNT_NAMES[key] || key;
-      
       doc.setFontSize(9);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(`${mountName}:`, margin + 3, yPos);
-      
+
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...textColor);
       const safeStrength = getSafeText(mount.strength, 'Moderate');
       const safeMeaning = getSafeText(mount.meaning || mount.observed, '');
-      const mountInfo = `${safeStrength} - ${safeMeaning}`.substring(0, 80);
-      doc.text(mountInfo, margin + 35, yPos);
-      
+      doc.text(truncate(`${safeStrength} - ${safeMeaning}`, 80), margin + 35, yPos);
       yPos += 6;
     });
-    
     yPos += 5;
   }
 
@@ -714,14 +736,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
   // ========== HAND TYPE ANALYSIS ==========
   if (analysis.handTypeAnalysis) {
-    checkPageBreak(50);
-    drawLotusDivider(yPos);
-
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('HAND TYPE ANALYSIS (Tatva Vigyan)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('HAND TYPE ANALYSIS (Tatva Vigyan)');
 
     const ht = analysis.handTypeAnalysis;
     const htItems = [
@@ -747,7 +762,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
       doc.setFontSize(9);
       doc.setTextColor(...textColor);
       doc.setFont('helvetica', 'italic');
-      yPos = addWrappedText(ht.personalityProfile, margin + 3, yPos, contentWidth - 6, 4);
+      addWrappedTextSafe(ht.personalityProfile, margin + 3, contentWidth - 6, 4, 250);
       yPos += 4;
     }
 
@@ -758,7 +773,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
       doc.text('Strengths:', margin + 3, yPos);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...textColor);
-      doc.text(ht.strengths.map(s => getSafeText(s)).join(', ').substring(0, 90), margin + 25, yPos);
+      doc.text(truncate(ht.strengths.map(s => getSafeText(s)).join(', '), 90), margin + 25, yPos);
       yPos += 6;
     }
 
@@ -769,23 +784,15 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
       doc.text('Challenges:', margin + 3, yPos);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...textColor);
-      doc.text(ht.challenges.map(c => getSafeText(c)).join(', ').substring(0, 90), margin + 28, yPos);
+      doc.text(truncate(ht.challenges.map(c => getSafeText(c)).join(', '), 90), margin + 28, yPos);
       yPos += 6;
     }
-
     yPos += 5;
   }
 
   // ========== SECONDARY LINES ==========
   if (analysis.secondaryLines) {
-    checkPageBreak(40);
-    drawLotusDivider(yPos);
-
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SECONDARY LINES (Dvitiyak Rekha)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('SECONDARY LINES (Dvitiyak Rekha)');
 
     const sl = analysis.secondaryLines;
     const secLineItems = [
@@ -799,39 +806,31 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
     secLineItems.forEach(item => {
       if (!item.info && !item.interp) return;
-      checkPageBreak(12);
+      checkPageBreak(14);
       doc.setFontSize(9);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(`${item.name}:`, margin + 3, yPos);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...textColor);
-      doc.text(getSafeText(item.info || '').substring(0, 50), margin + 35, yPos);
+      doc.text(truncate(getSafeText(item.info || ''), 50), margin + 35, yPos);
       yPos += 5;
       if (item.interp) {
         doc.setFontSize(8);
         doc.setTextColor(...mutedColor);
         doc.setFont('helvetica', 'italic');
-        const lines = doc.splitTextToSize(getSafeText(item.interp).substring(0, 120), contentWidth - 10);
+        const lines: string[] = doc.splitTextToSize(truncate(getSafeText(item.interp), 150), contentWidth - 10);
         doc.text(lines.slice(0, 2), margin + 5, yPos);
         yPos += lines.slice(0, 2).length * 4;
       }
       yPos += 2;
     });
-
     yPos += 5;
   }
 
   // ========== FINGER & NAIL ANALYSIS ==========
   if (analysis.fingerAnalysis) {
-    checkPageBreak(35);
-    drawLotusDivider(yPos);
-
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FINGER & NAIL ANALYSIS (Anguli Vigyan)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('FINGER & NAIL ANALYSIS (Anguli Vigyan)');
 
     const fa = analysis.fingerAnalysis;
     const fingerItems = [
@@ -844,18 +843,17 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
     fingerItems.forEach(item => {
       if (!item.value) return;
-      checkPageBreak(8);
+      checkPageBreak(10);
       doc.setFontSize(9);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(`${item.label}:`, margin + 3, yPos);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...textColor);
-      const lines = doc.splitTextToSize(item.value.substring(0, 100), contentWidth - 45);
+      const lines: string[] = doc.splitTextToSize(truncate(item.value, 100), contentWidth - 45);
       doc.text(lines.slice(0, 2), margin + 38, yPos);
       yPos += lines.slice(0, 2).length * 5 + 2;
     });
-
     yPos += 5;
   }
 
@@ -866,9 +864,10 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     doc.addPage();
     currentPage++;
     drawBorder();
+    addWatermark();
     drawOmHeader(22);
     yPos = 30;
-    
+
     doc.setFontSize(16);
     doc.setTextColor(...primaryColor);
     doc.setFont('helvetica', 'bold');
@@ -878,11 +877,8 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     Object.entries(analysis.categories).forEach(([key, category]) => {
       if (!category) return;
 
-      const predictionLength = category.prediction?.length || 0;
-      const estimatedHeight = 30 + Math.min((predictionLength / 80) * 5, 80);
-      checkPageBreak(Math.min(estimatedHeight, 90));
-
-      drawLotusDivider(yPos);
+      checkPageBreak(50);
+      addThinDivider();
 
       // Category header
       doc.setFillColor(248, 248, 255);
@@ -890,35 +886,27 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
       doc.setDrawColor(...goldColor);
       doc.setLineWidth(0.3);
       doc.roundedRect(margin, yPos, contentWidth, 10, 2, 2, 'S');
-      
+
       const title = CATEGORY_TITLES[key] || key;
       doc.setFontSize(11);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(title, margin + 3, yPos + 7);
-      
+
       doc.setFontSize(10);
       doc.setTextColor(...primaryColor);
       doc.text(`${category.rating || 8}/10`, pageWidth - margin - 18, yPos + 7);
       drawRatingBar(pageWidth - margin - 70, yPos + 3, category.rating || 8, 45);
-      
       yPos += 14;
 
-      // Prediction text - increased limit to 3000
+      // Prediction text — capped at 1200 chars
       if (category.prediction) {
         doc.setFontSize(9);
         doc.setTextColor(...textColor);
         doc.setFont('helvetica', 'normal');
-        
-        const maxChars = 1500;
-        const safePrediction = getSafeText(category.prediction);
-        const truncatedPrediction = safePrediction.length > maxChars 
-          ? safePrediction.substring(0, maxChars) + '...' 
-          : safePrediction;
-        
-        yPos = addWrappedText(truncatedPrediction, margin + 3, yPos, contentWidth - 6, 4);
+        addWrappedTextSafe(category.prediction, margin + 3, contentWidth - 6, 4, 1200);
       }
-      
+
       // Observed Features
       if (category.observedFeatures && category.observedFeatures.length > 0) {
         yPos += 3;
@@ -927,26 +915,27 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
         doc.setFont('helvetica', 'bold');
         doc.text('Key Observations:', margin + 3, yPos);
         doc.setFont('helvetica', 'normal');
-        const safeFeatures = category.observedFeatures.slice(0, 3).map((f: string) => getSafeText(f)).join(' | ');
-        doc.text(safeFeatures.substring(0, 80), margin + 35, yPos);
+        doc.text(truncate(category.observedFeatures.slice(0, 3).map((f: string) => getSafeText(f)).join(' | '), 80), margin + 35, yPos);
         yPos += 4;
       }
 
-      // Guidance
+      // Guidance — capped at 200 chars, rendered with page awareness
       if (category.guidance) {
-        checkPageBreak(15);
+        checkPageBreak(18);
+        const safeGuidance = truncate(getSafeText(category.guidance), 200);
+        const guidanceLines: string[] = doc.splitTextToSize(`Guidance: ${safeGuidance}`, contentWidth - 10);
+        const cappedLines = guidanceLines.slice(0, 4);
+        const guidanceHeight = cappedLines.length * 4 + 6;
+
         doc.setFillColor(232, 245, 233);
-        const safeGuidance = getSafeText(category.guidance);
-        const guidanceLines = doc.splitTextToSize(`Guidance: ${safeGuidance}`, contentWidth - 10);
-        const guidanceHeight = Math.min(guidanceLines.length * 4 + 4, 25);
         doc.roundedRect(margin + 2, yPos - 2, contentWidth - 4, guidanceHeight, 2, 2, 'F');
         doc.setFontSize(8);
         doc.setTextColor(46, 125, 50);
-        doc.text(guidanceLines.slice(0, 5), margin + 5, yPos + 2);
+        doc.text(cappedLines, margin + 5, yPos + 2);
         yPos += guidanceHeight + 4;
       }
 
-      yPos += 8;
+      yPos += 6;
     });
   }
 
@@ -954,14 +943,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
   // ========== LUCKY ELEMENTS ==========
   if (analysis.luckyElements) {
-    checkPageBreak(60);
-    drawLotusDivider(yPos);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LUCKY ELEMENTS (Shubh Tatva)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('LUCKY ELEMENTS (Shubh Tatva)');
 
     const elements = [
       { label: 'Colors', values: analysis.luckyElements.colors },
@@ -972,85 +954,82 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
       { label: 'Metals', values: analysis.luckyElements.metals },
     ];
 
-    elements.forEach((elem) => {
+    elements.forEach(elem => {
       if (!elem.values || elem.values.length === 0) return;
-
+      checkPageBreak(8);
       doc.setFontSize(9);
       doc.setTextColor(...secondaryColor);
       doc.setFont('helvetica', 'bold');
       doc.text(`${elem.label}:`, margin + 3, yPos);
-      
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...textColor);
-      const safeValues = elem.values.map(v => getSafeText(String(v))).join(', ');
-      doc.text(safeValues.substring(0, 70), margin + 40, yPos);
-      
+      doc.text(truncate(elem.values.map(v => getSafeText(String(v))).join(', '), 70), margin + 40, yPos);
       yPos += 6;
     });
-
     yPos += 5;
   }
 
   // ========== MANTRAS ==========
   if (analysis.luckyElements?.mantras && analysis.luckyElements.mantras.length > 0) {
-    checkPageBreak(40);
-    drawLotusDivider(yPos);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RECOMMENDED MANTRAS', margin, yPos);
-    yPos += 10;
+    addSectionHeader('RECOMMENDED MANTRAS');
 
-    analysis.luckyElements.mantras.slice(0, 3).forEach((mantra) => {
-      checkPageBreak(20);
-      
-      doc.setFillColor(255, 248, 240);
-      doc.roundedRect(margin, yPos, contentWidth, 18, 2, 2, 'F');
-      doc.setDrawColor(...goldColor);
-      doc.roundedRect(margin, yPos, contentWidth, 18, 2, 2, 'S');
-      
+    analysis.luckyElements.mantras.slice(0, 3).forEach(mantra => {
+      checkPageBreak(25);
+
       if (typeof mantra === 'string') {
+        const safeMantra = getSafeText(mantra);
+        const mLines: string[] = doc.splitTextToSize(safeMantra, contentWidth - 14);
+        const mHeight = Math.max(mLines.length * 5 + 6, 18);
+
+        doc.setFillColor(255, 248, 240);
+        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'F');
+        doc.setDrawColor(...goldColor);
+        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'S');
+
         doc.setFontSize(10);
         doc.setTextColor(...textColor);
         doc.setFont('helvetica', 'italic');
-        doc.text(getSafeText(mantra), margin + 5, yPos + 11);
+        doc.text(mLines.slice(0, 3), margin + 5, yPos + 6);
+        yPos += mHeight + 4;
       } else {
+        const transText = getSafeText(mantra.transliteration || mantra.sanskrit);
+        const meaningText = getSafeText(mantra.meaning);
+        const tLines: string[] = doc.splitTextToSize(transText, contentWidth - 14);
+        const meLines: string[] = meaningText ? doc.splitTextToSize(meaningText, contentWidth - 14) : [];
+        const mHeight = tLines.length * 5 + meLines.slice(0, 2).length * 4 + 10;
+
+        doc.setFillColor(255, 248, 240);
+        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'F');
+        doc.setDrawColor(...goldColor);
+        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'S');
+
         doc.setFontSize(10);
         doc.setTextColor(...secondaryColor);
         doc.setFont('helvetica', 'bold');
-        doc.text(getSafeText(mantra.transliteration || mantra.sanskrit), margin + 5, yPos + 7);
-        
-        if (mantra.meaning) {
+        doc.text(tLines.slice(0, 2), margin + 5, yPos + 7);
+
+        if (meaningText) {
           doc.setFontSize(8);
           doc.setTextColor(...mutedColor);
           doc.setFont('helvetica', 'italic');
-          doc.text(getSafeText(mantra.meaning).substring(0, 80), margin + 5, yPos + 14);
+          doc.text(meLines.slice(0, 2), margin + 5, yPos + 7 + tLines.slice(0, 2).length * 5 + 2);
         }
+        yPos += mHeight + 4;
       }
-      
-      yPos += 22;
     });
   }
 
   // ========== YOGAS ==========
   if (analysis.yogas && analysis.yogas.length > 0) {
-    checkPageBreak(30);
-    drawLotusDivider(yPos);
+    addSectionHeader('SPECIAL YOGAS DETECTED');
 
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SPECIAL YOGAS DETECTED', margin, yPos);
-    yPos += 10;
-
-    analysis.yogas.slice(0, 5).forEach((yoga) => {
+    analysis.yogas.slice(0, 5).forEach(yoga => {
       checkPageBreak(10);
       doc.setFontSize(9);
       doc.setTextColor(...textColor);
       doc.setFont('helvetica', 'normal');
       const safeYoga = getSafeText(yoga);
-      const lines = doc.splitTextToSize(`* ${safeYoga}`, contentWidth - 10);
+      const lines: string[] = doc.splitTextToSize(`* ${truncate(safeYoga, 150)}`, contentWidth - 10);
       doc.text(lines.slice(0, 2), margin + 3, yPos);
       yPos += lines.slice(0, 2).length * 4 + 2;
     });
@@ -1059,47 +1038,34 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
 
   // ========== REMEDIES ==========
   if (analysis.remedies && analysis.remedies.length > 0) {
-    checkPageBreak(40);
-    drawLotusDivider(yPos);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('REMEDIES & RECOMMENDATIONS (Upay)', margin, yPos);
-    yPos += 10;
+    addSectionHeader('REMEDIES & RECOMMENDATIONS (Upay)');
 
     analysis.remedies.slice(0, 7).forEach((remedy, index) => {
-      checkPageBreak(10);
+      checkPageBreak(12);
       doc.setFontSize(9);
       doc.setTextColor(...textColor);
       doc.setFont('helvetica', 'normal');
       const safeRemedy = getSafeText(remedy);
-      const lines = doc.splitTextToSize(`${index + 1}. ${safeRemedy}`, contentWidth - 10);
+      const lines: string[] = doc.splitTextToSize(`${index + 1}. ${truncate(safeRemedy, 200)}`, contentWidth - 10);
       doc.text(lines.slice(0, 3), margin + 3, yPos);
       yPos += lines.slice(0, 3).length * 4 + 2;
     });
-
     yPos += 5;
   }
 
   // ========== WARNINGS ==========
   if (analysis.warnings && analysis.warnings.length > 0) {
-    checkPageBreak(30);
-    drawLotusDivider(yPos);
-
-    doc.setFontSize(14);
+    addSectionHeader('CAUTION PERIODS');
+    // Override header color for warnings
     doc.setTextColor(220, 50, 50);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CAUTION PERIODS', margin, yPos);
-    yPos += 10;
 
-    analysis.warnings.slice(0, 5).forEach((warning) => {
+    analysis.warnings.slice(0, 5).forEach(warning => {
       checkPageBreak(10);
       doc.setFontSize(9);
       doc.setTextColor(...textColor);
       doc.setFont('helvetica', 'normal');
       const safeWarning = getSafeText(warning);
-      const lines = doc.splitTextToSize(`! ${safeWarning}`, contentWidth - 10);
+      const lines: string[] = doc.splitTextToSize(`! ${truncate(safeWarning, 150)}`, contentWidth - 10);
       doc.text(lines.slice(0, 2), margin + 3, yPos);
       yPos += lines.slice(0, 2).length * 4 + 2;
     });
@@ -1109,38 +1075,41 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
   // ========== BLESSINGS (FINAL) ==========
   if (analysis.blessings) {
     checkPageBreak(50);
-    drawLotusDivider(yPos);
-    
+    addThinDivider();
+
+    const safeBlessings = truncate(getSafeText(analysis.blessings), 500);
+    const blessingLines: string[] = doc.splitTextToSize(safeBlessings, contentWidth - 20);
+    const cappedBlessingLines = blessingLines.slice(0, 8);
+    const blessingHeight = cappedBlessingLines.length * 5 + 20;
+
     doc.setFillColor(255, 248, 225);
-    const safeBlessings = getSafeText(analysis.blessings);
-    const blessingLines = doc.splitTextToSize(safeBlessings, contentWidth - 20);
-    const blessingHeight = blessingLines.length * 5 + 20;
     doc.roundedRect(margin, yPos, contentWidth, blessingHeight, 5, 5, 'F');
     doc.setDrawColor(...goldColor);
     doc.setLineWidth(1);
     doc.roundedRect(margin, yPos, contentWidth, blessingHeight, 5, 5, 'S');
-    
+
     doc.setFontSize(12);
     doc.setTextColor(...goldColor);
     doc.setFont('helvetica', 'bold');
-    doc.text('GURU JI\'S BLESSINGS', pageWidth / 2, yPos + 10, { align: 'center' });
-    
+    doc.text("GURU JI'S BLESSINGS", pageWidth / 2, yPos + 10, { align: 'center' });
+
     doc.setFontSize(10);
     doc.setTextColor(...textColor);
     doc.setFont('helvetica', 'italic');
-    doc.text(blessingLines, margin + 10, yPos + 20);
-    
+    doc.text(cappedBlessingLines, margin + 10, yPos + 20);
+
     yPos += blessingHeight + 10;
   }
 
-  // Final footer
+  // Final disclaimer
   checkPageBreak(30);
-  drawLotusDivider(yPos);
+  addThinDivider();
   doc.setFontSize(8);
   doc.setTextColor(...mutedColor);
   doc.setFont('helvetica', 'normal');
   doc.text('This report is generated by BhaktVerse AI based on Vedic palmistry traditions (Samudrika Shastra).', pageWidth / 2, yPos, { align: 'center' });
-  doc.text('For entertainment and spiritual guidance purposes. Consult a qualified astrologer for specific advice.', pageWidth / 2, yPos + 5, { align: 'center' });
+  yPos += 5;
+  doc.text('For spiritual guidance purposes. Consult a qualified astrologer for specific advice.', pageWidth / 2, yPos, { align: 'center' });
 
   addPageFooter();
 
@@ -1154,7 +1123,7 @@ export const generatePalmReadingPDF = (analysis: PalmAnalysis, userName?: string
     doc.text(`Page ${i} of ${totalPageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
   }
 
-  // Save the PDF
+  // Save
   const safeName = getSafeText(userName, 'Seeker').replace(/[^a-zA-Z0-9]/g, '_');
   doc.save(`BhaktVerse_Palm_Reading_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
 };
