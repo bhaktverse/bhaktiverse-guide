@@ -707,8 +707,8 @@ const Dashboard = () => {
             <Card className="bg-gradient-to-r from-card via-card-sacred to-card border-primary/20 shadow-lotus overflow-hidden">
               <CardContent className="p-4 sm:p-6 relative">
                 <div className="absolute top-0 right-0 text-6xl sm:text-8xl opacity-5 -mt-4 -mr-4">✨</div>
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 text-3xl animate-sacred-float">📿</div>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="flex-shrink-0 text-2xl sm:text-3xl animate-sacred-float">📿</div>
                   <div>
                     <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
                       <Sparkles className="h-4 w-4" />
