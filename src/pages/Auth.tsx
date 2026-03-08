@@ -33,10 +33,7 @@ const Auth = () => {
   const performRedirect = (showToast = true) => {
     setRedirecting(true);
     if (showToast) {
-      toast({
-        title: "🙏 Welcome!",
-        description: "Redirecting to your spiritual dashboard...",
-      });
+      toast.success("🙏 Welcome! Redirecting to your spiritual dashboard...");
     }
     // Use setTimeout to ensure state updates render before navigate
     setTimeout(() => {
