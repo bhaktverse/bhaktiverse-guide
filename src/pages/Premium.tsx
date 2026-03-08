@@ -31,10 +31,12 @@ const Premium = () => {
   const { toast } = useToast();
 
   const handleUpgrade = () => {
-    toast({
-      title: "🚀 Coming Soon!",
-      description: "Premium subscriptions launching soon! Contact support for early access.",
-    });
+    const message = encodeURIComponent("Hi! I'm interested in BhaktVerse Premium. Please share details.");
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
+  const handleEmailContact = () => {
+    window.location.href = 'mailto:support@bhaktverse.com?subject=Premium%20Subscription%20Inquiry&body=Namaste!%20I%20am%20interested%20in%20BhaktVerse%20Premium.';
   };
 
   useEffect(() => {
