@@ -30,6 +30,41 @@ interface MountAnalysis {
   rating?: number;
 }
 
+interface HandTypeAnalysis {
+  classification?: string;
+  tatvaElement?: string;
+  palmShape?: string;
+  fingerToPalmRatio?: string;
+  personalityProfile?: string;
+  strengths?: string[];
+  challenges?: string[];
+}
+
+interface SecondaryLines {
+  marriageLines?: { count?: number; depth?: string; position?: string; interpretation?: string };
+  childrenLines?: { count?: number; interpretation?: string };
+  healthLine?: { present?: boolean; description?: string; interpretation?: string };
+  travelLines?: { count?: number; description?: string; interpretation?: string };
+  intuitionLine?: { present?: boolean; description?: string; interpretation?: string };
+  girdleOfVenus?: { present?: boolean; description?: string; interpretation?: string };
+}
+
+interface FingerAnalysis {
+  thumbFlexibility?: { type?: string; meaning?: string };
+  fingerGaps?: { observed?: string; financialControl?: string };
+  ringVsIndex?: { dominant?: string; confidenceLevel?: string };
+  nailShape?: { type?: string; healthIndicator?: string };
+  fingerProportions?: { details?: string; personality?: string };
+}
+
+interface LineQualityDetails {
+  breaks?: string[];
+  islands?: string[];
+  forks?: string[];
+  crosses?: string[];
+  chains?: string[];
+}
+
 interface PalmAnalysis {
   language?: string;
   palmType?: string;
@@ -62,8 +97,14 @@ interface PalmAnalysis {
     mercury?: MountAnalysis;
     venus?: MountAnalysis;
     mars?: MountAnalysis;
+    marsUpper?: MountAnalysis;
+    marsLower?: MountAnalysis;
     moon?: MountAnalysis;
   };
+  handTypeAnalysis?: HandTypeAnalysis;
+  secondaryLines?: SecondaryLines;
+  fingerAnalysis?: FingerAnalysis;
+  lineQualityDetails?: LineQualityDetails;
   luckyElements?: {
     colors?: string[];
     gemstones?: string[];
