@@ -47,7 +47,37 @@ const Horoscope = () => {
     autoDetectRashi();
   }, [user]);
 
-  const loadPanchang = async () => {
+  const autoDetectRashi = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('astro_profiles')
+        .select('rashi, dob')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data?.rashi) {
+        const zodiacMap: Record<string, number> = {
+          aries: 0, taurus: 1, gemini: 2, cancer: 3, leo: 4, virgo: 5,
+          libra: 6, scorpio: 7, sagittarius: 8, capricorn: 9, aquarius: 10, pisces: 11
+        };
+        const idx = zodiacMap[data.rashi];
+        if (idx !== undefined && RASHIS[idx]) {
+          setSelectedRashi(RASHIS[idx]);
+          toast.success(`🌟 Auto-detected your rashi: ${RASHIS[idx].hindiName}`);
+        }
+      } else if (data?.dob) {
+        const detected = getRashiByDate(new Date(data.dob));
+        if (detected) {
+          setSelectedRashi(detected);
+          toast.success(`🌟 Detected rashi from DOB: ${detected.hindiName}`);
+        }
+      }
+    } catch (err) {
+      console.error('Auto-detect rashi error:', err);
+    }
+  };
+
     try {
       const { data } = await supabase.functions.invoke('hindu-panchang', {
         body: { 
