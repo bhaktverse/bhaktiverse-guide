@@ -242,6 +242,31 @@ const SaintChat = () => {
               </div>
             </div>
             <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={async () => {
+                if (!user || !saintId) return;
+                // Delete existing session
+                await supabase
+                  .from('ai_chat_sessions')
+                  .delete()
+                  .eq('user_id', user.id)
+                  .eq('session_type', 'saint_specific')
+                  .eq('context_data->>saint_id', saintId);
+                // Reset to welcome message
+                setMessages([{
+                  id: 'welcome',
+                  role: 'saint',
+                  content: `🙏 Namaste! I am ${saint.name}. I'm here to share wisdom from the ${saint.tradition} tradition. What guidance do you seek today?`,
+                  timestamp: new Date()
+                }]);
+                toast({ title: "New Chat Started", description: "Previous conversation cleared." });
+              }}
+              className="gap-1 text-xs"
+            >
+              ✨ New Chat
+            </Button>
+            <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setShowTeachings(!showTeachings)}
