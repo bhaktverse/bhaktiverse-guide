@@ -725,6 +725,7 @@ const Community = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => deletePost(post.id)}
+                          aria-label="Delete post"
                           className="text-muted-foreground hover:text-destructive"
                         >
                           Delete

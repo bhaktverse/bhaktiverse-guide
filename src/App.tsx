@@ -54,7 +54,6 @@ const App = () => (
       <AuthProvider>
         <PremiumProvider>
           <TooltipProvider>
-            <Toaster />
             <Sonner />
           <BrowserRouter>
             <ErrorBoundary>
