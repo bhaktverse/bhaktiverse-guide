@@ -836,16 +836,12 @@ const Community = () => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {posts.reduce((sum, p) => sum + (p.likes_count || 0), 0)}
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{totalBlessings}</div>
                   <p className="text-sm text-muted-foreground">Blessings Shared</p>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-accent">
-                    {posts.reduce((sum, p) => sum + (p.comments_count || 0), 0)}
-                  </div>
+                  <div className="text-2xl font-bold text-accent">{totalComments}</div>
                   <p className="text-sm text-muted-foreground">Comments</p>
                 </div>
               </CardContent>

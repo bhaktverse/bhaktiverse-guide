@@ -99,7 +99,7 @@ const CommentThread = ({ postId, onCountChange }: CommentThreadProps) => {
   };
 
   const deleteComment = async (id: string) => {
-    await (supabase as any).from('post_comments').delete().eq('id', id);
+    await supabase.from('post_comments').delete().eq('id', id);
     loadComments();
     toast.success('Comment deleted');
   };

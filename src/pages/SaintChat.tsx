@@ -57,6 +57,8 @@ const SaintChat = () => {
   const [showTeachings, setShowTeachings] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  usePageTitle(saint ? `Chat with ${saint.name}` : 'Saint Chat');
+
   useEffect(() => {
     if (!authLoading && !user) { navigate('/auth'); return; }
     if (saintId) loadSaint();

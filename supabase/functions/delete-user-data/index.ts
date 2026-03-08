@@ -63,6 +63,24 @@ Deno.serve(async (req) => {
       await adminClient.from(table).delete().eq('user_id', userId);
     }
 
+    // Clean up storage files
+    try {
+      const { data: postFiles } = await adminClient.storage.from('community-media').list(`posts/${userId}`);
+      if (postFiles?.length) {
+        await adminClient.storage.from('community-media').remove(postFiles.map(f => `posts/${userId}/${f.name}`));
+      }
+      // Remove avatar files
+      const { data: allFiles } = await adminClient.storage.from('community-media').list('avatars');
+      if (allFiles?.length) {
+        const userAvatars = allFiles.filter(f => f.name.startsWith(userId));
+        if (userAvatars.length) {
+          await adminClient.storage.from('community-media').remove(userAvatars.map(f => `avatars/${f.name}`));
+        }
+      }
+    } catch (storageError) {
+      console.error('Storage cleanup error (non-fatal):', storageError);
+    }
+
     // Delete user from auth
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId);
     if (deleteError) {
