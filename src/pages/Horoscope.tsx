@@ -287,7 +287,7 @@ const Horoscope = () => {
             {/* Tabs for Different Views */}
             <Tabs defaultValue="daily" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="daily">दैनिक / Daily</TabsTrigger>
+                <TabsTrigger value="daily">सारांश / Overview</TabsTrigger>
                 <TabsTrigger value="detailed">विस्तृत / Detailed</TabsTrigger>
                 <TabsTrigger value="remedies">उपाय / Remedies</TabsTrigger>
               </TabsList>

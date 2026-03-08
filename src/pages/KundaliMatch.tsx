@@ -466,8 +466,9 @@ const KundaliMatch = () => {
                   onClick={() => {
                     setResult(null);
                     setAiAnalysis('');
-                    setPartner1({ name: '', dob: '', timeOfBirth: '', rashi: null });
-                    setPartner2({ name: '', dob: '', timeOfBirth: '', rashi: null });
+                    setPartner1({ name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null });
+                    setPartner2({ name: '', dob: '', timeOfBirth: '', placeOfBirth: '', rashi: null });
+                    setUsedFallback(false);
                   }}
                   className="gap-2"
                 >
