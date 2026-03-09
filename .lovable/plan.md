@@ -1,109 +1,166 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# Admin Dashboard -- Full Build Plan
 
-## Current Critical Issues
+## Architecture
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
-
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
-
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
-
----
-
-## Implementation Plan
-
-### Phase 1: Fix Palm Reading Edge Function (Critical)
-
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
-
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
-
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
-
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
-
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
-
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
-
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
-
----
-
-## Technical Details
-
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
+All admin pages live under `/admin/*` routes, protected by an `AdminRoute` wrapper that checks `user_roles` for `admin` role via the existing `has_role()` function. A dedicated sidebar layout (`AdminLayout`) wraps all admin pages.
 
 ```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
-
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
+src/
+├── components/admin/
+│   ├── AdminLayout.tsx          # Sidebar + header + outlet
+│   ├── AdminRoute.tsx           # Role-gated wrapper
+│   ├── AdminSidebar.tsx         # 19-section nav
+│   ├── AdminMetricCard.tsx      # Glassmorphism stat card
+│   ├── AdminDataTable.tsx       # Reusable table with search/filter/pagination
+│   └── AdminChartCard.tsx       # Chart wrapper
+├── pages/admin/
+│   ├── AdminDashboard.tsx       # Overview metrics + charts
+│   ├── AdminUsers.tsx           # User CRUD + role management
+│   ├── AdminContent.tsx         # Mantras, bhajans, scriptures, quotes
+│   ├── AdminAISystems.tsx       # AI module toggles, usage logs
+│   ├── AdminPalmReading.tsx     # Palm reading history, analytics
+│   ├── AdminDarshan.tsx         # Temple streams, scheduling
+│   ├── AdminCommunity.tsx       # Post moderation, spam tools
+│   ├── AdminShorts.tsx          # Bhakti shorts moderation
+│   ├── AdminDonations.tsx       # Payment analytics, transactions
+│   ├── AdminSubscriptions.tsx   # Plan management
+│   ├── AdminAnalytics.tsx       # Growth charts, retention, heatmaps
+│   ├── AdminNotifications.tsx   # Push/email broadcast tools
+│   ├── AdminCalendar.tsx        # Calendar events CRUD
+│   ├── AdminDatabase.tsx        # Table browser, record editor
+│   ├── AdminStorage.tsx         # Bucket browser, file management
+│   ├── AdminRoles.tsx           # Role assignment UI
+│   ├── AdminSecurity.tsx        # Audit logs, login tracking
+│   ├── AdminSettings.tsx        # Site config, feature toggles
+│   └── AdminSupport.tsx         # Reports, support tickets
 ```
 
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
+## Key Design Decisions
 
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
+**Styling**: Dark theme with saffron/gold accents using existing CSS variables. Glassmorphism via `backdrop-blur-xl bg-card/60 border border-border/30`. No Framer Motion (not installed) -- use Tailwind `animate-fade-in` and CSS transitions for micro-interactions.
+
+**Data**: All reads use Supabase client with existing RLS. Admin writes use the existing `has_role('admin')` policies. No new tables needed initially -- the existing 25+ tables cover all sections.
+
+**Charts**: Recharts (already installed) for all analytics.
+
+**Route structure**: All routes nested under `/admin` in App.tsx, lazy-loaded, wrapped in `AdminRoute`.
+
+## Section Details
+
+### 1. AdminRoute (access control)
+Checks `user_roles` table for admin role. Redirects non-admins to `/dashboard` with toast error.
+
+### 2. AdminLayout + Sidebar
+Collapsible sidebar using Shadcn Sidebar component. 19 nav items grouped into categories (Platform, Content, Finance, System). Header with admin avatar, search, and notifications bell.
+
+### 3. Dashboard Overview
+Metric cards querying counts from: `profiles`, `user_activities`, `ai_chat_sessions`, `palm_reading_history`, `mantra_sessions`, `community_posts`, `subscriptions`. Recharts line/bar charts for 7-day/30-day trends. Activity feed from recent `user_activities`. System health cards (static for now).
+
+### 4. User Management
+DataTable of `profiles` joined with `user_roles` and `subscriptions`. Search by name/email. Actions: edit profile, assign role, view activity detail panel (side sheet showing user's posts, readings, streaks, donations).
+
+### 5. Spiritual Content Management
+Tabs for: Mantras (`mantras_library`), Audio (`audio_library`), Scriptures (`scriptures` + `scripture_chapters`), Saints (`saints`), Daily Devotions (`daily_devotions`), Spiritual Content (`spiritual_content`), FAQs (`spiritual_faqs`). Each tab has a DataTable with create/edit dialogs.
+
+### 6. AI Systems Control
+Read-only dashboard showing usage from `ai_chat_sessions`, `divine_conversations`, `user_api_usage`. Toggle cards for each AI module (stored in a site_settings pattern or localStorage for now). Usage charts by day.
+
+### 7. Palm Reading System
+DataTable of `palm_reading_history`. Analytics: total readings, readings/day chart, language distribution pie chart.
+
+### 8. Live Darshan Management
+CRUD on `temples` table focusing on `live_darshan_url` and `darshan_schedule` fields. Embed preview of live streams.
+
+### 9. Community Moderation
+DataTable of `community_posts` with moderation actions (delete, feature/unfeature). Comment moderation from `post_comments`. Bulk actions.
+
+### 10. Bhakti Shorts
+CRUD on `bhakti_shorts` table. Approve/reject toggle. View counts and engagement metrics.
+
+### 11. Donations & Payments
+Placeholder section (Stripe not yet integrated). Will show subscription revenue from `subscriptions` table. Transaction history placeholder.
+
+### 12. Subscription Plans
+DataTable of `subscriptions`. View by tier. Plan configuration UI (placeholder until Stripe).
+
+### 13. Analytics & Insights
+Full-page Recharts dashboard: user growth (registrations over time from `profiles.created_at`), feature usage (from `user_activities`), AI usage trends, retention chart.
+
+### 14. Notifications System
+CRUD on `notifications` table. Broadcast form to send notification to all users or filtered set. Calendar event notifications.
+
+### 15. Calendar & Events
+CRUD on `calendar_events` table. Calendar view using existing data.
+
+### 16. Database Manager
+Dynamic table browser: select any table, view paginated records, search, edit individual records via form dialog. Uses Supabase client queries.
+
+### 17. File & Media Storage
+Browse Supabase storage buckets (`saints-images`, `temple-images`, `audio-library`, etc.). List files, delete, view storage usage.
+
+### 18. Admin Roles
+Manage `user_roles` table. Assign/revoke roles (admin, moderator, user).
+
+### 19. Security & Audit Logs
+Display recent admin actions (placeholder -- would need an audit_logs table in future). Show login activity from auth metadata.
+
+### 20. System Settings & Support
+Feature toggles (localStorage-based for now). Site configuration form. Support/reports placeholder.
+
+## Database Changes
+
+**One new table** for audit logging:
+
+```sql
+CREATE TABLE admin_audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id UUID NOT NULL,
+  action VARCHAR NOT NULL,
+  target_table VARCHAR,
+  target_id UUID,
+  details JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE admin_audit_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins view audit logs" ON admin_audit_logs
+  FOR SELECT TO authenticated
+  USING (has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins insert audit logs" ON admin_audit_logs
+  FOR INSERT TO authenticated
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 ```
 
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
+## App.tsx Changes
 
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+Add lazy imports for all 19 admin pages. Add nested routes:
+
+```tsx
+<Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+  <Route index element={<AdminDashboard />} />
+  <Route path="users" element={<AdminUsers />} />
+  <Route path="content" element={<AdminContent />} />
+  // ... all 19 routes
+</Route>
+```
+
+## Implementation Order
+
+Given the scope, files will be created in this sequence:
+1. AdminRoute, AdminLayout, AdminSidebar (infrastructure)
+2. Reusable components (MetricCard, DataTable, ChartCard)
+3. AdminDashboard (overview)
+4. AdminUsers, AdminRoles
+5. AdminContent (all content tabs)
+6. AdminCommunity, AdminShorts
+7. AdminAISystems, AdminPalmReading
+8. AdminDarshan, AdminCalendar
+9. AdminAnalytics
+10. AdminNotifications, AdminSubscriptions, AdminDonations
+11. AdminDatabase, AdminStorage
+12. AdminSecurity, AdminSettings, AdminSupport
+13. App.tsx route registration
+
+This creates ~25 new files and modifies App.tsx. All pages use existing Supabase tables with admin RLS policies already in place.
 
