@@ -265,7 +265,6 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   // ----- Full Player Content (shared between desktop card & mobile drawer) -----
   const fullPlayerContent = (
     <div className="p-4 sm:p-6">
-      <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
 
       {/* Track Info */}
       <div className="flex flex-wrap items-center gap-3 mb-4 sm:mb-6">
