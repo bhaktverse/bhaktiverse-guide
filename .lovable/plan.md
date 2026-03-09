@@ -1,109 +1,122 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# Admin Dashboard Audit & Scale-Ready Enhancements + Admin Role Assignment
 
-## Current Critical Issues
+## Current State Assessment
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
+The admin dashboard has all 19 sidebar sections with working routes. Here's what each section currently does and what's missing for 1M-user scale:
 
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
+### What Works
+- **Routing & RBAC**: AdminRoute correctly uses `has_role()` RPC. All 19 routes registered.
+- **Sidebar**: Clean grouped navigation with 4 categories (Platform, Content, Finance, System).
+- **Dashboard Overview**: 8 metric cards + bar/pie charts + recent users list.
+- **User Management**: DataTable with roles, detail sheet panel.
+- **Content Management**: 5 tabbed tables (Mantras, Audio, Scriptures, Saints, FAQs).
+- **Community Moderation**: Feature/delete posts with toggle.
+- **Database Manager**: Dynamic table browser with 30 tables.
+- **Roles**: Assign/remove roles UI.
+- **Security**: Audit log viewer.
+- **Settings**: Feature toggles (localStorage-based).
 
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+### Critical Gaps for 1M Users
 
----
+| Gap | Impact | Fix |
+|-----|--------|-----|
+| **No CRUD dialogs** on Content, Darshan, Shorts, Calendar, Notifications | Admins can't create/edit content without raw SQL | Add create/edit dialogs to all content sections |
+| **RLS blocks admin reads** on `profiles`, `palm_reading_history`, `ai_chat_sessions`, `mantra_sessions`, `notifications`, `divine_conversations`, `user_activities` | Dashboard metrics return 0 for user-scoped tables | Add admin SELECT policies to these tables |
+| **Simulated chart data** in Dashboard & Analytics | Growth/activity charts use `Math.random()` | Replace with real aggregated queries |
+| **No pagination** on Database Manager | 50-row limit, unusable at scale | Add cursor-based pagination |
+| **No bulk actions** | Can't moderate/delete in bulk | Add multi-select + bulk operations |
+| **No broadcast notifications** | Can't send push to all users | Add broadcast form in Notifications |
+| **No export/CSV** | Can't extract data for reporting | Add export button to DataTables |
+| **Feature toggles in localStorage** | Not persistent across devices/admins | Move to a `site_settings` table |
+| **Storage page is static** | Just lists bucket names, no file browsing | Integrate Supabase Storage API for file listing |
+| **No admin search** | Can't globally search across admin sections | Add command palette or global search |
+| **Community moderation uses user-scoped delete** | Admin can't delete other users' posts (RLS blocks it) | Add admin DELETE/UPDATE policies on `community_posts` |
+| **No rate limiting visibility** | No view of API usage across users | Add aggregate API usage view |
+| **AdminDashboard queries `profiles` directly** | RLS only allows users to see their own profile | Admin can only see count of their own profile |
 
 ## Implementation Plan
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+### Phase 1: Database — Admin RLS Policies (Migration)
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
+Add admin SELECT policies to user-scoped tables so the dashboard can actually read data:
 
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
+```sql
+-- profiles: admin can read all
+CREATE POLICY "Admins view all profiles" ON profiles FOR SELECT TO authenticated
+  USING (has_role(auth.uid(), 'admin'));
 
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
+-- Similar for: palm_reading_history, ai_chat_sessions, mantra_sessions, 
+-- divine_conversations, user_activities, notifications, spiritual_journey,
+-- user_api_usage, numerology_reports, user_favorites, user_achievements,
+-- astro_profiles, kundali_match_history, user_progress, playlists
 
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
+-- Admin can moderate community posts (update/delete)
+CREATE POLICY "Admins moderate posts" ON community_posts FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'admin'))
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
+-- Admin can moderate comments
+CREATE POLICY "Admins moderate comments" ON post_comments FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'admin'))
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
-
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
-
----
-
-## Technical Details
-
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
-
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
-
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
+-- Admin can manage notifications (for broadcast)
+CREATE POLICY "Admins manage notifications" ON notifications FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'admin'))
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 ```
 
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
+Also insert admin role for user `17046cb8-b1b1-4596-b3ec-8a9462d29acb`.
 
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
+### Phase 2: CRUD Dialogs (Content, Darshan, Shorts, Calendar, Notifications)
 
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
+Add create/edit dialog components to:
+- **AdminContent**: Add/edit mantras, audio, scriptures, saints, FAQs
+- **AdminDarshan**: Add/edit temple live stream URLs and schedules
+- **AdminShorts**: Upload/approve/reject shorts
+- **AdminCalendar**: Create/edit calendar events
+- **AdminNotifications**: Broadcast notification form (insert into `notifications` for all users or filtered set)
 
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+### Phase 3: Real Analytics Data
+
+Replace `Math.random()` charts with actual aggregated queries:
+- User registrations by day (group `profiles.created_at`)
+- Activity counts by day (group `user_activities.created_at`)
+- API usage trends (aggregate `user_api_usage`)
+
+### Phase 4: Scale-Ready UI Improvements
+
+- **Pagination**: Add proper pagination to AdminDatabase (offset-based with page controls)
+- **Bulk Actions**: Multi-select checkboxes on AdminDataTable + bulk delete/approve
+- **CSV Export**: Add export button to AdminDataTable
+- **Admin User Detail**: Expand user sheet to show subscription, activities, palm readings, AI sessions
+
+### Phase 5: Settings Persistence
+
+- Create `site_settings` table (key-value with JSONB) with admin-only RLS
+- Migrate feature toggles from localStorage to database
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| Migration SQL | ~18 new admin RLS policies + `site_settings` table |
+| Data insert | Admin role for user `17046cb8-...` |
+| `AdminContent.tsx` | Add create/edit dialogs for each content tab |
+| `AdminDarshan.tsx` | Add create/edit temple dialog |
+| `AdminShorts.tsx` | Add approve/reject + create dialog |
+| `AdminCalendar.tsx` | Add create/edit event dialog |
+| `AdminNotifications.tsx` | Add broadcast notification form |
+| `AdminDashboard.tsx` | Replace random data with real queries |
+| `AdminAnalytics.tsx` | Replace random data with real aggregations |
+| `AdminDataTable.tsx` | Add pagination, bulk select, CSV export |
+| `AdminDatabase.tsx` | Add pagination controls |
+| `AdminUsers.tsx` | Expand detail panel with activity data |
+| `AdminSettings.tsx` | Migrate to `site_settings` table |
+| `AdminStorage.tsx` | Add Supabase Storage file listing |
+| `AdminCommunity.tsx` | Use admin policies for delete/update |
+
+This is a large scope (~15 files). The migration and data insert will be executed first, then all UI files updated in parallel.
 
