@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import AdminChartCard from "@/components/admin/AdminChartCard";
 import { Users, Bot, Hand, Music, MessageSquare, CreditCard, Eye, Flame } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { format, subDays } from "date-fns";
 
 const COLORS = ["hsl(25,90%,55%)", "hsl(45,85%,60%)", "hsl(320,30%,60%)", "hsl(200,40%,55%)", "hsl(120,35%,50%)"];
 
@@ -33,12 +34,30 @@ export default function AdminDashboard() {
       const { data: recent } = await supabase.from("profiles").select("name, created_at, spiritual_level").order("created_at", { ascending: false }).limit(5);
       setRecentUsers(recent ?? []);
 
-      // Build 7-day activity chart
-      const days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(); d.setDate(d.getDate() - (6 - i));
-        return { date: d.toLocaleDateString("en", { weekday: "short" }), users: Math.floor(Math.random() * 20 + 5), sessions: Math.floor(Math.random() * 30 + 10) };
+      // Real 7-day activity data
+      const sevenDaysAgo = subDays(new Date(), 6).toISOString();
+      const { data: activities } = await supabase.from("user_activities").select("created_at").gte("created_at", sevenDaysAgo);
+      const { data: regs } = await supabase.from("profiles").select("created_at").gte("created_at", sevenDaysAgo);
+
+      const dayMap: Record<string, { users: number; sessions: number }> = {};
+      for (let i = 0; i < 7; i++) {
+        const d = subDays(new Date(), 6 - i);
+        const key = format(d, "yyyy-MM-dd");
+        dayMap[key] = { users: 0, sessions: 0 };
+      }
+      (regs ?? []).forEach((r: any) => {
+        const key = format(new Date(r.created_at), "yyyy-MM-dd");
+        if (dayMap[key]) dayMap[key].users++;
       });
-      setActivityData(days);
+      (activities ?? []).forEach((a: any) => {
+        const key = format(new Date(a.created_at), "yyyy-MM-dd");
+        if (dayMap[key]) dayMap[key].sessions++;
+      });
+
+      setActivityData(Object.entries(dayMap).map(([date, vals]) => ({
+        date: format(new Date(date), "EEE"),
+        ...vals,
+      })));
     };
     load();
   }, []);
@@ -59,8 +78,8 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <AdminMetricCard title="Total Users" value={metrics.users} icon={Users} trend={{ value: 12, label: "this week" }} />
-        <AdminMetricCard title="AI Sessions" value={metrics.ai} icon={Bot} trend={{ value: 8, label: "this week" }} />
+        <AdminMetricCard title="Total Users" value={metrics.users} icon={Users} />
+        <AdminMetricCard title="AI Sessions" value={metrics.ai} icon={Bot} />
         <AdminMetricCard title="Palm Readings" value={metrics.readings} icon={Hand} />
         <AdminMetricCard title="Mantra Sessions" value={metrics.mantras} icon={Flame} />
         <AdminMetricCard title="Community Posts" value={metrics.posts} icon={MessageSquare} />
@@ -70,14 +89,14 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <AdminChartCard title="Weekly Activity" subtitle="Users & sessions over 7 days">
+        <AdminChartCard title="Weekly Activity" subtitle="Registrations & activities (last 7 days)">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={activityData}>
               <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="sessions" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Registrations" />
+              <Bar dataKey="sessions" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} name="Activities" />
             </BarChart>
           </ResponsiveContainer>
         </AdminChartCard>

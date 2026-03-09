@@ -19,14 +19,17 @@ export default function AdminCommunity() {
 
   const toggleFeatured = async (post: any) => {
     await supabase.from("community_posts").update({ featured: !post.featured }).eq("id", post.id);
-    toast.success(post.featured ? "Unfeatured" : "Featured");
-    load();
+    toast.success(post.featured ? "Unfeatured" : "Featured"); load();
   };
 
   const deletePost = async (id: string) => {
     await supabase.from("community_posts").delete().eq("id", id);
-    toast.success("Post deleted");
-    load();
+    toast.success("Post deleted"); load();
+  };
+
+  const bulkDelete = async (ids: string[]) => {
+    for (const id of ids) { await supabase.from("community_posts").delete().eq("id", id); }
+    toast.success(`Deleted ${ids.length} posts`); load();
   };
 
   const columns: Column<any>[] = [
@@ -46,6 +49,12 @@ export default function AdminCommunity() {
       </div>
       <AdminDataTable
         data={posts} columns={columns} searchKey="content" loading={loading}
+        enableBulkSelect
+        bulkActions={(ids) => (
+          <Button variant="destructive" size="sm" onClick={() => bulkDelete(ids)}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete ({ids.length})
+          </Button>
+        )}
         actions={(row) => (
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleFeatured(row)}>

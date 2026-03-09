@@ -3,12 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminDataTable, { Column } from "@/components/admin/AdminDataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Check, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminShorts() {
   const [shorts, setShorts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialog, setDialog] = useState(false);
+  const [form, setForm] = useState<Record<string, any>>({});
 
   const load = async () => {
     const { data } = await supabase.from("bhakti_shorts").select("*").order("created_at", { ascending: false });
@@ -19,8 +25,20 @@ export default function AdminShorts() {
 
   const toggleApproval = async (s: any) => {
     await supabase.from("bhakti_shorts").update({ approved: !s.approved }).eq("id", s.id);
-    toast.success(s.approved ? "Unapproved" : "Approved");
-    load();
+    toast.success(s.approved ? "Unapproved" : "Approved"); load();
+  };
+
+  const del = async (id: string) => {
+    await supabase.from("bhakti_shorts").delete().eq("id", id);
+    toast.success("Deleted"); load();
+  };
+
+  const save = async () => {
+    await supabase.from("bhakti_shorts").insert({
+      title: form.title, video_url: form.video_url, description: form.description,
+      category: form.category || "devotional", approved: true,
+    });
+    toast.success("Created"); setDialog(false); load();
   };
 
   const columns: Column<any>[] = [
@@ -34,18 +52,40 @@ export default function AdminShorts() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold">Bhakti Shorts</h1>
-        <p className="text-sm text-muted-foreground">{shorts.length} videos · {shorts.filter(s => !s.approved).length} pending</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Bhakti Shorts</h1>
+          <p className="text-sm text-muted-foreground">{shorts.length} videos · {shorts.filter(s => !s.approved).length} pending</p>
+        </div>
+        <Button size="sm" onClick={() => { setForm({}); setDialog(true); }}><Plus className="h-4 w-4 mr-1" /> Add Short</Button>
       </div>
       <AdminDataTable
         data={shorts} columns={columns} searchKey="title" loading={loading}
         actions={(row) => (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleApproval(row)}>
-            {row.approved ? <X className="h-4 w-4 text-destructive" /> : <Check className="h-4 w-4 text-[hsl(var(--success))]" />}
-          </Button>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleApproval(row)}>
+              {row.approved ? <X className="h-4 w-4 text-destructive" /> : <Check className="h-4 w-4 text-[hsl(var(--success))]" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => del(row.id)}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         )}
       />
+      {dialog && (
+        <Dialog open onOpenChange={() => setDialog(false)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Add Bhakti Short</DialogTitle></DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div><Label className="text-xs">Title</Label><Input value={form.title ?? ""} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="mt-1" /></div>
+              <div><Label className="text-xs">Video URL</Label><Input value={form.video_url ?? ""} onChange={e => setForm(p => ({ ...p, video_url: e.target.value }))} className="mt-1" /></div>
+              <div><Label className="text-xs">Description</Label><Textarea value={form.description ?? ""} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="mt-1" rows={2} /></div>
+              <div><Label className="text-xs">Category</Label><Input value={form.category ?? "devotional"} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="mt-1" /></div>
+              <Button onClick={save} className="w-full">Create</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
