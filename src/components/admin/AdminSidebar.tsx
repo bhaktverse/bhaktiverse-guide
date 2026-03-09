@@ -74,7 +74,7 @@ export default function AdminSidebar() {
           </div>
         )}
         {groups.map((g) => (
-          <SidebarGroup key={g.label} defaultOpen>
+          <SidebarGroup key={g.label}>
             <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70">
               {g.label}
             </SidebarGroupLabel>
