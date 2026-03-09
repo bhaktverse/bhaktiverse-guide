@@ -244,7 +244,7 @@ const PalmReading = () => {
         if (roles?.some(r => r.role === 'admin' || r.role === 'moderator')) {
           setIsPremiumUser(true); setShowFullReading(true); return;
         }
-        const { data: journey } = await supabase.from('spiritual_journey').select('level, experience_points').eq('user_id', user.id).single();
+        const { data: journey } = await supabase.from('spiritual_journey').select('level, experience_points').eq('user_id', user.id).maybeSingle();
         if (journey && (journey.level >= 3 || journey.experience_points >= 500)) {
           setIsPremiumUser(true); setShowFullReading(true);
         }
