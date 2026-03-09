@@ -48,6 +48,29 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 
+// Admin pages
+const AdminRoute = lazy(() => import("./components/admin/AdminRoute"));
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
+const AdminAISystems = lazy(() => import("./pages/admin/AdminAISystems"));
+const AdminPalmReading = lazy(() => import("./pages/admin/AdminPalmReading"));
+const AdminDarshan = lazy(() => import("./pages/admin/AdminDarshan"));
+const AdminCommunity = lazy(() => import("./pages/admin/AdminCommunity"));
+const AdminShorts = lazy(() => import("./pages/admin/AdminShorts"));
+const AdminDonations = lazy(() => import("./pages/admin/AdminDonations"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
+const AdminCalendar = lazy(() => import("./pages/admin/AdminCalendar"));
+const AdminDatabase = lazy(() => import("./pages/admin/AdminDatabase"));
+const AdminStorage = lazy(() => import("./pages/admin/AdminStorage"));
+const AdminRoles = lazy(() => import("./pages/admin/AdminRoles"));
+const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -90,6 +113,29 @@ const App = () => (
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                 <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
+
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="content" element={<AdminContent />} />
+                  <Route path="ai-systems" element={<AdminAISystems />} />
+                  <Route path="palm-reading" element={<AdminPalmReading />} />
+                  <Route path="darshan" element={<AdminDarshan />} />
+                  <Route path="community" element={<AdminCommunity />} />
+                  <Route path="shorts" element={<AdminShorts />} />
+                  <Route path="donations" element={<AdminDonations />} />
+                  <Route path="subscriptions" element={<AdminSubscriptions />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="notifications" element={<AdminNotifications />} />
+                  <Route path="calendar" element={<AdminCalendar />} />
+                  <Route path="database" element={<AdminDatabase />} />
+                  <Route path="storage" element={<AdminStorage />} />
+                  <Route path="roles" element={<AdminRoles />} />
+                  <Route path="security" element={<AdminSecurity />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="support" element={<AdminSupport />} />
+                </Route>
 
                 {/* CATCH-ALL */}
                 <Route path="*" element={<NotFound />} />
