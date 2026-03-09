@@ -445,11 +445,14 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
 
   // ----- Desktop: Sticky card -----
   return (
-    <Card className="card-sacred sticky top-24 shadow-divine">
-      <CardContent className="p-0">
-        {fullPlayerContent}
-      </CardContent>
-    </Card>
+    <>
+      <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
+      <Card className="card-sacred sticky top-24 shadow-divine">
+        <CardContent className="p-0">
+          {fullPlayerContent}
+        </CardContent>
+      </Card>
+    </>
   );
 };
 
