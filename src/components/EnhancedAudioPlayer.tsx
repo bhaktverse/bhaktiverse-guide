@@ -406,37 +406,40 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   // ----- Mobile: Fixed mini-player + Drawer -----
   if (isMobile) {
     return (
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        {/* Mini Player Bar - fixed at bottom above MobileBottomNav */}
-        <DrawerTrigger asChild>
-          <div className="fixed bottom-16 left-0 right-0 z-40 bg-card border-t border-border shadow-divine px-3 py-2 cursor-pointer">
-            {/* Thin progress bar at top */}
-            <div className="absolute top-0 left-0 right-0 h-0.5 bg-muted">
-              <div className="h-full bg-primary transition-all" style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }} />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-xl flex-shrink-0">{getCategoryIcon(track.category)}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{track.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+      <>
+        <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          {/* Mini Player Bar - fixed at bottom above MobileBottomNav */}
+          <DrawerTrigger asChild>
+            <div className="fixed bottom-16 left-0 right-0 z-40 bg-card border-t border-border shadow-divine px-3 py-2 cursor-pointer">
+              {/* Thin progress bar at top */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-muted">
+                <div className="h-full bg-primary transition-all" style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }} />
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-                </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); handleNext(); }}>
-                  <SkipForward className="h-4 w-4" />
-                </Button>
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <div className="text-xl flex-shrink-0">{getCategoryIcon(track.category)}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{track.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); handleNext(); }}>
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
             </div>
-          </div>
-        </DrawerTrigger>
+          </DrawerTrigger>
 
-        <DrawerContent className="max-h-[85vh] overflow-y-auto">
-          {fullPlayerContent}
-        </DrawerContent>
-      </Drawer>
+          <DrawerContent className="max-h-[85vh] overflow-y-auto">
+            {fullPlayerContent}
+          </DrawerContent>
+        </Drawer>
+      </>
     );
   }
 
