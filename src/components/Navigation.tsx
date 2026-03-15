@@ -26,7 +26,8 @@ import {
   Users,
   Calendar,
   Sun,
-  MessageCircle
+  MessageCircle,
+  Sparkles
 } from 'lucide-react';
 import NotificationCenter from '@/components/NotificationCenter';
 import ThemeToggle from '@/components/ThemeToggle';
