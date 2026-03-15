@@ -1,5 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { usePageTitle } from '@/hooks/usePageTitle';
+import GitaVerseWidget from "@/components/GitaVerseWidget";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -719,6 +720,11 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Gita Verse of the Day */}
+          <div className="lg:col-span-2">
+            <GitaVerseWidget variant="compact" />
           </div>
 
           {/* Right Sidebar */}

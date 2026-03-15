@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 const HeroSection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [dbStats, setDbStats] = useState({ saints: 0, temples: 0, scriptures: 0, audio: 0 });
+  const [dbStats, setDbStats] = useState({ saints: 0, temples: 0, scriptures: 0, audio: 0, users: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
 
   useEffect(() => {
@@ -20,17 +20,19 @@ const HeroSection = () => {
 
   const loadStats = async () => {
     try {
-      const [saintsRes, templesRes, scripturesRes, audioRes] = await Promise.all([
+      const [saintsRes, templesRes, scripturesRes, audioRes, usersRes] = await Promise.all([
         supabase.from('saints').select('id', { count: 'exact', head: true }),
         supabase.from('temples').select('id', { count: 'exact', head: true }),
         supabase.from('scriptures').select('id', { count: 'exact', head: true }),
         supabase.from('audio_library').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles_public').select('id', { count: 'exact', head: true }),
       ]);
       setDbStats({
         saints: saintsRes.count || 0,
         temples: templesRes.count || 0,
         scriptures: scripturesRes.count || 0,
         audio: audioRes.count || 0,
+        users: usersRes.count || 0,
       });
       setStatsLoaded(true);
     } catch (e) {
@@ -40,6 +42,7 @@ const HeroSection = () => {
   };
 
   const statsDisplay = [
+    ...(dbStats.users > 0 ? [{ value: `${dbStats.users}+`, label: 'Devotees Joined', icon: '🙏' }] : []),
     { value: `${dbStats.saints}+`, label: 'Saint Personalities', icon: '🧘' },
     { value: `${dbStats.scriptures}+`, label: 'Sacred Texts', icon: '📚' },
     { value: `${dbStats.temples}+`, label: 'Temples Connected', icon: '🏛️' },

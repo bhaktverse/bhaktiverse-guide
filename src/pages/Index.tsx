@@ -4,9 +4,10 @@ import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import GitaVerseWidget from "@/components/GitaVerseWidget";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, UserPlus, Compass, Users } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,7 +41,46 @@ const Index = () => {
       <Navigation />
       <HeroSection />
       <FeaturesSection />
-      
+
+      {/* How It Works Section */}
+      <section className="py-20 bg-gradient-to-b from-card/50 to-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-temple bg-clip-text text-transparent">
+              How It Works
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Begin your spiritual journey in 3 simple steps
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {[
+              { step: '1', icon: <UserPlus className="h-8 w-8 text-primary" />, title: 'Create Your Profile', desc: 'Sign up and tell us about your spiritual interests, favorite deities, and preferred language.' },
+              { step: '2', icon: <Compass className="h-8 w-8 text-primary" />, title: 'Explore & Discover', desc: 'Browse saints, scriptures, temples, and get AI-powered palm reading, numerology, and horoscope insights.' },
+              { step: '3', icon: <Users className="h-8 w-8 text-primary" />, title: 'Connect & Grow', desc: 'Join the community, track your spiritual journey, earn achievements, and grow with fellow devotees.' },
+            ].map((item) => (
+              <div key={item.step} className="relative text-center">
+                <div className="w-16 h-16 rounded-full bg-gradient-temple text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-divine">
+                  {item.step}
+                </div>
+                <div className="card-sacred p-6 rounded-2xl">
+                  <div className="mb-3 flex justify-center">{item.icon}</div>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Gita Verse of the Day */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <GitaVerseWidget variant="full" />
+        </div>
+      </section>
+
       {/* Community Voices Section */}
       <section className="py-20 bg-gradient-to-b from-background to-card/50">
         <div className="container mx-auto px-4">
