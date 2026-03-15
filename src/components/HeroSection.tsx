@@ -20,17 +20,19 @@ const HeroSection = () => {
 
   const loadStats = async () => {
     try {
-      const [saintsRes, templesRes, scripturesRes, audioRes] = await Promise.all([
+      const [saintsRes, templesRes, scripturesRes, audioRes, usersRes] = await Promise.all([
         supabase.from('saints').select('id', { count: 'exact', head: true }),
         supabase.from('temples').select('id', { count: 'exact', head: true }),
         supabase.from('scriptures').select('id', { count: 'exact', head: true }),
         supabase.from('audio_library').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles_public').select('id', { count: 'exact', head: true }),
       ]);
       setDbStats({
         saints: saintsRes.count || 0,
         temples: templesRes.count || 0,
         scriptures: scripturesRes.count || 0,
         audio: audioRes.count || 0,
+        users: usersRes.count || 0,
       });
       setStatsLoaded(true);
     } catch (e) {
