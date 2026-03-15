@@ -202,6 +202,7 @@ const Navigation = () => {
                 </Button>
               )}
             </div>
+          </div>
         </div>
       </nav>
 
