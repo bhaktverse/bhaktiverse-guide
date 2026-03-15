@@ -721,6 +721,11 @@ const Dashboard = () => {
             </Card>
           </div>
 
+          {/* Gita Verse of the Day */}
+          <div className="lg:col-span-2">
+            <GitaVerseWidget variant="compact" />
+          </div>
+
           {/* Right Sidebar */}
           <div className="space-y-4 sm:space-y-6 min-w-0">
             {/* Progress & Events side by side on small-medium, stacked on mobile and lg */}
