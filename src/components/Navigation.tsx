@@ -63,101 +63,96 @@ const Navigation = () => {
               </span>
             </Link>
 
-            {user ? (
-              <>
-                {/* Desktop Navigation Links */}
-                <div className="hidden md:flex items-center space-x-1">
-                  <GlobalSearch />
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/dashboard" className={navLinkClass('/dashboard')}>
-                      <Home className="h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Link>
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center space-x-1">
+              {user && <GlobalSearch />}
+              
+              {user && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/dashboard" className={navLinkClass('/dashboard')}>
+                    <Home className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </Button>
+              )}
+
+              {/* Explore Dropdown - visible to all */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className={groupTriggerClass(['/saints', '/scriptures', '/temples', '/audio-library'])}>
+                    <BookOpen className="h-4 w-4" />
+                    <span>Explore</span>
+                    <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/saints')} className="cursor-pointer">
+                    <Users className="h-4 w-4 mr-2" /> Saints
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/scriptures')} className="cursor-pointer">
+                    <BookOpen className="h-4 w-4 mr-2" /> Scriptures
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/temples')} className="cursor-pointer">
+                    <Building className="h-4 w-4 mr-2" /> Temples
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/audio-library')} className="cursor-pointer">
+                    <Music className="h-4 w-4 mr-2" /> Audio Library
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                  {/* Services Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={groupTriggerClass(['/palm-reading', '/numerology', '/horoscope', '/kundali-match'])}>
-                        <Compass className="h-4 w-4" />
-                        <span>Services</span>
-                        <ChevronDown className="h-3 w-3 ml-1" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                      <DropdownMenuItem onClick={() => navigate('/palm-reading')} className="cursor-pointer">
-                        <Hand className="h-4 w-4 mr-2" /> Palm Reading
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/numerology')} className="cursor-pointer">
-                        <Compass className="h-4 w-4 mr-2" /> Numerology
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/horoscope')} className="cursor-pointer">
-                        <Star className="h-4 w-4 mr-2" /> Daily Horoscope
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/kundali-match')} className="cursor-pointer">
-                        <Heart className="h-4 w-4 mr-2" /> Kundali Match
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+              {/* Community & Calendar - visible to all */}
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/community" className={navLinkClass('/community')}>
+                  <MessageCircle className="h-4 w-4" />
+                  <span>Community</span>
+                </Link>
+              </Button>
 
-                  {/* Explore Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={groupTriggerClass(['/saints', '/scriptures', '/temples', '/audio-library'])}>
-                        <BookOpen className="h-4 w-4" />
-                        <span>Explore</span>
-                        <ChevronDown className="h-3 w-3 ml-1" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                      <DropdownMenuItem onClick={() => navigate('/saints')} className="cursor-pointer">
-                        <Users className="h-4 w-4 mr-2" /> Saints
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/scriptures')} className="cursor-pointer">
-                        <BookOpen className="h-4 w-4 mr-2" /> Scriptures
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/temples')} className="cursor-pointer">
-                        <Building className="h-4 w-4 mr-2" /> Temples
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/audio-library')} className="cursor-pointer">
-                        <Music className="h-4 w-4 mr-2" /> Audio Library
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  {/* More Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={groupTriggerClass(['/spiritual-calendar', '/community', '/daily-devotion'])}>
-                        <Calendar className="h-4 w-4" />
-                        <span>More</span>
-                        <ChevronDown className="h-3 w-3 ml-1" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                      <DropdownMenuItem onClick={() => navigate('/spiritual-calendar')} className="cursor-pointer">
-                        <Calendar className="h-4 w-4 mr-2" /> Spiritual Calendar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/community')} className="cursor-pointer">
-                        <MessageCircle className="h-4 w-4 mr-2" /> Community
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/daily-devotion')} className="cursor-pointer">
-                        <Sun className="h-4 w-4 mr-2" /> Daily Devotion
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/premium" className={`flex items-center space-x-1 text-secondary hover:text-secondary ${isActive('/premium') ? 'font-semibold' : ''}`}>
-                      <Crown className="h-4 w-4" />
-                      <span>Premium</span>
-                    </Link>
+              {/* Services Dropdown - visible to all */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className={groupTriggerClass(['/palm-reading', '/numerology', '/horoscope', '/kundali-match'])}>
+                    <Compass className="h-4 w-4" />
+                    <span>Services</span>
+                    <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
-                </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/palm-reading')} className="cursor-pointer">
+                    <Hand className="h-4 w-4 mr-2" /> Palm Reading
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/numerology')} className="cursor-pointer">
+                    <Compass className="h-4 w-4 mr-2" /> Numerology
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/horoscope')} className="cursor-pointer">
+                    <Star className="h-4 w-4 mr-2" /> Daily Horoscope
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/kundali-match')} className="cursor-pointer">
+                    <Heart className="h-4 w-4 mr-2" /> Kundali Match
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/spiritual-calendar')} className="cursor-pointer">
+                    <Calendar className="h-4 w-4 mr-2" /> Spiritual Calendar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/daily-devotion')} className="cursor-pointer">
+                    <Sun className="h-4 w-4 mr-2" /> Daily Devotion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                {/* Desktop User Menu */}
-                <div className="hidden md:flex items-center space-x-2">
-                  <ThemeToggle />
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/premium" className={`flex items-center space-x-1 text-secondary hover:text-secondary ${isActive('/premium') ? 'font-semibold' : ''}`}>
+                  <Crown className="h-4 w-4" />
+                  <span>Premium</span>
+                </Link>
+              </Button>
+            </div>
+
+            {/* Desktop Right Section */}
+            <div className="hidden md:flex items-center space-x-2">
+              <ThemeToggle />
+              {user ? (
+                <>
                   <NotificationCenter />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -178,24 +173,34 @@ const Navigation = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
+                </>
+              ) : (
+                <Button asChild className="bg-gradient-temple text-white hover:opacity-90">
+                  <Link to="/auth">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Get Started
+                  </Link>
+                </Button>
+              )}
+            </div>
 
-                {/* Mobile Menu Button */}
-                <div className="md:hidden flex items-center gap-1">
-                  <ThemeToggle />
+            {/* Mobile Right Section */}
+            <div className="md:hidden flex items-center gap-1">
+              <ThemeToggle />
+              {user ? (
+                <>
                   <NotificationCenter />
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/profile">
                       <User className="h-4 w-4" />
                     </Link>
                   </Button>
-                </div>
-              </>
-            ) : (
-              <Button asChild className="bg-primary text-primary-foreground hover:opacity-90">
-                <Link to="/auth">Login</Link>
-              </Button>
-            )}
+                </>
+              ) : (
+                <Button size="sm" asChild className="bg-gradient-temple text-white">
+                  <Link to="/auth">Login</Link>
+                </Button>
+              )}
           </div>
         </div>
       </nav>

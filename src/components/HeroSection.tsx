@@ -42,6 +42,7 @@ const HeroSection = () => {
   };
 
   const statsDisplay = [
+    ...(dbStats.users > 0 ? [{ value: `${dbStats.users}+`, label: 'Devotees Joined', icon: '🙏' }] : []),
     { value: `${dbStats.saints}+`, label: 'Saint Personalities', icon: '🧘' },
     { value: `${dbStats.scriptures}+`, label: 'Sacred Texts', icon: '📚' },
     { value: `${dbStats.temples}+`, label: 'Temples Connected', icon: '🏛️' },
