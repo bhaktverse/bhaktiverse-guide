@@ -201,7 +201,7 @@ const Navigation = () => {
                   <Link to="/auth">Login</Link>
                 </Button>
               )}
-          </div>
+            </div>
         </div>
       </nav>
 
