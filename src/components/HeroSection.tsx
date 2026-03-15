@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 const HeroSection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [dbStats, setDbStats] = useState({ saints: 0, temples: 0, scriptures: 0, audio: 0 });
+  const [dbStats, setDbStats] = useState({ saints: 0, temples: 0, scriptures: 0, audio: 0, users: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
 
   useEffect(() => {
