@@ -99,6 +99,15 @@ const Navigation = () => {
                   <DropdownMenuItem onClick={() => navigate('/audio-library')} className="cursor-pointer">
                     <Music className="h-4 w-4 mr-2" /> Audio Library
                   </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer font-medium text-primary" onClick={() => navigate('/deity/krishna')}>
+                    🪈 Krishna
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer font-medium text-primary" onClick={() => navigate('/deity/vishnu')}>
+                    🔱 Vishnu
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer font-medium text-primary" onClick={() => navigate('/deity/hanuman')}>
+                    🐒 Hanuman
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 

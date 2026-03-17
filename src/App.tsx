@@ -47,6 +47,7 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const DeityPage = lazy(() => import("./pages/DeityPage"));
 
 // Admin pages
 const AdminRoute = lazy(() => import("./components/admin/AdminRoute"));
@@ -101,6 +102,7 @@ const App = () => (
                 <Route path="/daily-devotion" element={<DailyDevotion />} />
                 <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
                 <Route path="/palm-reading/shared/:readingId" element={<SharedPalmReading />} />
+                <Route path="/deity/:deitySlug" element={<DeityPage />} />
 
                 {/* Protected Routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

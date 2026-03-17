@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import Navigation from '@/components/Navigation';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import ScrollToTop from '@/components/ScrollToTop';
@@ -16,6 +18,7 @@ import PlaylistManager from '@/components/PlaylistManager';
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
+import { fetchJamendoTracks, type JamendoTrack } from '@/services/jamendoAudio';
 import { toast } from 'sonner';
 import { 
   Play, 
@@ -60,8 +63,39 @@ const AudioLibrary = () => {
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
   const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
   const { isFavorited, toggleFavorite } = useFavorites('audio');
+  
+  // Jamendo Discover state
+  const [activeTab, setActiveTab] = useState<string>('library');
+  const [jamendoTracks, setJamendoTracks] = useState<JamendoTrack[]>([]);
+  const [jamendoLoading, setJamendoLoading] = useState(false);
+  const [jamendoSearch, setJamendoSearch] = useState('');
 
   useEffect(() => { loadTracks(); }, []);
+
+  const loadJamendo = useCallback(async (query?: string) => {
+    setJamendoLoading(true);
+    const results = await fetchJamendoTracks(query || undefined, query ? undefined : "meditation+spiritual");
+    setJamendoTracks(results);
+    setJamendoLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'discover' && jamendoTracks.length === 0) loadJamendo();
+  }, [activeTab]);
+
+  const handleJamendoPlay = (jt: JamendoTrack) => {
+    const converted: AudioTrack = {
+      id: jt.id,
+      title: jt.title,
+      artist: jt.artist,
+      category: 'meditation',
+      duration: jt.duration,
+      audio_url: jt.audioUrl,
+      language: 'english',
+      difficulty_level: 'beginner',
+    };
+    setCurrentTrack(converted);
+  };
 
   const loadTracks = async () => {
     try {
@@ -210,62 +244,134 @@ const AudioLibrary = () => {
             </p>
           </div>
 
-          {/* Search */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search mantras, bhajans, artists..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background/70 border-border/50"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] bg-background/70">
-                  <SelectValue placeholder="Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Languages</SelectItem>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {lang === 'hindi' ? 'Hindi' : lang === 'sanskrit' ? 'Sanskrit' : lang === 'english' ? 'English' : lang}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {/* Library / Discover Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="library" className="flex-1 sm:flex-none">🎵 Library</TabsTrigger>
+              <TabsTrigger value="discover" className="flex-1 sm:flex-none">🌐 Discover</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-          {/* Category Chips - horizontal scroll */}
-          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-thin snap-x -mx-1 px-1">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors ${
-                selectedCategory === 'all'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
-              }`}
-            >
-              All
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap ${
-                  selectedCategory === cat
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
-                }`}
-              >
-                {getCategoryIcon(cat)} {cat}
-              </button>
-            ))}
-          </div>
+          {activeTab === 'library' && (
+            <>
+              {/* Search */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search mantras, bhajans, artists..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-background/70 border-border/50"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] bg-background/70">
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Languages</SelectItem>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang === 'hindi' ? 'Hindi' : lang === 'sanskrit' ? 'Sanskrit' : lang === 'english' ? 'English' : lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Category Chips */}
+              <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-thin snap-x -mx-1 px-1 mb-4">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors ${
+                    selectedCategory === 'all'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
+                  }`}
+                >
+                  All
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap ${
+                      selectedCategory === cat
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {getCategoryIcon(cat)} {cat}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'discover' && (
+            <div className="mb-4">
+              <div className="flex gap-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search Jamendo tracks..."
+                    value={jamendoSearch}
+                    onChange={(e) => setJamendoSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && loadJamendo(jamendoSearch)}
+                    className="pl-10 bg-background/70 border-border/50"
+                  />
+                </div>
+                <Button onClick={() => loadJamendo(jamendoSearch)} variant="outline" size="sm">Search</Button>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Jamendo Discover Section */}
+        {activeTab === 'discover' && (
+          <Card className="bg-card-sacred/80 backdrop-blur-md border-border/50 shadow-divine mb-6">
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Music className="h-5 w-5 text-primary" />
+                <span>Discover Tracks</span>
+                <Badge variant="outline" className="text-xs">Jamendo</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-6 pt-0">
+              {jamendoLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                </div>
+              ) : jamendoTracks.length > 0 ? (
+                <div className="space-y-2">
+                  {jamendoTracks.map((jt) => (
+                    <div
+                      key={jt.id}
+                      className="group flex items-center gap-3 p-3 rounded-xl hover:bg-background/50 transition-all cursor-pointer border border-transparent hover:border-primary/20"
+                      onClick={() => handleJamendoPlay(jt)}
+                    >
+                      {jt.coverImage && (
+                        <img src={jt.coverImage} alt={jt.title} className="h-10 w-10 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{jt.title}</p>
+                        <p className="text-xs text-muted-foreground">{jt.artist} · {Math.floor(jt.duration / 60)}:{(jt.duration % 60).toString().padStart(2, '0')}</p>
+                      </div>
+                      <Play className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center py-8 text-muted-foreground text-sm">No tracks found. Try a different search.</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'library' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Track List */}
           <div className="lg:col-span-2">
@@ -412,14 +518,16 @@ const AudioLibrary = () => {
             />
           </div>
         </div>
+        )}
 
-        {/* Mobile-only PlaylistManager below track list */}
-        <div className="lg:hidden mt-6">
-          <PlaylistManager 
-            allTracks={tracks}
-            onPlayPlaylist={handlePlayPlaylist}
-          />
-        </div>
+        {activeTab === 'library' && (
+          <div className="lg:hidden mt-6">
+            <PlaylistManager 
+              allTracks={tracks}
+              onPlayPlaylist={handlePlayPlaylist}
+            />
+          </div>
+        )}
       </div>
       
       {/* Mobile mini-player (rendered outside grid) */}

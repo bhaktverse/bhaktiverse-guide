@@ -7,14 +7,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, Plus, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Check, X, Plus, Trash2, Youtube, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminShorts() {
   const [shorts, setShorts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState(false);
+  const [importDialog, setImportDialog] = useState(false);
   const [form, setForm] = useState<Record<string, any>>({});
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [importing, setImporting] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from("bhakti_shorts").select("*").order("created_at", { ascending: false });
@@ -41,6 +45,40 @@ export default function AdminShorts() {
     toast.success("Created"); setDialog(false); load();
   };
 
+  const importFromYouTube = async () => {
+    if (!youtubeUrl.trim()) return;
+    setImporting(true);
+    try {
+      // Extract video ID
+      const match = youtubeUrl.match(/(?:shorts\/|v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (!match) {
+        toast.error("Invalid YouTube URL");
+        return;
+      }
+      const videoId = match[1];
+      const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+      // Normalize URL to shorts format
+      const videoUrl = `https://www.youtube.com/shorts/${videoId}`;
+
+      await supabase.from("bhakti_shorts").insert({
+        title: `YouTube Short ${videoId}`,
+        video_url: videoUrl,
+        thumbnail_url: thumbnail,
+        category: "devotional",
+        approved: true,
+      });
+      toast.success("Imported from YouTube!");
+      setYoutubeUrl("");
+      setImportDialog(false);
+      load();
+    } catch (err) {
+      toast.error("Import failed");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const columns: Column<any>[] = [
     { key: "title", label: "Title" },
     { key: "category", label: "Category", render: (r) => <Badge variant="secondary" className="text-[10px]">{r.category}</Badge> },
@@ -57,7 +95,14 @@ export default function AdminShorts() {
           <h1 className="text-2xl font-bold">Bhakti Shorts</h1>
           <p className="text-sm text-muted-foreground">{shorts.length} videos · {shorts.filter(s => !s.approved).length} pending</p>
         </div>
-        <Button size="sm" onClick={() => { setForm({}); setDialog(true); }}><Plus className="h-4 w-4 mr-1" /> Add Short</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setImportDialog(true)}>
+            <Youtube className="h-4 w-4 mr-1" /> Import from YouTube
+          </Button>
+          <Button size="sm" onClick={() => { setForm({}); setDialog(true); }}>
+            <Plus className="h-4 w-4 mr-1" /> Add Short
+          </Button>
+        </div>
       </div>
       <AdminDataTable
         data={shorts} columns={columns} searchKey="title" loading={loading}
@@ -72,6 +117,8 @@ export default function AdminShorts() {
           </div>
         )}
       />
+
+      {/* Add Short Dialog */}
       {dialog && (
         <Dialog open onOpenChange={() => setDialog(false)}>
           <DialogContent>
@@ -82,6 +129,31 @@ export default function AdminShorts() {
               <div><Label className="text-xs">Description</Label><Textarea value={form.description ?? ""} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="mt-1" rows={2} /></div>
               <div><Label className="text-xs">Category</Label><Input value={form.category ?? "devotional"} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="mt-1" /></div>
               <Button onClick={save} className="w-full">Create</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Import from YouTube Dialog */}
+      {importDialog && (
+        <Dialog open onOpenChange={() => setImportDialog(false)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Import from YouTube</DialogTitle></DialogHeader>
+            <div className="space-y-3 pt-2">
+              <p className="text-sm text-muted-foreground">Paste a YouTube Shorts URL to auto-import it as a Bhakti Short.</p>
+              <div>
+                <Label className="text-xs">YouTube URL</Label>
+                <Input
+                  value={youtubeUrl}
+                  onChange={e => setYoutubeUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/shorts/..."
+                  className="mt-1"
+                />
+              </div>
+              <Button onClick={importFromYouTube} className="w-full" disabled={importing}>
+                {importing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Youtube className="h-4 w-4 mr-2" />}
+                Import Short
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

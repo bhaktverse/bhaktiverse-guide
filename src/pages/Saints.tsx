@@ -60,6 +60,10 @@ const Saints = () => {
     return matchesSearch && matchesTradition;
   });
 
+  // Sampradaya-specific filter categories
+  const sampradayas = [
+    "Gaudiya", "Sri (Ramanuja)", "Madhva", "Vallabha", "Nimbarka", "Shaiva", "Advaita", "Smarta"
+  ];
   const traditions = Array.from(new Set(saints.map(saint => saint.tradition).filter(Boolean)));
 
   if (loading) {
@@ -107,7 +111,9 @@ const Saints = () => {
               <Button variant={!selectedTradition ? 'default' : 'outline'} onClick={() => setSelectedTradition('')} size="sm">
                 All
               </Button>
-              {traditions.map((t) => (
+              {sampradayas.filter(s => traditions.some(t => t?.toLowerCase().includes(s.toLowerCase().split(' ')[0]))).concat(
+                traditions.filter(t => !sampradayas.some(s => t?.toLowerCase().includes(s.toLowerCase().split(' ')[0])))
+              ).map((t) => (
                 <Button key={t} variant={selectedTradition === t ? 'default' : 'outline'} onClick={() => setSelectedTradition(t)} size="sm">
                   {t}
                 </Button>
