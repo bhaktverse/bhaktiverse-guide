@@ -1,109 +1,179 @@
 
 
-# Palm Reading Fix & Strategic Upgrade Plan
+# Phase 2: Deity Pages + Bhajan & Mantra Upgrade Plan
 
-## Current Critical Issues
+## Overview
 
-### Issue 1: Edge Function 401 Error (BLOCKING)
-The `palm-reading-analysis` function calls OpenAI directly with an **invalid API key** (logs confirm: `Incorrect API key provided`). All other functions (saint-chat, numerology) already use the **Lovable AI Gateway** (`https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY`). The palm reading function was never migrated.
-
-### Issue 2: Test User Premium Access
-User `44ac479f-2aa0-4b2b-b758-6a34a38077ac` already has `admin` role and Level 16 / 1575 XP. The `usePremium` hook and `PalmReading.tsx` both check for admin role. This user **already qualifies** for unlimited premium. No changes needed here.
-
-### Issue 3: CORS Headers Mismatch
-The palm reading function uses abbreviated CORS headers missing `x-supabase-client-platform` etc., while all other working functions include the full set.
+This plan covers two workstreams: (A) Phase 2 from the scaling audit (deity pages, sampradaya filters) and (B) the Bhajan & Mantra system upgrade (YouTube Shorts API, Jamendo MP3 integration, enhanced audio player).
 
 ---
 
-## Implementation Plan
+## Workstream A: Vaishnav Identity (Phase 2)
 
-### Phase 1: Fix Palm Reading Edge Function (Critical)
+### A1. Deity-Specific Pages
 
-**File: `supabase/functions/palm-reading-analysis/index.ts`**
+**New file: `src/pages/DeityPage.tsx`**
+- Route: `/deity/:deitySlug` (e.g., `/deity/krishna`, `/deity/vishnu`, `/deity/hanuman`)
+- Hardcoded deity metadata (name, Sanskrit name, description, iconography, associated mantras, temples, scriptures)
+- Sections: Hero with deity info, Related Saints (filtered from `saints` table by tradition), Related Temples (filtered from `temples` table by `primary_deity`), Related Audio (filtered from `audio_library` by `associated_deity`), Related Scriptures
+- Sacred design with deity-specific gradient colors
 
-1. **Migrate from OpenAI direct to Lovable AI Gateway**
-   - Replace `https://api.openai.com/v1/chat/completions` with `https://ai.gateway.lovable.dev/v1/chat/completions`
-   - Replace `OPENAI_API_KEY` with `LOVABLE_API_KEY`
-   - Use model `google/gemini-2.0-flash` (supports vision/multimodal via the gateway)
-   - Keep the same multimodal message format (text + image_url) which the gateway supports
+**Route addition in `App.tsx`:**
+- Add `<Route path="/deity/:deitySlug" element={<DeityPage />} />` as a public route
 
-2. **Fix CORS headers** — match the full header set used by saint-chat and numerology
+### A2. Sampradaya Categorization
 
-3. **Add legal/ethical safeguards to the system prompt** per user's review:
-   - Never predict death or exact illness
-   - Use probabilistic tone ("indications suggest" not "you will")
-   - Include spiritual disclaimer
-   - Avoid deterministic marriage/death claims
-   - Add: "Reading depth measures analytical coverage, not good or bad fate"
+**Modify `src/pages/Saints.tsx`:**
+- Add explicit sampradaya filter chips: Sri (Ramanuja), Madhva, Nimbarka, Vallabha, Gaudiya, Shaiva, General
+- Replace generic tradition filter with these specific categories
 
-4. **Reduce temperature** from 0.8 to 0.7 for more consistent structured JSON output
+**Modify `src/pages/Temples.tsx`:**
+- Add sampradaya/tradition filter chips matching the same pattern
 
-5. **Optimize token usage**: Trim the overly verbose prompt structure. The current prompt asks for "MINIMUM 600 WORDS" per category — reduce to "200-300 words" per category to stay within gateway token limits (the gateway may have lower limits than direct OpenAI). This also addresses the user's concern about being "over token heavy."
+### A3. Navigation Updates
 
-### Phase 2: Add Reading Depth Score Clarification
-
-**File: `src/components/PalmReadingReport.tsx`**
-
-Add a small disclaimer line below the Reading Depth Score card:
-> "Reading depth measures analytical coverage — not good or bad fortune."
-
-### Phase 3: PDF Report Optimization
-
-**File: `src/utils/pdfGenerator.ts`**
-
-Per user's advice, keep PDF at **8-10 pages max** (not 16). Add the new sections (Hand Type, Secondary Lines, Finger Analysis) but keep them concise — one section per page rather than multi-page sprawl.
-
-### Phase 4: Palm Image Storage Fix
-
-**File: `src/pages/PalmReading.tsx`**
-
-Replace the truncated base64 storage (`imageData.substring(0, 500)`) with a proper upload to `community-media` bucket under `palm-readings/{user_id}/{timestamp}.jpg`, then store the public URL in `palm_image_url`.
-
-### Phase 5: Premium Gate UX Enhancement
-
-**File: `src/components/FreePalmReadingSummary.tsx`**
-
-Update the upgrade CTA copy from generic "Unlock Premium" to psychologically framed:
-> "Your palm reveals deeper karmic patterns — unlock detailed destiny mapping"
+**Modify `src/components/Navigation.tsx`:**
+- Add "Deities" link under Explore dropdown pointing to a deity index or direct links (Krishna, Vishnu, Hanuman)
 
 ---
 
-## Technical Details
+## Workstream B: Bhajan & Mantra Upgrade
 
-### Gateway Migration (Phase 1)
-The Lovable AI Gateway at `ai.gateway.lovable.dev` supports the OpenAI-compatible API format including multimodal messages with `image_url` content type. The saint-chat already demonstrates this pattern. Key changes:
+### B1. API Secrets Setup
 
-```text
-OLD: fetch("https://api.openai.com/v1/chat/completions")
-     Authorization: Bearer ${OPENAI_API_KEY}
-     model: "gpt-4o"
+Two secrets need to be added:
+- `YOUTUBE_API_KEY` — YouTube Data API v3 key
+- `JAMENDO_CLIENT_ID` — Jamendo API client ID
 
-NEW: fetch("https://ai.gateway.lovable.dev/v1/chat/completions")
-     Authorization: Bearer ${LOVABLE_API_KEY}
-     model: "google/gemini-2.0-flash"
+### B2. YouTube Shorts Edge Function
+
+**New file: `supabase/functions/youtube-shorts/index.ts`**
+- Accepts `{ query, pageToken? }` body
+- Calls YouTube Data API v3 `search` endpoint with `type=video&videoDuration=short&maxResults=12`
+- Caches results in a new `youtube_shorts_cache` table (query, results JSON, fetched_at) to avoid API overuse
+- Returns cached results if fetched within last 6 hours
+- Default queries: "krishna bhajan shorts", "hanuman mantra shorts", "shiv bhajan shorts", "ram bhajan shorts"
+
+**New migration: `youtube_shorts_cache` table**
+```sql
+CREATE TABLE youtube_shorts_cache (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  query text NOT NULL,
+  results jsonb NOT NULL DEFAULT '[]',
+  fetched_at timestamptz DEFAULT now(),
+  UNIQUE(query)
+);
+ALTER TABLE youtube_shorts_cache ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read cache" ON youtube_shorts_cache FOR SELECT TO public USING (true);
+CREATE POLICY "Service role manages cache" ON youtube_shorts_cache FOR ALL TO service_role USING (true);
 ```
 
-### System Prompt Legal Safeguards (Phase 1)
-Add to the beginning of the system prompt:
+**Config update: `supabase/config.toml`**
+- Add `[functions.youtube-shorts]` with `verify_jwt = false`
 
-```text
-## ETHICAL GUIDELINES (MANDATORY)
-- NEVER predict death, exact lifespan, or serious illness diagnosis
-- Use probabilistic language: "indications suggest", "patterns indicate"
-- Include disclaimer: analysis is spiritual guidance, not medical/legal advice
-- Avoid deterministic claims about marriage timing or partner count
-- Frame all observations constructively with remedies
-```
+### B3. Jamendo Tracks Edge Function
 
-### Files Modified
-| Phase | File | Change |
-|-------|------|--------|
-| 1 | `supabase/functions/palm-reading-analysis/index.ts` | Gateway migration, CORS fix, ethical safeguards, token optimization |
-| 2 | `src/components/PalmReadingReport.tsx` | Score clarification text |
-| 3 | `src/utils/pdfGenerator.ts` | Add new sections, cap at 8-10 pages |
-| 4 | `src/pages/PalmReading.tsx` | Image upload to bucket |
-| 5 | `src/components/FreePalmReadingSummary.tsx` | Premium CTA copy |
+**New file: `supabase/functions/jamendo-tracks/index.ts`**
+- Accepts `{ query?, tags?, limit? }` body
+- Calls Jamendo API `/tracks` endpoint with `client_id`, filters for spiritual/meditation tags
+- Returns track name, artist, audio URL (streamable), cover image, duration
+- No caching needed (Jamendo is generous with rate limits)
 
-### No Database Changes Required
-All data fits within existing `palm_reading_history.analysis` JSONB column. Test user already has admin role — no schema or role changes needed.
+**Config update:** Add `[functions.jamendo-tracks]` with `verify_jwt = false`
+
+### B4. YouTube Shorts Service Layer
+
+**New file: `src/services/youtubeShorts.ts`**
+- `fetchShorts(query: string)` — calls the edge function, returns `{ videoId, title, thumbnail }[]`
+- `searchShorts(userInput: string)` — debounced search via edge function
+- Category mapping: Krishna, Ram, Shiv, Devi, Hanuman
+
+### B5. Jamendo Audio Service Layer
+
+**New file: `src/services/jamendoAudio.ts`**
+- `fetchTracks(query?: string, tags?: string)` — calls the edge function
+- `searchTracks(query: string)` — debounced search
+- Returns `{ id, title, artist, audioUrl, coverImage, duration }[]`
+
+### B6. Enhanced Dashboard Shorts Section
+
+**Modify `src/pages/Dashboard.tsx`** (lines 586-642):
+- Replace static `bhaktiShorts` DB-only section with a hybrid section:
+  - Tab row: "Featured" (from DB bhakti_shorts) | "Krishna" | "Ram" | "Shiv" | "Devi"
+  - Clicking a deity tab fetches YouTube Shorts via the service layer
+  - Search bar (debounced) for custom queries
+  - Vertical card feed with snap scrolling (horizontal on dashboard, like current)
+  - Each card: thumbnail, title, play overlay → opens embedded YouTube player in a dialog
+  - Skeleton loaders while fetching
+  - Error/empty states
+
+### B7. New Shorts Feed Component
+
+**New file: `src/components/ShortsFeed.tsx`**
+- Reusable component for displaying YouTube Shorts in a vertical scrollable feed
+- Props: `shorts[]`, `loading`, `onSearch`
+- Each short renders as a 9:16 card with embedded YouTube iframe on click
+- Category tabs built-in
+- Used on Dashboard and potentially a future `/shorts` page
+
+### B8. Jamendo Integration into Audio Library
+
+**Modify `src/pages/AudioLibrary.tsx`:**
+- Add a "Discover" tab/section alongside existing DB tracks
+- "Discover" section calls Jamendo edge function for spiritual/meditation tracks
+- Jamendo results displayed in same card format as DB tracks
+- Clicking a Jamendo track plays it in the existing `EnhancedAudioPlayer`
+- Jamendo tracks marked with a "Jamendo" badge
+
+### B9. Audio Player Enhancements (Minor)
+
+**Modify `src/components/EnhancedAudioPlayer.tsx`:**
+- Add cover image support (for Jamendo tracks that include album art)
+- The player already has play/pause, next/prev, seek, volume, shuffle, repeat, mini-player — no major changes needed
+
+### B10. Admin Shorts Management Enhancement
+
+**Modify `src/pages/admin/AdminShorts.tsx`:**
+- Add "Import from YouTube" button that lets admin paste a YouTube URL or search query
+- Auto-extracts videoId, title, thumbnail
+- Saves to `bhakti_shorts` table as a manually curated short
+- Toggle featured/approved status (already exists)
+
+---
+
+## File Summary
+
+| Action | File | Purpose |
+|--------|------|---------|
+| Create | `src/pages/DeityPage.tsx` | Deity-specific landing pages |
+| Create | `src/services/youtubeShorts.ts` | YouTube Shorts API service |
+| Create | `src/services/jamendoAudio.ts` | Jamendo audio API service |
+| Create | `src/components/ShortsFeed.tsx` | Reusable Shorts feed component |
+| Create | `supabase/functions/youtube-shorts/index.ts` | YouTube API proxy + cache |
+| Create | `supabase/functions/jamendo-tracks/index.ts` | Jamendo API proxy |
+| Create | Migration for `youtube_shorts_cache` table | Cache table |
+| Modify | `src/App.tsx` | Add `/deity/:deitySlug` route |
+| Modify | `src/pages/Dashboard.tsx` | Upgrade Bhakti Shorts section |
+| Modify | `src/pages/AudioLibrary.tsx` | Add Jamendo discovery tab |
+| Modify | `src/pages/Saints.tsx` | Add sampradaya filter chips |
+| Modify | `src/components/Navigation.tsx` | Add Deities link |
+| Modify | `src/pages/admin/AdminShorts.tsx` | Add YouTube import |
+| Modify | `supabase/config.toml` | Add new function configs |
+| Add | Secrets: `YOUTUBE_API_KEY`, `JAMENDO_CLIENT_ID` | API credentials |
+
+---
+
+## Implementation Order
+
+1. Add secrets (YOUTUBE_API_KEY, JAMENDO_CLIENT_ID)
+2. Create `youtube_shorts_cache` migration
+3. Deploy `youtube-shorts` and `jamendo-tracks` edge functions
+4. Create service layers (`youtubeShorts.ts`, `jamendoAudio.ts`)
+5. Create `ShortsFeed.tsx` component
+6. Upgrade Dashboard shorts section
+7. Add Jamendo discovery to Audio Library
+8. Create `DeityPage.tsx` + route
+9. Update Saints.tsx sampradaya filters
+10. Update Navigation with Deities
+11. Enhance AdminShorts with YouTube import
 
