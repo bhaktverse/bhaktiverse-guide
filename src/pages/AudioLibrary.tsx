@@ -529,6 +529,7 @@ const AudioLibrary = () => {
             onPlayPlaylist={handlePlayPlaylist}
           />
         </div>
+        )}
       </div>
       
       {/* Mobile mini-player (rendered outside grid) */}
