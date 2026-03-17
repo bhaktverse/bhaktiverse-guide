@@ -330,6 +330,48 @@ const AudioLibrary = () => {
           )}
         </div>
 
+        {/* Jamendo Discover Section */}
+        {activeTab === 'discover' && (
+          <Card className="bg-card-sacred/80 backdrop-blur-md border-border/50 shadow-divine mb-6">
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Music className="h-5 w-5 text-primary" />
+                <span>Discover Tracks</span>
+                <Badge variant="outline" className="text-xs">Jamendo</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-6 pt-0">
+              {jamendoLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                </div>
+              ) : jamendoTracks.length > 0 ? (
+                <div className="space-y-2">
+                  {jamendoTracks.map((jt) => (
+                    <div
+                      key={jt.id}
+                      className="group flex items-center gap-3 p-3 rounded-xl hover:bg-background/50 transition-all cursor-pointer border border-transparent hover:border-primary/20"
+                      onClick={() => handleJamendoPlay(jt)}
+                    >
+                      {jt.coverImage && (
+                        <img src={jt.coverImage} alt={jt.title} className="h-10 w-10 rounded-lg object-cover flex-shrink-0" loading="lazy" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{jt.title}</p>
+                        <p className="text-xs text-muted-foreground">{jt.artist} · {Math.floor(jt.duration / 60)}:{(jt.duration % 60).toString().padStart(2, '0')}</p>
+                      </div>
+                      <Play className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center py-8 text-muted-foreground text-sm">No tracks found. Try a different search.</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'library' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Track List */}
           <div className="lg:col-span-2">
