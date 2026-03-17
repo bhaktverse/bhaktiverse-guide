@@ -244,60 +244,90 @@ const AudioLibrary = () => {
             </p>
           </div>
 
-          {/* Search */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search mantras, bhajans, artists..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background/70 border-border/50"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] bg-background/70">
-                  <SelectValue placeholder="Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Languages</SelectItem>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {lang === 'hindi' ? 'Hindi' : lang === 'sanskrit' ? 'Sanskrit' : lang === 'english' ? 'English' : lang}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {/* Library / Discover Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="library" className="flex-1 sm:flex-none">🎵 Library</TabsTrigger>
+              <TabsTrigger value="discover" className="flex-1 sm:flex-none">🌐 Discover</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-          {/* Category Chips - horizontal scroll */}
-          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-thin snap-x -mx-1 px-1">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors ${
-                selectedCategory === 'all'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
-              }`}
-            >
-              All
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap ${
-                  selectedCategory === cat
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
-                }`}
-              >
-                {getCategoryIcon(cat)} {cat}
-              </button>
-            ))}
-          </div>
+          {activeTab === 'library' && (
+            <>
+              {/* Search */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search mantras, bhajans, artists..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-background/70 border-border/50"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] bg-background/70">
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Languages</SelectItem>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang === 'hindi' ? 'Hindi' : lang === 'sanskrit' ? 'Sanskrit' : lang === 'english' ? 'English' : lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Category Chips */}
+              <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-thin snap-x -mx-1 px-1 mb-4">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors ${
+                    selectedCategory === 'all'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
+                  }`}
+                >
+                  All
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap ${
+                      selectedCategory === cat
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background/70 text-muted-foreground border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {getCategoryIcon(cat)} {cat}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'discover' && (
+            <div className="mb-4">
+              <div className="flex gap-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search Jamendo tracks..."
+                    value={jamendoSearch}
+                    onChange={(e) => setJamendoSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && loadJamendo(jamendoSearch)}
+                    className="pl-10 bg-background/70 border-border/50"
+                  />
+                </div>
+                <Button onClick={() => loadJamendo(jamendoSearch)} variant="outline" size="sm">Search</Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
