@@ -518,6 +518,9 @@ const AudioLibrary = () => {
             />
           </div>
         </div>
+        )}
+
+        {activeTab === 'library' && (
 
         {/* Mobile-only PlaylistManager below track list */}
         <div className="lg:hidden mt-6">
