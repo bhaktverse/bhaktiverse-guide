@@ -1525,6 +1525,27 @@ export type Database = {
         }
         Relationships: []
       }
+      youtube_shorts_cache: {
+        Row: {
+          fetched_at: string
+          id: string
+          query: string
+          results: Json
+        }
+        Insert: {
+          fetched_at?: string
+          id?: string
+          query: string
+          results?: Json
+        }
+        Update: {
+          fetched_at?: string
+          id?: string
+          query?: string
+          results?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles_public: {
