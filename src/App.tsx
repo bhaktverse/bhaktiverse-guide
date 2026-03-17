@@ -102,6 +102,7 @@ const App = () => (
                 <Route path="/daily-devotion" element={<DailyDevotion />} />
                 <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
                 <Route path="/palm-reading/shared/:readingId" element={<SharedPalmReading />} />
+                <Route path="/deity/:deitySlug" element={<DeityPage />} />
 
                 {/* Protected Routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

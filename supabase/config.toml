@@ -68,3 +68,9 @@ verify_jwt = false
 
 [functions.delete-user-data]
 verify_jwt = false
+
+[functions.youtube-shorts]
+verify_jwt = false
+
+[functions.jamendo-tracks]
+verify_jwt = false

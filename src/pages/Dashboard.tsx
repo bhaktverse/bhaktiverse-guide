@@ -43,6 +43,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import ShortsFeed from "@/components/ShortsFeed";
 
 interface DailyDevotion {
   id: string;
