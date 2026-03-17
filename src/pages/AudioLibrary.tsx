@@ -72,6 +72,31 @@ const AudioLibrary = () => {
 
   useEffect(() => { loadTracks(); }, []);
 
+  const loadJamendo = useCallback(async (query?: string) => {
+    setJamendoLoading(true);
+    const results = await fetchJamendoTracks(query || undefined, query ? undefined : "meditation+spiritual");
+    setJamendoTracks(results);
+    setJamendoLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'discover' && jamendoTracks.length === 0) loadJamendo();
+  }, [activeTab]);
+
+  const handleJamendoPlay = (jt: JamendoTrack) => {
+    const converted: AudioTrack = {
+      id: jt.id,
+      title: jt.title,
+      artist: jt.artist,
+      category: 'meditation',
+      duration: jt.duration,
+      audio_url: jt.audioUrl,
+      language: 'english',
+      difficulty_level: 'beginner',
+    };
+    setCurrentTrack(converted);
+  };
+
   const loadTracks = async () => {
     try {
       setLoading(true);
