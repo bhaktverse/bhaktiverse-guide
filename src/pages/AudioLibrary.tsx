@@ -63,6 +63,12 @@ const AudioLibrary = () => {
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
   const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
   const { isFavorited, toggleFavorite } = useFavorites('audio');
+  
+  // Jamendo Discover state
+  const [activeTab, setActiveTab] = useState<string>('library');
+  const [jamendoTracks, setJamendoTracks] = useState<JamendoTrack[]>([]);
+  const [jamendoLoading, setJamendoLoading] = useState(false);
+  const [jamendoSearch, setJamendoSearch] = useState('');
 
   useEffect(() => { loadTracks(); }, []);
 
