@@ -111,11 +111,17 @@ const Navigation = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Community & Calendar - visible to all */}
+              {/* Community & Leaderboard */}
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/community" className={navLinkClass('/community')}>
                   <MessageCircle className="h-4 w-4" />
                   <span>Community</span>
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/leaderboard" className={navLinkClass('/leaderboard')}>
+                  <Star className="h-4 w-4" />
+                  <span>Leaderboard</span>
                 </Link>
               </Button>
 
