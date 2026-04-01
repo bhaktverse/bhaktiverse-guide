@@ -41,12 +41,12 @@ Deno.serve(async (req) => {
   results.saints = sErr ? sErr.message : "ok";
 
   // Insert more audio tracks
-  const { error: aErr } = await supabase.from("audio_library").upsert([
+  const { error: aErr } = await supabase.from("audio_library").insert([
     { title: "Vishnu Sahasranama", artist: "Traditional", category: "mantra", duration: 1800, language: "sa", audio_url: "https://archive.org/download/vishnu-sahasranama/vishnu-sahasranama.ogg", associated_deity: "Vishnu", difficulty_level: "intermediate" },
     { title: "Hanuman Aarti", artist: "Traditional", category: "aarti", duration: 300, language: "hi", audio_url: "https://archive.org/download/hanuman-aarti/hanuman-aarti.ogg", associated_deity: "Hanuman", difficulty_level: "beginner" },
     { title: "Achyutam Keshavam", artist: "Traditional", category: "bhajan", duration: 420, language: "hi", audio_url: "https://archive.org/download/achyutam-keshavam/achyutam-keshavam.ogg", associated_deity: "Krishna", difficulty_level: "beginner" },
     { title: "Bajrang Baan", artist: "Traditional", category: "mantra", duration: 600, language: "hi", audio_url: "https://archive.org/download/bajrang-baan/bajrang-baan.ogg", associated_deity: "Hanuman", difficulty_level: "intermediate" },
-  ], { onConflict: "title", ignoreDuplicates: true });
+  ]);
   results.audio = aErr ? aErr.message : "ok";
 
   return new Response(JSON.stringify(results), {
