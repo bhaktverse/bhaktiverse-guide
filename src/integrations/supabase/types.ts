@@ -368,6 +368,48 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_challenges: {
+        Row: {
+          active_date: string | null
+          challenge_type: string
+          created_at: string | null
+          deity_focus: string | null
+          description: string | null
+          difficulty: string | null
+          icon: string | null
+          id: string
+          points_reward: number
+          target_count: number | null
+          title: string
+        }
+        Insert: {
+          active_date?: string | null
+          challenge_type?: string
+          created_at?: string | null
+          deity_focus?: string | null
+          description?: string | null
+          difficulty?: string | null
+          icon?: string | null
+          id?: string
+          points_reward?: number
+          target_count?: number | null
+          title: string
+        }
+        Update: {
+          active_date?: string | null
+          challenge_type?: string
+          created_at?: string | null
+          deity_focus?: string | null
+          description?: string | null
+          difficulty?: string | null
+          icon?: string | null
+          id?: string
+          points_reward?: number
+          target_count?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
       daily_devotions: {
         Row: {
           benefits: string | null
@@ -917,6 +959,39 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          points_awarded: number | null
+          referral_code: string
+          referred_user_id: string | null
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       saints: {
         Row: {
           ai_model_fine_tuned: boolean | null
@@ -1443,6 +1518,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_favorites: {
         Row: {
