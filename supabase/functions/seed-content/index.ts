@@ -25,11 +25,11 @@ Deno.serve(async (req) => {
     { name: "Dwarkadhish Temple", primary_deity: "Lord Krishna (Dwarkadhish)", location: { city: "Dwarka", state: "Gujarat", country: "India" }, description: "One of the Char Dham sites. Five-storied temple believed to be 2500 years old.", tradition: "Vaishnavism", rating: 4.7, verified: true },
     { name: "Ranganathaswamy Temple", primary_deity: "Lord Vishnu (Ranganatha)", location: { city: "Srirangam", state: "Tamil Nadu", country: "India" }, description: "Largest functioning Hindu temple in the world, a Dravidian masterpiece.", tradition: "Sri Vaishnavism", rating: 4.9, verified: true },
     { name: "Padmanabhaswamy Temple", primary_deity: "Lord Vishnu (Padmanabha)", location: { city: "Thiruvananthapuram", state: "Kerala", country: "India" }, description: "One of 108 Divya Desams. The richest temple in the world.", tradition: "Sri Vaishnavism", rating: 4.8, verified: true },
-  ], { onConflict: "name", ignoreDuplicates: true });
+  ]);
   results.temples = tErr ? tErr.message : "ok";
 
   // Insert saints
-  const { error: sErr } = await supabase.from("saints").upsert([
+  const { error: sErr } = await supabase.from("saints").insert([
     { name: "Ramanujacharya", tradition: "Sri Vaishnavism", biography: "The great Vaishnava philosopher who established Vishishtadvaita Vedanta. Born in 1017 CE in Sriperumbudur, he reformed temple worship and made spirituality accessible to all.", key_teachings: "Vishishtadvaita (qualified non-dualism), devotion to Vishnu as supreme, equality in devotion", birth_year: 1017, death_year: 1137, primary_language: "ta", verified: true },
     { name: "Madhvacharya", tradition: "Madhva (Dvaita)", biography: "Founder of Dvaita school of Vedanta. Born near Udupi, Karnataka. Established the Ashta Mathas of Udupi.", key_teachings: "Dvaita philosophy - eternal distinction between soul and God, Vishnu as supreme reality", birth_year: 1238, death_year: 1317, primary_language: "kn", verified: true },
     { name: "Vallabhacharya", tradition: "Vallabha (Pushti Marg)", biography: "Founder of Pushti Marg, the path of grace. Established the worship of Shrinathji at Nathdwara.", key_teachings: "Shuddhadvaita, Pushti Marg - path of divine grace, Krishna as supreme Brahman", birth_year: 1479, death_year: 1531, primary_language: "hi", verified: true },
