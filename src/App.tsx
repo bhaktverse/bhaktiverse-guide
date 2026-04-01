@@ -48,6 +48,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const DeityPage = lazy(() => import("./pages/DeityPage"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 // Admin pages
 const AdminRoute = lazy(() => import("./components/admin/AdminRoute"));
