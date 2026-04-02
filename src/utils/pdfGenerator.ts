@@ -1164,7 +1164,7 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     doc.setFontSize(12);
     doc.setTextColor(...goldColor);
     doc.setFont('helvetica', 'bold');
-    doc.text("GURU JI'S BLESSINGS", pageWidth / 2, yPos + 10, { align: 'center' });
+    doc.text("PANDIT VISIONHAST'S BLESSINGS", pageWidth / 2, yPos + 10, { align: 'center' });
 
     doc.setFontSize(10);
     doc.setTextColor(...textColor);
