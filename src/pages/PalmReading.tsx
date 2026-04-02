@@ -114,6 +114,19 @@ interface PalmAnalysis {
   rawAnalysis?: string;
   overallScore?: number;
   confidenceScore?: number;
+  timingPredictions?: {
+    next_1_year?: string;
+    next_3_years?: string;
+    next_7_years?: string;
+    age_of_peak_success?: string;
+    health_alert_periods?: string[];
+    financial_growth_periods?: string[];
+  };
+  quadrangleAndGreatTriangle?: {
+    quadrangle?: { shape?: string; interpretation?: string };
+    greatTriangle?: { shape?: string; interpretation?: string };
+  };
+  specialMarkings?: Record<string, any>;
 }
 
 interface PalmReadingRecord {
