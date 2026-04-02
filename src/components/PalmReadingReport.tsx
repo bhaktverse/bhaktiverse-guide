@@ -71,6 +71,19 @@ interface PalmAnalysis {
   remedies?: string[];
   warnings?: string[];
   blessings?: string;
+  timingPredictions?: {
+    next_1_year?: string;
+    next_3_years?: string;
+    next_7_years?: string;
+    age_of_peak_success?: string;
+    health_alert_periods?: string[];
+    financial_growth_periods?: string[];
+  };
+  quadrangleAndGreatTriangle?: {
+    quadrangle?: { shape?: string; interpretation?: string };
+    greatTriangle?: { shape?: string; interpretation?: string };
+  };
+  specialMarkings?: Record<string, any>;
 }
 
 interface DailyHoroscope {
@@ -147,6 +160,8 @@ const TOC_SECTIONS = [
   { id: 'lucky', label: 'Lucky Elements', icon: '💎' },
   { id: 'mantras', label: 'Recommended Mantras', icon: '🕉️' },
   { id: 'yogas', label: 'Special Yogas', icon: '⭐' },
+  { id: 'timing', label: 'Timing Predictions', icon: '⏳' },
+  { id: 'quadrangle', label: 'Quadrangle & Triangle', icon: '🔺' },
   { id: 'remedies', label: 'Remedies', icon: '🛡️' },
   { id: 'blessings', label: 'Blessings', icon: '🙏' },
   { id: 'services', label: 'Continue Your Journey', icon: '🚀' },
@@ -1087,6 +1102,99 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
                   </li>
                 ))}
               </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ===== TIMING PREDICTIONS ===== */}
+        {analysis.timingPredictions && (
+          <Card id="timing" className="mb-8 border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-card to-secondary/5">
+            <div className="h-1 bg-gradient-to-r from-primary via-secondary to-primary" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                {showHindi ? 'समय-आधारित भविष्यवाणी' : 'Timing Predictions'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[
+                { key: 'next_1_year', label: showHindi ? 'अगला 1 वर्ष' : 'Next 1 Year', icon: '🔮' },
+                { key: 'next_3_years', label: showHindi ? 'अगले 3 वर्ष' : 'Next 3 Years', icon: '📅' },
+                { key: 'next_7_years', label: showHindi ? 'अगले 7 वर्ष' : 'Next 7 Years', icon: '🧭' },
+                { key: 'age_of_peak_success', label: showHindi ? 'शिखर सफलता की आयु' : 'Peak Success Age', icon: '⭐' },
+              ].map(item => {
+                const value = (analysis.timingPredictions as any)?.[item.key];
+                if (!value) return null;
+                return (
+                  <div key={item.key} className="p-4 rounded-lg bg-card/50 border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">{item.icon}</span>
+                      <h4 className="font-semibold text-sm">{item.label}</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{value}</p>
+                  </div>
+                );
+              })}
+              {analysis.timingPredictions.financial_growth_periods && analysis.timingPredictions.financial_growth_periods.length > 0 && (
+                <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">💰</span>
+                    <h4 className="font-semibold text-sm">{showHindi ? 'आर्थिक वृद्धि काल' : 'Financial Growth Periods'}</h4>
+                  </div>
+                  <ul className="space-y-1">
+                    {analysis.timingPredictions.financial_growth_periods.map((p, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <TrendingUp className="h-3 w-3 mt-1 text-green-500 shrink-0" />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {analysis.timingPredictions.health_alert_periods && analysis.timingPredictions.health_alert_periods.length > 0 && (
+                <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">⚠️</span>
+                    <h4 className="font-semibold text-sm">{showHindi ? 'स्वास्थ्य सतर्कता काल' : 'Health Alert Periods'}</h4>
+                  </div>
+                  <ul className="space-y-1">
+                    {analysis.timingPredictions.health_alert_periods.map((p, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <AlertTriangle className="h-3 w-3 mt-1 text-amber-500 shrink-0" />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ===== QUADRANGLE & GREAT TRIANGLE ===== */}
+        {analysis.quadrangleAndGreatTriangle && (
+          <Card id="quadrangle" className="mb-8 card-sacred">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Compass className="h-5 w-5 text-primary" />
+                {showHindi ? 'चतुर्भुज एवं महा त्रिकोण' : 'Quadrangle & Great Triangle'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analysis.quadrangleAndGreatTriangle.quadrangle && (
+                <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+                  <h4 className="font-semibold text-sm mb-1">{showHindi ? 'चतुर्भुज' : 'Quadrangle'}</h4>
+                  <Badge variant="outline" className="mb-2">{analysis.quadrangleAndGreatTriangle.quadrangle.shape}</Badge>
+                  <p className="text-sm text-muted-foreground">{analysis.quadrangleAndGreatTriangle.quadrangle.interpretation}</p>
+                </div>
+              )}
+              {analysis.quadrangleAndGreatTriangle.greatTriangle && (
+                <div className="p-4 rounded-lg bg-card/50 border border-border/50">
+                  <h4 className="font-semibold text-sm mb-1">{showHindi ? 'महा त्रिकोण' : 'Great Triangle'}</h4>
+                  <Badge variant="outline" className="mb-2">{analysis.quadrangleAndGreatTriangle.greatTriangle.shape}</Badge>
+                  <p className="text-sm text-muted-foreground">{analysis.quadrangleAndGreatTriangle.greatTriangle.interpretation}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

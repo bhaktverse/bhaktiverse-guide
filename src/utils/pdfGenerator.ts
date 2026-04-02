@@ -1061,6 +1061,54 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     yPos += 5;
   }
 
+  // ========== TIMING PREDICTIONS ==========
+  const tp = (analysis as any).timingPredictions;
+  if (tp) {
+    addSectionHeader('TIMING PREDICTIONS (Kaal Drishti)');
+
+    const timingItems = [
+      { label: 'Next 1 Year', value: tp.next_1_year },
+      { label: 'Next 3 Years', value: tp.next_3_years },
+      { label: 'Next 7 Years', value: tp.next_7_years },
+      { label: 'Peak Success Age', value: tp.age_of_peak_success },
+    ];
+
+    timingItems.forEach(item => {
+      if (!item.value) return;
+      checkPageBreak(18);
+      doc.setFontSize(10);
+      doc.setTextColor(...goldColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text(item.label, margin + 3, yPos);
+      yPos += 5;
+      doc.setFontSize(9);
+      doc.setTextColor(...textColor);
+      doc.setFont('helvetica', 'normal');
+      const lines: string[] = doc.splitTextToSize(truncate(getSafeText(item.value), 300), contentWidth - 10);
+      doc.text(lines.slice(0, 4), margin + 5, yPos);
+      yPos += lines.slice(0, 4).length * 4 + 3;
+    });
+
+    if (tp.financial_growth_periods?.length) {
+      checkPageBreak(12);
+      doc.setFontSize(10);
+      doc.setTextColor(...goldColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Financial Growth Periods', margin + 3, yPos);
+      yPos += 5;
+      tp.financial_growth_periods.slice(0, 3).forEach((p: string) => {
+        checkPageBreak(8);
+        doc.setFontSize(9);
+        doc.setTextColor(...textColor);
+        doc.setFont('helvetica', 'normal');
+        const lines: string[] = doc.splitTextToSize(`> ${truncate(getSafeText(p), 200)}`, contentWidth - 10);
+        doc.text(lines.slice(0, 2), margin + 5, yPos);
+        yPos += lines.slice(0, 2).length * 4 + 2;
+      });
+    }
+    yPos += 5;
+  }
+
   // ========== REMEDIES ==========
   if (analysis.remedies && analysis.remedies.length > 0) {
     addSectionHeader('REMEDIES & RECOMMENDATIONS (Upay)');
@@ -1116,7 +1164,7 @@ export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: 
     doc.setFontSize(12);
     doc.setTextColor(...goldColor);
     doc.setFont('helvetica', 'bold');
-    doc.text("GURU JI'S BLESSINGS", pageWidth / 2, yPos + 10, { align: 'center' });
+    doc.text("PANDIT VISIONHAST'S BLESSINGS", pageWidth / 2, yPos + 10, { align: 'center' });
 
     doc.setFontSize(10);
     doc.setTextColor(...textColor);
