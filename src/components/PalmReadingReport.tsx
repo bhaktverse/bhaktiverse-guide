@@ -160,6 +160,8 @@ const TOC_SECTIONS = [
   { id: 'lucky', label: 'Lucky Elements', icon: '💎' },
   { id: 'mantras', label: 'Recommended Mantras', icon: '🕉️' },
   { id: 'yogas', label: 'Special Yogas', icon: '⭐' },
+  { id: 'timing', label: 'Timing Predictions', icon: '⏳' },
+  { id: 'quadrangle', label: 'Quadrangle & Triangle', icon: '🔺' },
   { id: 'remedies', label: 'Remedies', icon: '🛡️' },
   { id: 'blessings', label: 'Blessings', icon: '🙏' },
   { id: 'services', label: 'Continue Your Journey', icon: '🚀' },
