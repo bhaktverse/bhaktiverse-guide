@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 
+// ===== INTERFACES =====
 interface CategoryPrediction {
   title: string;
   prediction: string;
@@ -22,6 +23,14 @@ interface LineAnalysis {
   destinyPath?: string;
   successPath?: string;
   rating?: number;
+  visibility?: string;
+  depth?: string;
+  curvature?: string;
+  startPoint?: string;
+  endPoint?: string;
+  markings?: string[];
+  samudrikaInterpretation?: string;
+  prediction?: string;
 }
 
 interface MountAnalysis {
@@ -29,6 +38,9 @@ interface MountAnalysis {
   observed?: string;
   meaning?: string;
   rating?: number;
+  development?: string;
+  markings?: string[];
+  interpretation?: string;
 }
 
 interface HandTypeAnalysis {
@@ -66,6 +78,15 @@ interface LineQualityDetails {
   chains?: string[];
 }
 
+interface TimingPredictions {
+  next_1_year?: string;
+  next_3_years?: string;
+  next_7_years?: string;
+  age_of_peak_success?: string;
+  health_alert_periods?: string[];
+  financial_growth_periods?: string[];
+}
+
 interface PalmAnalysis {
   language?: string;
   palmType?: string;
@@ -90,6 +111,7 @@ interface PalmAnalysis {
     lifeLine?: LineAnalysis;
     fateLine?: LineAnalysis;
     sunLine?: LineAnalysis;
+    mercuryLine?: LineAnalysis;
   };
   mountAnalysis?: {
     jupiter?: MountAnalysis;
@@ -106,6 +128,21 @@ interface PalmAnalysis {
   secondaryLines?: SecondaryLines;
   fingerAnalysis?: FingerAnalysis;
   lineQualityDetails?: LineQualityDetails;
+  timingPredictions?: TimingPredictions;
+  quadrangleAndGreatTriangle?: {
+    quadrangle?: { shape?: string; interpretation?: string };
+    greatTriangle?: { shape?: string; interpretation?: string };
+  };
+  specialMarkings?: {
+    stars?: Array<{ location?: string; interpretation?: string }>;
+    crosses?: Array<{ location?: string; interpretation?: string }>;
+    triangles?: Array<{ location?: string; interpretation?: string }>;
+    squares?: Array<{ location?: string; interpretation?: string }>;
+    grilles?: Array<{ location?: string; interpretation?: string }>;
+    mysticCross?: { present?: boolean; interpretation?: string };
+    simianLine?: { present?: boolean; interpretation?: string };
+    ringOfSolomon?: { present?: boolean; interpretation?: string };
+  };
   luckyElements?: {
     colors?: string[];
     gemstones?: string[];
@@ -122,128 +159,60 @@ interface PalmAnalysis {
   blessings?: string;
 }
 
-const CATEGORY_TITLES: Record<string, string> = {
+// ===== CONSTANTS =====
+const SAFFRON: [number, number, number] = [255, 102, 0];
+const GOLD: [number, number, number] = [218, 165, 32];
+const TEXT: [number, number, number] = [40, 40, 40];
+const MUTED: [number, number, number] = [120, 120, 120];
+const GREEN: [number, number, number] = [34, 139, 34];
+const RED: [number, number, number] = [200, 50, 50];
+const BG: [number, number, number] = [250, 248, 245];
+const CARD_BG: [number, number, number] = [255, 252, 248];
+const SECTION_BG: [number, number, number] = [245, 240, 235];
+const PURPLE: [number, number, number] = [128, 60, 128];
+
+const LINE_COLORS: Record<string, [number, number, number]> = {
+  lifeLine: [34, 139, 34],
+  heartLine: [200, 50, 80],
+  headLine: [50, 100, 200],
+  fateLine: [128, 60, 128],
+  sunLine: [218, 165, 32],
+  mercuryLine: [50, 150, 150],
+};
+
+const LINE_LABELS: Record<string, { en: string; hi: string }> = {
+  lifeLine: { en: 'Life Line', hi: 'Jeevan Rekha' },
+  heartLine: { en: 'Heart Line', hi: 'Hriday Rekha' },
+  headLine: { en: 'Head Line', hi: 'Mastishk Rekha' },
+  fateLine: { en: 'Fate Line', hi: 'Bhagya Rekha' },
+  sunLine: { en: 'Sun Line', hi: 'Surya Rekha' },
+  mercuryLine: { en: 'Mercury Line', hi: 'Buddh Rekha' },
+};
+
+const MOUNT_LABELS: Record<string, string> = {
+  jupiter: 'Guru (Jupiter)',
+  saturn: 'Shani (Saturn)',
+  apollo: 'Surya (Apollo)',
+  mercury: 'Budh (Mercury)',
+  venus: 'Shukra (Venus)',
+  mars: 'Mangal (Mars)',
+  marsUpper: 'Upper Mars',
+  marsLower: 'Lower Mars',
+  moon: 'Chandra (Luna)',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
   career: 'Career & Finance',
   love: 'Love & Relationships',
   health: 'Health & Vitality',
   family: 'Family & Children',
   education: 'Education & Wisdom',
   spiritual: 'Spiritual Growth',
-  travel: 'Travel & Fortune'
+  travel: 'Travel & Fortune',
 };
 
-const LINE_NAMES: Record<string, string> = {
-  heartLine: 'Heart Line',
-  headLine: 'Head Line',
-  lifeLine: 'Life Line',
-  fateLine: 'Fate Line',
-  sunLine: 'Sun Line'
-};
-
-const MOUNT_NAMES: Record<string, string> = {
-  jupiter: 'Jupiter Mount',
-  saturn: 'Saturn Mount',
-  apollo: 'Apollo Mount',
-  mercury: 'Mercury Mount',
-  venus: 'Venus Mount',
-  mars: 'Mars Mount',
-  moon: 'Moon Mount'
-};
-
-const transliterationMap: Record<string, string> = {
-  'ॐ': 'Om', 'श्री': 'Shri', 'जी': 'Ji', 'नमस्ते': 'Namaste', 'नमः': 'Namah',
-  'मंत्र': 'Mantra', 'शुभ': 'Shubh', 'अशुभ': 'Ashubh', 'भाग्य': 'Bhagya',
-  'ग्रह': 'Graha', 'राशि': 'Rashi', 'नक्षत्र': 'Nakshatra', 'दोष': 'Dosha',
-  'योग': 'Yoga', 'कर्म': 'Karma', 'धर्म': 'Dharma', 'पूजा': 'Puja',
-  'आरती': 'Aarti', 'प्रणाम': 'Pranam', 'आशीर्वाद': 'Ashirvad',
-  'सूर्य': 'Surya', 'चंद्र': 'Chandra', 'मंगल': 'Mangal', 'बुध': 'Budh',
-  'गुरु': 'Guru', 'शुक्र': 'Shukra', 'शनि': 'Shani', 'राहु': 'Rahu', 'केतु': 'Ketu',
-  'हृदय': 'Hridaya', 'रेखा': 'Rekha', 'पर्वत': 'Parvat', 'जीवन': 'Jeevan',
-  'प्रेम': 'Prem', 'स्वास्थ्य': 'Swasthya', 'शिक्षा': 'Shiksha',
-  'परिवार': 'Parivar', 'संतान': 'Santan', 'विवाह': 'Vivah',
-  'आध्यात्मिक': 'Adhyatmik', 'यात्रा': 'Yatra',
-  'बेटा': 'Beta', 'बेटी': 'Beti', 'बच्चे': 'Bachche', 'प्रिय': 'Priya',
-  'आप': 'Aap', 'हाथ': 'Hath', 'देखता': 'Dekhta', 'हूं': 'Hoon',
-  'में': 'Mein', 'है': 'Hai', 'और': 'Aur', 'के': 'Ke', 'को': 'Ko',
-  'से': 'Se', 'पर': 'Par', 'बहुत': 'Bahut', 'अच्छा': 'Achha',
-  'खुश': 'Khush', 'प्यार': 'Pyaar',
-  // Expanded spiritual terms
-  'भक्ति': 'Bhakti', 'मोक्ष': 'Moksha', 'साधना': 'Sadhana', 'ध्यान': 'Dhyan',
-  'तपस्या': 'Tapasya', 'सेवा': 'Seva', 'दान': 'Daan', 'व्रत': 'Vrat',
-  'उपवास': 'Upvas', 'संस्कार': 'Sanskar', 'वेद': 'Veda', 'पुराण': 'Puran',
-  'गीता': 'Geeta', 'रामायण': 'Ramayana', 'महाभारत': 'Mahabharat',
-  'शिव': 'Shiva', 'विष्णु': 'Vishnu', 'ब्रह्मा': 'Brahma', 'लक्ष्मी': 'Lakshmi',
-  'सरस्वती': 'Saraswati', 'गणेश': 'Ganesh', 'हनुमान': 'Hanuman', 'कृष्ण': 'Krishna',
-  'राम': 'Ram', 'दुर्गा': 'Durga', 'काली': 'Kali', 'पार्वती': 'Parvati',
-  'ज्योतिष': 'Jyotish', 'कुंडली': 'Kundali', 'ग्रहण': 'Grahan', 'अमावस्या': 'Amavasya',
-  'पूर्णिमा': 'Poornima', 'एकादशी': 'Ekadashi', 'चतुर्थी': 'Chaturthi',
-  'प्रदोष': 'Pradosh', 'संक्रांति': 'Sankranti', 'नवरात्रि': 'Navratri',
-  'दिवाली': 'Diwali', 'होली': 'Holi', 'मकर': 'Makar', 'कुम्भ': 'Kumbh',
-  'मीन': 'Meen', 'मेष': 'Mesh', 'वृषभ': 'Vrishabh', 'मिथुन': 'Mithun',
-  'कर्क': 'Kark', 'सिंह': 'Singh', 'कन्या': 'Kanya', 'तुला': 'Tula',
-  'वृश्चिक': 'Vrishchik', 'धनु': 'Dhanu',
-  'अग्नि': 'Agni', 'वायु': 'Vayu', 'जल': 'Jal', 'पृथ्वी': 'Prithvi', 'आकाश': 'Akash',
-  'चक्र': 'Chakra', 'कुंडलिनी': 'Kundalini', 'प्राण': 'Prana', 'नाड़ी': 'Nadi',
-  'अंगूठा': 'Angutha', 'अंगुली': 'Anguli', 'तर्जनी': 'Tarjani', 'मध्यमा': 'Madhyama',
-  'अनामिका': 'Anamika', 'कनिष्ठा': 'Kanishtha',
-  'सफलता': 'Safalta', 'समृद्धि': 'Samriddhi', 'शांति': 'Shanti', 'सुख': 'Sukh',
-  'आनंद': 'Anand', 'कल्याण': 'Kalyan', 'मंगलकारी': 'Mangalkari',
-  'उपाय': 'Upay', 'रत्न': 'Ratna', 'यंत्र': 'Yantra', 'तंत्र': 'Tantra',
-  'रुद्राक्ष': 'Rudraksha', 'तुलसी': 'Tulsi', 'चंदन': 'Chandan',
-  'का': 'Ka', 'की': 'Ki', 'कि': 'Ki', 'ये': 'Ye', 'वो': 'Vo',
-  'यह': 'Yah', 'वह': 'Vah', 'कैसे': 'Kaise', 'क्या': 'Kya',
-  'नहीं': 'Nahin', 'हां': 'Haan', 'अभी': 'Abhi', 'कभी': 'Kabhi',
-  'जब': 'Jab', 'तब': 'Tab', 'अगर': 'Agar', 'तो': 'To', 'लेकिन': 'Lekin',
-};
-
-function transliterate(text: string): string {
-  if (!text) return '';
-  let result = text;
-  // Sort by length descending so longer words match first (e.g., "श्री" before "श")
-  const sortedEntries = Object.entries(transliterationMap).sort((a, b) => b[0].length - a[0].length);
-  for (const [hindi, roman] of sortedEntries) {
-    result = result.replace(new RegExp(hindi, 'g'), roman);
-  }
-  // Character-level Devanagari to Latin
-  const devanagariToLatin: Record<string, string> = {
-    'अ': 'a', 'आ': 'aa', 'इ': 'i', 'ई': 'ee', 'उ': 'u', 'ऊ': 'oo',
-    'ए': 'e', 'ऐ': 'ai', 'ओ': 'o', 'औ': 'au', 'ऋ': 'ri',
-    'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
-    'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'ny',
-    'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
-    'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n',
-    'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
-    'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh',
-    'ष': 'sh', 'स': 's', 'ह': 'h',
-    'ा': 'a', 'ि': 'i', 'ी': 'ee', 'ु': 'u', 'ू': 'oo',
-    'े': 'e', 'ै': 'ai', 'ो': 'o', 'ौ': 'au',
-    '्': '', 'ं': 'n', 'ः': 'h', '़': '',
-    '।': '.', '॥': '.',
-  };
-  for (const [dev, lat] of Object.entries(devanagariToLatin)) {
-    result = result.replace(new RegExp(dev, 'g'), lat);
-  }
-  // Remove any remaining Devanagari, zero-width chars, non-ASCII
-  result = result
-    .replace(/[\u0900-\u097F]/g, '')
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    .replace(/[^\x20-\x7E\n\r\t]/g, '')
-    .replace(/&\s*&[=\w?@]*\s*/g, '')
-    .replace(/&[=\w?@]+/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-  return result;
-}
-
-function getSafeText(text: string | undefined | null, fallback: string = ''): string {
-  if (!text) return fallback;
-  const transliterated = transliterate(text);
-  return transliterated || fallback;
-}
-
-function truncate(text: string, maxLen: number): string {
-  if (text.length <= maxLen) return text;
-  return text.substring(0, maxLen - 3) + '...';
+function containsDevanagari(text: string): boolean {
+  return /[\u0900-\u097F]/.test(text);
 }
 
 function getZodiacFromDob(dob: string): { sign: string; hindiSign: string } {
@@ -251,953 +220,851 @@ function getZodiacFromDob(dob: string): { sign: string; hindiSign: string } {
   const date = new Date(dob);
   const day = date.getDate();
   const month = date.getMonth() + 1;
-  const zodiacData: Array<{ sign: string; hindiSign: string; startMonth: number; startDay: number; endMonth: number; endDay: number }> = [
-    { sign: 'Capricorn', hindiSign: 'मकर', startMonth: 12, startDay: 22, endMonth: 1, endDay: 19 },
-    { sign: 'Aquarius', hindiSign: 'कुम्भ', startMonth: 1, startDay: 20, endMonth: 2, endDay: 18 },
-    { sign: 'Pisces', hindiSign: 'मीन', startMonth: 2, startDay: 19, endMonth: 3, endDay: 20 },
-    { sign: 'Aries', hindiSign: 'मेष', startMonth: 3, startDay: 21, endMonth: 4, endDay: 19 },
-    { sign: 'Taurus', hindiSign: 'वृषभ', startMonth: 4, startDay: 20, endMonth: 5, endDay: 20 },
-    { sign: 'Gemini', hindiSign: 'मिथुन', startMonth: 5, startDay: 21, endMonth: 6, endDay: 20 },
-    { sign: 'Cancer', hindiSign: 'कर्क', startMonth: 6, startDay: 21, endMonth: 7, endDay: 22 },
-    { sign: 'Leo', hindiSign: 'सिंह', startMonth: 7, startDay: 23, endMonth: 8, endDay: 22 },
-    { sign: 'Virgo', hindiSign: 'कन्या', startMonth: 8, startDay: 23, endMonth: 9, endDay: 22 },
-    { sign: 'Libra', hindiSign: 'तुला', startMonth: 9, startDay: 23, endMonth: 10, endDay: 22 },
-    { sign: 'Scorpio', hindiSign: 'वृश्चिक', startMonth: 10, startDay: 23, endMonth: 11, endDay: 21 },
-    { sign: 'Sagittarius', hindiSign: 'धनु', startMonth: 11, startDay: 22, endMonth: 12, endDay: 21 },
+  const zodiacData = [
+    { sign: 'Capricorn', hindiSign: 'Makar', startMonth: 12, startDay: 22, endMonth: 1, endDay: 19 },
+    { sign: 'Aquarius', hindiSign: 'Kumbh', startMonth: 1, startDay: 20, endMonth: 2, endDay: 18 },
+    { sign: 'Pisces', hindiSign: 'Meen', startMonth: 2, startDay: 19, endMonth: 3, endDay: 20 },
+    { sign: 'Aries', hindiSign: 'Mesh', startMonth: 3, startDay: 21, endMonth: 4, endDay: 19 },
+    { sign: 'Taurus', hindiSign: 'Vrishabh', startMonth: 4, startDay: 20, endMonth: 5, endDay: 20 },
+    { sign: 'Gemini', hindiSign: 'Mithun', startMonth: 5, startDay: 21, endMonth: 6, endDay: 20 },
+    { sign: 'Cancer', hindiSign: 'Kark', startMonth: 6, startDay: 21, endMonth: 7, endDay: 22 },
+    { sign: 'Leo', hindiSign: 'Singh', startMonth: 7, startDay: 23, endMonth: 8, endDay: 22 },
+    { sign: 'Virgo', hindiSign: 'Kanya', startMonth: 8, startDay: 23, endMonth: 9, endDay: 22 },
+    { sign: 'Libra', hindiSign: 'Tula', startMonth: 9, startDay: 23, endMonth: 10, endDay: 22 },
+    { sign: 'Scorpio', hindiSign: 'Vrishchik', startMonth: 10, startDay: 23, endMonth: 11, endDay: 21 },
+    { sign: 'Sagittarius', hindiSign: 'Dhanu', startMonth: 11, startDay: 22, endMonth: 12, endDay: 21 },
   ];
   for (const z of zodiacData) {
     if (z.startMonth === 12 && z.endMonth === 1) {
-      if ((month === 12 && day >= z.startDay) || (month === 1 && day <= z.endDay)) return { sign: z.sign, hindiSign: z.hindiSign };
+      if ((month === 12 && day >= z.startDay) || (month === 1 && day <= z.endDay)) return z;
     } else {
-      if ((month === z.startMonth && day >= z.startDay) || (month === z.endMonth && day <= z.endDay)) return { sign: z.sign, hindiSign: z.hindiSign };
+      if ((month === z.startMonth && day >= z.startDay) || (month === z.endMonth && day <= z.endDay)) return z;
     }
   }
-  return { sign: 'Aries', hindiSign: 'मेष' };
+  return { sign: 'Aries', hindiSign: 'Mesh' };
 }
 
-export const generatePalmReadingPDF = async (analysis: PalmAnalysis, userName?: string, language?: string, userDob?: string, readingUrl?: string, dbReadingId?: string): Promise<void> => {
+function truncate(text: string, maxLen: number): string {
+  if (!text || text.length <= maxLen) return text || '';
+  return text.substring(0, maxLen - 3) + '...';
+}
+
+function safeStr(val: unknown, fallback = ''): string {
+  if (val === null || val === undefined) return fallback;
+  return String(val) || fallback;
+}
+
+// ===== FONT LOADING =====
+let devanagariLoaded = false;
+
+async function loadDevanagariFont(doc: jsPDF): Promise<boolean> {
+  try {
+    const resp = await fetch('/fonts/NotoSansDevanagari-Regular.ttf');
+    if (!resp.ok) return false;
+    const buf = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const b64 = btoa(binary);
+    doc.addFileToVFS('NotoSansDevanagari.ttf', b64);
+    doc.addFont('NotoSansDevanagari.ttf', 'NotoSansDevanagari', 'normal');
+    devanagariLoaded = true;
+    return true;
+  } catch {
+    console.warn('Devanagari font load failed, using fallback');
+    return false;
+  }
+}
+
+function setFont(doc: jsPDF, text: string, style: 'normal' | 'bold' | 'italic' = 'normal') {
+  if (devanagariLoaded && containsDevanagari(text)) {
+    doc.setFont('NotoSansDevanagari', 'normal');
+  } else {
+    doc.setFont('helvetica', style);
+  }
+}
+
+function safeText(doc: jsPDF, text: string, x: number, y: number, options?: any) {
+  setFont(doc, text);
+  doc.text(text, x, y, options);
+}
+
+// ===== MAIN EXPORT =====
+export const generatePalmReadingPDF = async (
+  analysis: PalmAnalysis,
+  userName?: string,
+  language?: string,
+  userDob?: string,
+  readingUrl?: string,
+  dbReadingId?: string
+): Promise<void> => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  const contentWidth = pageWidth - (margin * 2);
-  const bottomMargin = pageHeight - 25;
-  let yPos = margin;
-  let currentPage = 1;
-
-  const primaryColor: [number, number, number] = [255, 102, 0];
-  const secondaryColor: [number, number, number] = [128, 0, 128];
-  const textColor: [number, number, number] = [51, 51, 51];
-  const mutedColor: [number, number, number] = [100, 100, 100];
-  const successColor: [number, number, number] = [34, 139, 34];
-  const goldColor: [number, number, number] = [218, 165, 32];
-  const saffronColor: [number, number, number] = [255, 153, 51];
-  const deepRed: [number, number, number] = [139, 0, 0];
-
+  const W = doc.internal.pageSize.getWidth(); // 210
+  const H = doc.internal.pageSize.getHeight(); // 297
+  const M = 14; // margin
+  const CW = W - M * 2; // content width
+  const BM = H - 18; // bottom margin
+  let y = M;
   const readingId = `BV-${Date.now().toString(36).toUpperCase()}`;
   const zodiac = userDob ? getZodiacFromDob(userDob) : null;
+  const dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const name = safeStr(userName, 'Seeker');
 
-  // ===== CORE HELPERS =====
+  // Load Devanagari font
+  await loadDevanagariFont(doc);
 
-  const drawSwastik = (cx: number, cy: number, size: number) => {
-    doc.setDrawColor(...saffronColor);
-    doc.setLineWidth(0.8);
-    const s = size;
-    doc.line(cx - s, cy, cx + s, cy);
-    doc.line(cx, cy - s, cx, cy + s);
-    doc.line(cx + s, cy, cx + s, cy - s);
-    doc.line(cx - s, cy, cx - s, cy + s);
-    doc.line(cx, cy - s, cx - s, cy - s);
-    doc.line(cx, cy + s, cx + s, cy + s);
-  };
-
-  const drawBorder = () => {
-    doc.setDrawColor(...goldColor);
-    doc.setLineWidth(2);
-    doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
-    doc.setLineWidth(0.5);
-    doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
-    drawSwastik(18, 18, 3);
-    drawSwastik(pageWidth - 18, 18, 3);
-    drawSwastik(18, pageHeight - 18, 3);
-    drawSwastik(pageWidth - 18, pageHeight - 18, 3);
-  };
-
-  const addWatermark = () => {
-    doc.saveGraphicsState();
-    doc.setFontSize(50);
-    doc.setTextColor(240, 235, 225);
-    doc.setFont('helvetica', 'bold');
-    // Rotate text for watermark effect — approximate with positioned text
-    doc.text('BhaktVerse', pageWidth / 2, pageHeight / 2, { align: 'center', angle: 45 });
-    doc.restoreGraphicsState();
-  };
-
-  const addPageFooter = () => {
+  // ===== HELPERS =====
+  const addFooter = () => {
     doc.setFontSize(7);
-    doc.setTextColor(...mutedColor);
+    doc.setTextColor(...MUTED);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Reading ID: ${readingId}`, margin, pageHeight - 8);
-    doc.text('BhaktVerse AI Palm Reading Report', pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.text('Hasta Rekha Vishleshan Report', M, H - 8);
+    doc.text('For guidance purposes only · Not a substitute for medical or legal advice', W / 2, H - 8, { align: 'center' });
   };
 
-  const drawOmHeader = (y: number) => {
-    doc.setFontSize(16);
-    doc.setTextColor(...saffronColor);
+  const newPage = () => {
+    addFooter();
+    doc.addPage();
+    y = M;
+    doc.setFillColor(...BG);
+    doc.rect(0, 0, W, H, 'F');
+  };
+
+  const checkSpace = (need: number) => {
+    if (y + need > BM) newPage();
+  };
+
+  const drawPill = (x: number, py: number, label: string, value: string, w: number) => {
+    doc.setFillColor(240, 237, 232);
+    doc.roundedRect(x, py, w, 12, 3, 3, 'F');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...MUTED);
+    doc.setFont('helvetica', 'normal');
+    doc.text(label, x + w / 2, py + 4.5, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setTextColor(...TEXT);
     doc.setFont('helvetica', 'bold');
-    doc.text('|| Om ||', pageWidth / 2, y, { align: 'center' });
+    doc.text(truncate(value, 20), x + w / 2, py + 9.5, { align: 'center' });
   };
 
-  const checkPageBreak = (neededSpace: number): void => {
-    if (yPos + neededSpace > bottomMargin) {
-      addPageFooter();
-      doc.addPage();
-      currentPage++;
-      yPos = margin + 5;
-      drawBorder();
-      addWatermark();
-    }
-  };
-
-  // Page-aware wrapped text — splits text into lines and checks page breaks during rendering
-  const addWrappedTextSafe = (text: string, x: number, maxWidth: number, lineHeight: number, maxChars?: number): void => {
-    const safeText = getSafeText(text, 'Analysis not available');
-    const capped = maxChars ? truncate(safeText, maxChars) : safeText;
-    const lines: string[] = doc.splitTextToSize(capped, maxWidth);
-
-    for (let i = 0; i < lines.length; i++) {
-      checkPageBreak(lineHeight + 2);
-      doc.text(lines[i], x, yPos);
-      yPos += lineHeight;
-    }
-  };
-
-  const addSectionDivider = () => {
-    doc.setDrawColor(...goldColor);
-    doc.setLineWidth(0.5);
-    doc.line(margin + 20, yPos, pageWidth - margin - 20, yPos);
-    const cx = pageWidth / 2;
-    doc.setFillColor(...goldColor);
-    doc.circle(cx, yPos, 1.5, 'F');
-    doc.circle(cx - 8, yPos, 0.8, 'F');
-    doc.circle(cx + 8, yPos, 0.8, 'F');
-    yPos += 6;
-  };
-
-  const addThinDivider = () => {
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.line(margin + 10, yPos, pageWidth - margin - 10, yPos);
-    yPos += 4;
-  };
-
-  const drawRatingBar = (x: number, y: number, rating: number, width: number = 50) => {
-    const barHeight = 4;
-    doc.setFillColor(230, 230, 230);
-    doc.roundedRect(x, y, width, barHeight, 2, 2, 'F');
-    const fillWidth = (rating / 10) * width;
-    if (rating >= 8) doc.setFillColor(34, 139, 34);
-    else if (rating >= 6) doc.setFillColor(218, 165, 32);
-    else doc.setFillColor(220, 50, 50);
-    doc.roundedRect(x, y, fillWidth, barHeight, 2, 2, 'F');
-  };
-
-  const addSectionHeader = (title: string) => {
-    checkPageBreak(40);
-    addThinDivider();
-    yPos += 2;
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
+  const sectionHeader = (num: number, titleEn: string, titleHi: string) => {
+    checkSpace(16);
+    doc.setFontSize(13);
+    doc.setTextColor(...SAFFRON);
     doc.setFont('helvetica', 'bold');
-    doc.text(title, margin, yPos);
-    yPos += 10;
-  };
-
-  // ========== PAGE 1: COVER PAGE ==========
-  doc.setFillColor(255, 250, 240);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
-  drawBorder();
-  addWatermark();
-
-  doc.setFontSize(11);
-  doc.setTextColor(...deepRed);
-  doc.setFont('helvetica', 'bold');
-  doc.text('|| Shri Ganeshaya Namah ||', pageWidth / 2, 28, { align: 'center' });
-
-  drawOmHeader(42);
-
-  doc.setFontSize(10);
-  doc.setTextColor(...goldColor);
-  doc.text('* * * * * * *', pageWidth / 2, 52, { align: 'center' });
-
-  doc.setFontSize(28);
-  doc.setTextColor(...primaryColor);
-  doc.setFont('helvetica', 'bold');
-  doc.text('AI GURU PALM READING', pageWidth / 2, 70, { align: 'center' });
-
-  doc.setFontSize(14);
-  doc.setTextColor(...secondaryColor);
-  doc.text('Vedic Kundali-Style Analysis Report', pageWidth / 2, 83, { align: 'center' });
-
-  // User info box
-  doc.setFillColor(255, 243, 224);
-  const infoBoxH = zodiac ? 75 : 65;
-  doc.roundedRect(margin + 15, 95, contentWidth - 30, infoBoxH, 5, 5, 'F');
-  doc.setDrawColor(...goldColor);
-  doc.setLineWidth(1);
-  doc.roundedRect(margin + 15, 95, contentWidth - 30, infoBoxH, 5, 5, 'S');
-
-  const safeUserName = getSafeText(userName, 'Seeker');
-  let infoY = 110;
-
-  doc.setFontSize(16);
-  doc.setTextColor(...deepRed);
-  doc.setFont('helvetica', 'bold');
-  doc.text(safeUserName, pageWidth / 2, infoY, { align: 'center' });
-  infoY += 10;
-
-  if (zodiac) {
+    doc.text(`${num}`, M, y + 5);
     doc.setFontSize(11);
-    doc.setTextColor(...secondaryColor);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Zodiac / Rashi: ${zodiac.sign} (${getSafeText(zodiac.hindiSign)})`, pageWidth / 2, infoY, { align: 'center' });
-    infoY += 8;
-  }
-
-  doc.setFontSize(10);
-  doc.setTextColor(...textColor);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Palm Type: ${getSafeText(analysis.palmType, 'Analyzed')}`, pageWidth / 2, infoY, { align: 'center' });
-  infoY += 7;
-  doc.text(`Dominant Planet: ${getSafeText(analysis.dominantPlanet, 'Multiple')}`, pageWidth / 2, infoY, { align: 'center' });
-  infoY += 7;
-
-  if (analysis.nakshatra) {
-    const sn = getSafeText(analysis.nakshatra);
-    if (sn) {
-      doc.text(`Nakshatra: ${sn}`, pageWidth / 2, infoY, { align: 'center' });
-      infoY += 7;
-    }
-  }
-
-  doc.setFontSize(8);
-  doc.setTextColor(...mutedColor);
-  doc.text(`Report ID: ${readingId}`, pageWidth / 2, infoY + 3, { align: 'center' });
-
-  // Scores
-  const scoreBoxY = zodiac ? 180 : 170;
-  if (analysis.overallScore || analysis.confidenceScore) {
-    doc.setFillColor(232, 245, 233);
-    const halfW = (contentWidth - 50) / 2 - 5;
-    doc.roundedRect(margin + 25, scoreBoxY, halfW, 35, 3, 3, 'F');
-    doc.roundedRect(pageWidth / 2 + 5, scoreBoxY, halfW, 35, 3, 3, 'F');
-
-    doc.setFontSize(12);
-    doc.setTextColor(...successColor);
-    doc.setFont('helvetica', 'bold');
-    const c1 = margin + 25 + halfW / 2;
-    const c2 = pageWidth / 2 + 5 + halfW / 2;
-    doc.text('Overall Score', c1, scoreBoxY + 13, { align: 'center' });
-    doc.setFontSize(18);
-    const rawScore = analysis.overallScore || 8.0;
-    const displayScore = rawScore > 10 ? (rawScore / 10).toFixed(1) : rawScore.toString();
-    doc.text(`${displayScore}/10`, c1, scoreBoxY + 28, { align: 'center' });
-
-    doc.setFontSize(12);
-    doc.text('Confidence', c2, scoreBoxY + 13, { align: 'center' });
-    doc.setFontSize(18);
-    doc.text(`${analysis.confidenceScore || 85}%`, c2, scoreBoxY + 28, { align: 'center' });
-  }
-
-  doc.setFontSize(10);
-  doc.setTextColor(...mutedColor);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, pageWidth / 2, scoreBoxY + 50, { align: 'center' });
-
-  if (language === 'hi') {
-    doc.setFontSize(9);
+    doc.text(titleEn, M + 8, y + 5);
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
     doc.setFont('helvetica', 'italic');
-    doc.text('(Hindi content displayed in Romanized IAST transliteration for PDF compatibility)', pageWidth / 2, scoreBoxY + 58, { align: 'center' });
-  }
+    doc.text(titleHi, M + 8 + doc.getTextWidth(titleEn + '  '), y + 5);
+    y += 10;
+  };
 
-  // QR Code for online reading link
-  const shareId = dbReadingId || readingId;
-  const qrUrl = readingUrl || `https://bhaktverse.lovable.app/palm-reading/shared/${shareId}`;
-  try {
-    const qrDataUrl = await QRCode.toDataURL(qrUrl, {
-      width: 200,
-      margin: 1,
-      color: { dark: '#8B0000', light: '#FFF8DC' },
-      errorCorrectionLevel: 'M',
-    });
-    const qrSize = 28;
-    const qrX = (pageWidth - qrSize) / 2;
-    const qrY = scoreBoxY + 62;
-    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-    doc.setFontSize(8);
-    doc.setTextColor(...mutedColor);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Scan to view & share your reading online', pageWidth / 2, qrY + qrSize + 4, { align: 'center' });
-  } catch (qrErr) {
-    console.warn('QR code generation failed:', qrErr);
-  }
-
-  doc.setFontSize(8);
-  doc.setTextColor(...mutedColor);
-  doc.text('Powered by BhaktVerse AI - Vedic Palm Reading', pageWidth / 2, pageHeight - 20, { align: 'center' });
-  addPageFooter();
-
-  // ========== PAGE 2: TABLE OF CONTENTS ==========
-  doc.addPage();
-  currentPage++;
-  drawBorder();
-  addWatermark();
-  drawOmHeader(22);
-  yPos = 30;
-
-  doc.setFontSize(20);
-  doc.setTextColor(...primaryColor);
-  doc.setFont('helvetica', 'bold');
-  doc.text('TABLE OF CONTENTS', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 12;
-  addSectionDivider();
-
-  const tocItems = [
-    { title: 'Report Summary Dashboard', page: '3' },
-    { title: "Guru Ji's Blessing & Life Path", page: '3' },
-    { title: 'Palm Line Analysis (Rekha Vigyan)', page: '4' },
-    { title: 'Mount Analysis (Parvat Vigyan)', page: '4-5' },
-    { title: 'Hand Type Analysis (Tatva)', page: '5' },
-    { title: 'Secondary Lines (Dvitiyak Rekha)', page: '5-6' },
-    { title: 'Finger & Nail Analysis (Anguli)', page: '6' },
-    { title: 'Category Predictions (7 Areas)', page: '6-8' },
-    { title: 'Lucky Elements (Shubh Tatva)', page: '8-9' },
-    { title: 'Recommended Mantras', page: '9' },
-    { title: 'Special Yogas Detected', page: '9' },
-    { title: 'Remedies & Recommendations', page: '9-10' },
-    { title: "Guru Ji's Final Blessings", page: '10' },
-  ];
-
-  tocItems.forEach((item, i) => {
-    doc.setFontSize(11);
-    doc.setTextColor(...textColor);
-    doc.setFont('helvetica', 'normal');
-    const titleTxt = `${i + 1}. ${item.title}`;
-    const titleWidth = doc.getTextWidth(titleTxt);
-    doc.text(titleTxt, margin + 5, yPos);
-
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text(item.page, pageWidth - margin - 5, yPos, { align: 'right' });
-
-    doc.setTextColor(...mutedColor);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    const dotStart = margin + 5 + titleWidth + 3;
-    const dotEnd = pageWidth - margin - 5 - doc.getTextWidth(item.page) - 3;
-    let dotX = dotStart;
-    while (dotX < dotEnd) {
-      doc.text('.', dotX, yPos);
-      dotX += 2;
+  const wrapText = (text: string, x: number, maxW: number, lh: number, maxChars?: number) => {
+    const t = maxChars ? truncate(safeStr(text), maxChars) : safeStr(text);
+    if (!t) return;
+    setFont(doc, t);
+    const lines: string[] = doc.splitTextToSize(t, maxW);
+    for (const line of lines) {
+      checkSpace(lh + 1);
+      setFont(doc, line);
+      doc.text(line, x, y);
+      y += lh;
     }
-    yPos += 8;
-  });
+  };
 
-  addPageFooter();
+  const drawProgressBar = (x: number, py: number, rating: number, w: number = 40) => {
+    const h = 3;
+    doc.setFillColor(225, 220, 215);
+    doc.roundedRect(x, py, w, h, 1.5, 1.5, 'F');
+    const fill = Math.min((rating / 10) * w, w);
+    if (rating >= 8) doc.setFillColor(...GREEN);
+    else if (rating >= 5) doc.setFillColor(...GOLD);
+    else doc.setFillColor(...RED);
+    doc.roundedRect(x, py, fill, h, 1.5, 1.5, 'F');
+  };
 
-  // ========== PAGE 3: SUMMARY DASHBOARD ==========
-  doc.addPage();
-  currentPage++;
-  drawBorder();
-  addWatermark();
-  drawOmHeader(22);
-  yPos = 30;
+  // ========== PAGE 1: COVER ==========
+  doc.setFillColor(...BG);
+  doc.rect(0, 0, W, H, 'F');
 
-  doc.setFontSize(16);
-  doc.setTextColor(...primaryColor);
+  // Top banner
+  doc.setFillColor(60, 45, 35);
+  doc.rect(0, 0, W, 40, 'F');
+  doc.setFontSize(7);
+  doc.setTextColor(180, 160, 140);
+  doc.setFont('helvetica', 'normal');
+  const headerLetters = 'H A S T A   R E K H A   V I S H L E S H A N  ·  S A M U D R I K A   S H A S T R A';
+  doc.text(headerLetters, W / 2, 12, { align: 'center' });
+
+  // Title
+  doc.setFontSize(24);
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.text('REPORT SUMMARY DASHBOARD', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 12;
-  addSectionDivider();
+  doc.text('Full Palm Reading Report', W / 2, 26, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setTextColor(200, 180, 160);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Comprehensive analysis — Indian + Western palmistry', W / 2, 34, { align: 'center' });
 
-  // Category rating bars
-  if (analysis.categories) {
-    const cats = Object.entries(analysis.categories);
-    const colWidth = (contentWidth - 10) / 2;
+  y = 50;
 
-    cats.forEach(([key, category], i) => {
-      if (!category) return;
-      const col = i % 2;
-      const x = margin + (col * (colWidth + 10));
-      if (col === 0 && i > 0) yPos += 14;
-      const rowY = yPos;
+  // Meta pills row
+  const pillW = (CW - 12) / 4;
+  drawPill(M, y, 'Client name', name, pillW);
+  drawPill(M + pillW + 4, y, 'Rashi / Zodiac', zodiac ? `${zodiac.sign} (${zodiac.hindiSign})` : 'N/A', pillW);
+  drawPill(M + (pillW + 4) * 2, y, 'Hand analyzed', safeStr(analysis.palmType, 'Both'), pillW);
+  drawPill(M + (pillW + 4) * 3, y, 'Report date', dateStr, pillW);
+  y += 20;
 
-      doc.setFontSize(9);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(CATEGORY_TITLES[key] || key, x, rowY);
-
-      doc.setTextColor(...primaryColor);
-      doc.text(`${category.rating || 8}/10`, x + colWidth - 15, rowY);
-      drawRatingBar(x, rowY + 2, category.rating || 8, colWidth - 20);
-    });
-    yPos += 20;
+  // Confidence indicator
+  if (analysis.confidenceScore) {
+    doc.setFillColor(240, 248, 240);
+    doc.roundedRect(M, y, CW, 10, 3, 3, 'F');
+    doc.setFillColor(...GREEN);
+    doc.circle(M + 6, y + 5, 2, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(...TEXT);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Image quality: ${analysis.confidenceScore >= 80 ? 'High' : analysis.confidenceScore >= 50 ? 'Medium' : 'Low'} — Confidence: ${analysis.confidenceScore}%`, M + 12, y + 6);
+    y += 16;
   }
 
-  yPos += 10;
-  addThinDivider();
+  // Score cards
+  if (analysis.overallScore) {
+    const halfW = (CW - 6) / 2;
+    doc.setFillColor(...CARD_BG);
+    doc.roundedRect(M, y, halfW, 28, 4, 4, 'F');
+    doc.roundedRect(M + halfW + 6, y, halfW, 28, 4, 4, 'F');
+
+    doc.setFontSize(9);
+    doc.setTextColor(...MUTED);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Overall Score', M + halfW / 2, y + 10, { align: 'center' });
+    doc.text('Accuracy Confidence', M + halfW + 6 + halfW / 2, y + 10, { align: 'center' });
+
+    doc.setFontSize(18);
+    doc.setTextColor(...SAFFRON);
+    doc.setFont('helvetica', 'bold');
+    const rawScore = analysis.overallScore > 10 ? (analysis.overallScore / 10).toFixed(1) : String(analysis.overallScore);
+    doc.text(`${rawScore}/10`, M + halfW / 2, y + 22, { align: 'center' });
+    doc.text(`${analysis.confidenceScore || 85}%`, M + halfW + 6 + halfW / 2, y + 22, { align: 'center' });
+    y += 34;
+  }
 
   // Greeting
   if (analysis.greeting) {
-    checkPageBreak(40);
-    const safeGreeting = getSafeText(analysis.greeting, 'Welcome to your personalized palm reading.');
-    const greetingLines: string[] = doc.splitTextToSize(safeGreeting, contentWidth - 20);
-    const greetingHeight = Math.min(greetingLines.length * 5 + 20, 50);
+    checkSpace(30);
+    doc.setFillColor(...CARD_BG);
+    doc.roundedRect(M, y, CW, 24, 4, 4, 'F');
+    doc.setDrawColor(...SAFFRON);
+    doc.setLineWidth(0.8);
+    doc.line(M + 3, y + 4, M + 3, y + 20);
 
-    doc.setFillColor(255, 248, 240);
-    doc.roundedRect(margin, yPos, contentWidth, greetingHeight, 3, 3, 'F');
-    doc.setDrawColor(...goldColor);
-    doc.roundedRect(margin, yPos, contentWidth, greetingHeight, 3, 3, 'S');
-
-    doc.setFontSize(11);
-    doc.setTextColor(...secondaryColor);
+    doc.setFontSize(8);
+    doc.setTextColor(...SAFFRON);
     doc.setFont('helvetica', 'bold');
-    doc.text("GURU JI'S BLESSING", margin + 10, yPos + 8);
-
-    doc.setFontSize(10);
-    doc.setTextColor(...textColor);
-    doc.setFont('helvetica', 'italic');
-    doc.text(greetingLines.slice(0, 5), margin + 10, yPos + 18);
-
-    yPos += greetingHeight + 10;
+    doc.text("Pandit VisionHast's Note", M + 8, y + 8);
+    doc.setFontSize(8);
+    doc.setTextColor(...TEXT);
+    setFont(doc, analysis.greeting, 'italic');
+    const greetLines: string[] = doc.splitTextToSize(safeStr(analysis.greeting), CW - 16);
+    doc.text(greetLines.slice(0, 3), M + 8, y + 14);
+    y += 28;
   }
 
-  // Destiny
-  if (analysis.overallDestiny) {
-    checkPageBreak(50);
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('YOUR LIFE PATH & DESTINY', margin, yPos);
-    yPos += 8;
-    doc.setFontSize(10);
-    doc.setTextColor(...textColor);
+  // QR code
+  const shareId = dbReadingId || readingId;
+  const qrUrl = readingUrl || `https://bhaktverse.lovable.app/palm-reading/shared/${shareId}`;
+  try {
+    const qrDataUrl = await QRCode.toDataURL(qrUrl, { width: 150, margin: 1, color: { dark: '#3C2D23', light: '#FAF8F5' }, errorCorrectionLevel: 'M' });
+    const qrSize = 22;
+    doc.addImage(qrDataUrl, 'PNG', (W - qrSize) / 2, y, qrSize, qrSize);
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
     doc.setFont('helvetica', 'normal');
-    addWrappedTextSafe(analysis.overallDestiny, margin, contentWidth, 5, 600);
-    yPos += 10;
-  }
+    doc.text('Scan to view & share online', W / 2, y + qrSize + 4, { align: 'center' });
+    y += qrSize + 10;
+  } catch { /* QR optional */ }
 
-  addPageFooter();
+  addFooter();
 
-  // ========== LINE ANALYSIS ==========
-  if (analysis.lineAnalysis) {
-    addSectionHeader('PALM LINE ANALYSIS (Rekha Vigyan)');
+  // ========== SECTION 1: HAND CONSTITUTION ==========
+  newPage();
 
-    Object.entries(analysis.lineAnalysis).forEach(([key, line]) => {
-      if (!line) return;
-      checkPageBreak(30);
+  sectionHeader(1, 'Hath ka Swaroop', 'Hand Constitution');
 
-      const lineName = LINE_NAMES[key] || key;
-      doc.setFillColor(248, 248, 255);
-      doc.roundedRect(margin, yPos, contentWidth, 8, 2, 2, 'F');
-
-      doc.setFontSize(10);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(lineName, margin + 3, yPos + 6);
-
-      if (line.rating) {
-        doc.setTextColor(...primaryColor);
-        doc.text(`${line.rating}/10`, pageWidth - margin - 15, yPos + 6);
-        drawRatingBar(pageWidth - margin - 65, yPos + 2, line.rating, 40);
-      }
-      yPos += 12;
-
-      if (line.observed) {
-        doc.setFontSize(9);
-        doc.setTextColor(...textColor);
-        doc.setFont('helvetica', 'normal');
-        addWrappedTextSafe(line.observed, margin + 3, contentWidth - 6, 4, 200);
-        yPos += 2;
-      }
-
-      if (line.meaning) {
-        doc.setFontSize(9);
-        doc.setTextColor(...mutedColor);
-        doc.setFont('helvetica', 'italic');
-        addWrappedTextSafe(`Meaning: ${getSafeText(line.meaning)}`, margin + 3, contentWidth - 6, 4, 200);
-      }
-      yPos += 6;
-    });
-  }
-
-  addPageFooter();
-
-  // ========== MOUNT ANALYSIS ==========
-  if (analysis.mountAnalysis) {
-    addSectionHeader('MOUNT ANALYSIS (Parvat Vigyan)');
-
-    Object.entries(analysis.mountAnalysis).forEach(([key, mount]) => {
-      if (!mount) return;
-      checkPageBreak(10);
-
-      const mountName = MOUNT_NAMES[key] || key;
-      doc.setFontSize(9);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${mountName}:`, margin + 3, yPos);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      const safeStrength = getSafeText(mount.strength, 'Moderate');
-      const safeMeaning = getSafeText(mount.meaning || mount.observed, '');
-      doc.text(truncate(`${safeStrength} - ${safeMeaning}`, 80), margin + 35, yPos);
-      yPos += 6;
-    });
-    yPos += 5;
-  }
-
-  addPageFooter();
-
-  // ========== HAND TYPE ANALYSIS ==========
   if (analysis.handTypeAnalysis) {
-    addSectionHeader('HAND TYPE ANALYSIS (Tatva Vigyan)');
-
     const ht = analysis.handTypeAnalysis;
-    const htItems = [
-      { label: 'Classification', value: ht.classification || 'N/A' },
-      { label: 'Tatva Element', value: ht.tatvaElement || 'N/A' },
-      { label: 'Palm Shape', value: ht.palmShape || 'N/A' },
-      { label: 'Finger-to-Palm Ratio', value: ht.fingerToPalmRatio || 'N/A' },
-    ];
-
-    htItems.forEach(item => {
-      doc.setFontSize(9);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${item.label}:`, margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      doc.text(getSafeText(item.value), margin + 45, yPos);
-      yPos += 6;
-    });
+    const pw = (CW - 12) / 4;
+    drawPill(M, y, 'Hand shape', safeStr(ht.palmShape || ht.classification, 'N/A'), pw);
+    drawPill(M + pw + 4, y, 'Finger ratio', safeStr(ht.fingerToPalmRatio, 'N/A'), pw);
+    drawPill(M + (pw + 4) * 2, y, 'Tatva element', safeStr(ht.tatvaElement, 'N/A'), pw);
+    drawPill(M + (pw + 4) * 3, y, 'Personality', safeStr(ht.classification, 'N/A'), pw);
+    y += 18;
 
     if (ht.personalityProfile) {
-      yPos += 2;
+      doc.setFillColor(...CARD_BG);
+      doc.roundedRect(M, y, CW, 20, 3, 3, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(...TEXT);
+      setFont(doc, ht.personalityProfile);
+      const lines: string[] = doc.splitTextToSize(safeStr(ht.personalityProfile), CW - 10);
+      doc.text(lines.slice(0, 4), M + 5, y + 6);
+      y += Math.min(lines.length * 4 + 8, 24);
+    }
+
+    if (ht.strengths?.length || ht.challenges?.length) {
+      y += 4;
+      if (ht.strengths?.length) {
+        doc.setFontSize(8);
+        doc.setTextColor(...GREEN);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Strengths: ', M, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...TEXT);
+        doc.text(truncate(ht.strengths.join(', '), 80), M + 20, y);
+        y += 5;
+      }
+      if (ht.challenges?.length) {
+        doc.setFontSize(8);
+        doc.setTextColor(...RED);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Challenges: ', M, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...TEXT);
+        doc.text(truncate(ht.challenges.join(', '), 80), M + 22, y);
+        y += 5;
+      }
+    }
+    y += 6;
+  }
+
+  // ========== SECTION 2: MAJOR LINES ==========
+  sectionHeader(2, 'Pramukh Rekhayein', 'Major Palm Lines');
+
+  if (analysis.lineAnalysis) {
+    const entries = Object.entries(analysis.lineAnalysis).filter(([, v]) => v);
+    const colW = (CW - 6) / 2;
+
+    entries.forEach(([key, line], i) => {
+      if (!line) return;
+      const col = i % 2;
+      const x = M + col * (colW + 6);
+
+      if (col === 0) checkSpace(45);
+
+      const cardY = y;
+      doc.setFillColor(...CARD_BG);
+      doc.roundedRect(x, cardY, colW, 40, 3, 3, 'F');
+
+      // Color dot + name
+      const color = LINE_COLORS[key] || SAFFRON;
+      doc.setFillColor(...color);
+      doc.circle(x + 5, cardY + 6, 2, 'F');
+
+      const labels = LINE_LABELS[key] || { en: key, hi: '' };
       doc.setFontSize(9);
-      doc.setTextColor(...textColor);
+      doc.setTextColor(...TEXT);
+      doc.setFont('helvetica', 'bold');
+      doc.text(labels.en, x + 10, cardY + 7);
+      doc.setFontSize(7);
+      doc.setTextColor(...MUTED);
       doc.setFont('helvetica', 'italic');
-      addWrappedTextSafe(ht.personalityProfile, margin + 3, contentWidth - 6, 4, 250);
-      yPos += 4;
-    }
+      doc.text(labels.hi, x + 10 + doc.getTextWidth(labels.en + ' '), cardY + 7);
 
-    if (ht.strengths && ht.strengths.length > 0) {
-      doc.setFontSize(9);
-      doc.setTextColor(...successColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Strengths:', margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      doc.text(truncate(ht.strengths.map(s => getSafeText(s)).join(', '), 90), margin + 25, yPos);
-      yPos += 6;
-    }
-
-    if (ht.challenges && ht.challenges.length > 0) {
-      doc.setFontSize(9);
-      doc.setTextColor(220, 150, 50);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Challenges:', margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      doc.text(truncate(ht.challenges.map(c => getSafeText(c)).join(', '), 90), margin + 28, yPos);
-      yPos += 6;
-    }
-    yPos += 5;
-  }
-
-  // ========== SECONDARY LINES ==========
-  if (analysis.secondaryLines) {
-    addSectionHeader('SECONDARY LINES (Dvitiyak Rekha)');
-
-    const sl = analysis.secondaryLines;
-    const secLineItems = [
-      { name: 'Marriage Lines', info: sl.marriageLines ? `Count: ${sl.marriageLines.count || 0}, Depth: ${getSafeText(sl.marriageLines.depth)}` : null, interp: sl.marriageLines?.interpretation },
-      { name: 'Children Lines', info: sl.childrenLines ? `Count: ${sl.childrenLines.count || 0}` : null, interp: sl.childrenLines?.interpretation },
-      { name: 'Health Line', info: sl.healthLine?.present ? getSafeText(sl.healthLine.description) : 'Not prominent', interp: sl.healthLine?.interpretation },
-      { name: 'Travel Lines', info: sl.travelLines ? `Count: ${sl.travelLines.count || 0}` : null, interp: sl.travelLines?.interpretation },
-      { name: 'Intuition Line', info: sl.intuitionLine?.present ? 'Present' : 'Not visible', interp: sl.intuitionLine?.interpretation },
-      { name: 'Girdle of Venus', info: sl.girdleOfVenus?.present ? 'Present' : 'Not visible', interp: sl.girdleOfVenus?.interpretation },
-    ];
-
-    secLineItems.forEach(item => {
-      if (!item.info && !item.interp) return;
-      checkPageBreak(14);
-      doc.setFontSize(9);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${item.name}:`, margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      doc.text(truncate(getSafeText(item.info || ''), 50), margin + 35, yPos);
-      yPos += 5;
-      if (item.interp) {
-        doc.setFontSize(8);
-        doc.setTextColor(...mutedColor);
-        doc.setFont('helvetica', 'italic');
-        const lines: string[] = doc.splitTextToSize(truncate(getSafeText(item.interp), 150), contentWidth - 10);
-        doc.text(lines.slice(0, 2), margin + 5, yPos);
-        yPos += lines.slice(0, 2).length * 4;
+      // Rating
+      if (line.rating) {
+        drawProgressBar(x + colW - 30, cardY + 4, line.rating, 25);
       }
-      yPos += 2;
-    });
-    yPos += 5;
-  }
 
-  // ========== FINGER & NAIL ANALYSIS ==========
-  if (analysis.fingerAnalysis) {
-    addSectionHeader('FINGER & NAIL ANALYSIS (Anguli Vigyan)');
+      // Attributes
+      let attrY = cardY + 13;
+      const attrs: [string, string][] = [];
+      if (line.depth || line.visibility) attrs.push(['Depth', safeStr(line.depth || line.visibility)]);
+      if (line.curvature) attrs.push(['Curvature', safeStr(line.curvature)]);
+      if (line.observed) attrs.push(['Observed', truncate(safeStr(line.observed), 30)]);
+      if (line.markings?.length) attrs.push(['Markings', truncate(line.markings.join(', '), 30)]);
 
-    const fa = analysis.fingerAnalysis;
-    const fingerItems = [
-      { label: 'Thumb Flexibility', value: fa.thumbFlexibility ? `${getSafeText(fa.thumbFlexibility.type)} - ${getSafeText(fa.thumbFlexibility.meaning)}` : null },
-      { label: 'Finger Gaps', value: fa.fingerGaps ? `${getSafeText(fa.fingerGaps.observed)} (${getSafeText(fa.fingerGaps.financialControl)})` : null },
-      { label: 'Ring vs Index', value: fa.ringVsIndex ? `${getSafeText(fa.ringVsIndex.dominant)} - ${getSafeText(fa.ringVsIndex.confidenceLevel)}` : null },
-      { label: 'Nail Shape', value: fa.nailShape ? `${getSafeText(fa.nailShape.type)} - ${getSafeText(fa.nailShape.healthIndicator)}` : null },
-      { label: 'Proportions', value: fa.fingerProportions ? `${getSafeText(fa.fingerProportions.details)} (${getSafeText(fa.fingerProportions.personality)})` : null },
-    ];
-
-    fingerItems.forEach(item => {
-      if (!item.value) return;
-      checkPageBreak(10);
-      doc.setFontSize(9);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${item.label}:`, margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      const lines: string[] = doc.splitTextToSize(truncate(item.value, 100), contentWidth - 45);
-      doc.text(lines.slice(0, 2), margin + 38, yPos);
-      yPos += lines.slice(0, 2).length * 5 + 2;
-    });
-    yPos += 5;
-  }
-
-  addPageFooter();
-
-  // ========== CATEGORY PREDICTIONS ==========
-  if (analysis.categories) {
-    doc.addPage();
-    currentPage++;
-    drawBorder();
-    addWatermark();
-    drawOmHeader(22);
-    yPos = 30;
-
-    doc.setFontSize(16);
-    doc.setTextColor(...primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DETAILED CATEGORY PREDICTIONS', margin, yPos);
-    yPos += 12;
-
-    Object.entries(analysis.categories).forEach(([key, category]) => {
-      if (!category) return;
-
-      checkPageBreak(50);
-      addThinDivider();
-
-      // Category header
-      doc.setFillColor(248, 248, 255);
-      doc.roundedRect(margin, yPos, contentWidth, 10, 2, 2, 'F');
-      doc.setDrawColor(...goldColor);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(margin, yPos, contentWidth, 10, 2, 2, 'S');
-
-      const title = CATEGORY_TITLES[key] || key;
-      doc.setFontSize(11);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(title, margin + 3, yPos + 7);
-
-      doc.setFontSize(10);
-      doc.setTextColor(...primaryColor);
-      doc.text(`${category.rating || 8}/10`, pageWidth - margin - 18, yPos + 7);
-      drawRatingBar(pageWidth - margin - 70, yPos + 3, category.rating || 8, 45);
-      yPos += 14;
-
-      // Prediction text — capped at 1200 chars
-      if (category.prediction) {
-        doc.setFontSize(9);
-        doc.setTextColor(...textColor);
+      attrs.slice(0, 4).forEach(([k, v]) => {
+        doc.setFontSize(6.5);
+        doc.setTextColor(...MUTED);
         doc.setFont('helvetica', 'normal');
-        addWrappedTextSafe(category.prediction, margin + 3, contentWidth - 6, 4, 1200);
+        doc.text(k, x + 5, attrY);
+        doc.setTextColor(...TEXT);
+        doc.text(v, x + 22, attrY);
+        attrY += 4;
+      });
+
+      // Prediction or meaning
+      const predText = safeStr(line.prediction || line.meaning || line.samudrikaInterpretation, '');
+      if (predText) {
+        doc.setFontSize(6.5);
+        doc.setTextColor(...TEXT);
+        setFont(doc, predText);
+        const pLines: string[] = doc.splitTextToSize(truncate(predText, 120), colW - 10);
+        doc.text(pLines.slice(0, 2), x + 5, attrY + 2);
       }
 
-      // Observed Features
-      if (category.observedFeatures && category.observedFeatures.length > 0) {
-        yPos += 3;
-        doc.setFontSize(8);
-        doc.setTextColor(...mutedColor);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Key Observations:', margin + 3, yPos);
-        doc.setFont('helvetica', 'normal');
-        doc.text(truncate(category.observedFeatures.slice(0, 3).map((f: string) => getSafeText(f)).join(' | '), 80), margin + 35, yPos);
-        yPos += 4;
-      }
-
-      // Guidance — capped at 200 chars, rendered with page awareness
-      if (category.guidance) {
-        checkPageBreak(18);
-        const safeGuidance = truncate(getSafeText(category.guidance), 200);
-        const guidanceLines: string[] = doc.splitTextToSize(`Guidance: ${safeGuidance}`, contentWidth - 10);
-        const cappedLines = guidanceLines.slice(0, 4);
-        const guidanceHeight = cappedLines.length * 4 + 6;
-
-        doc.setFillColor(232, 245, 233);
-        doc.roundedRect(margin + 2, yPos - 2, contentWidth - 4, guidanceHeight, 2, 2, 'F');
-        doc.setFontSize(8);
-        doc.setTextColor(46, 125, 50);
-        doc.text(cappedLines, margin + 5, yPos + 2);
-        yPos += guidanceHeight + 4;
-      }
-
-      yPos += 6;
-    });
-  }
-
-  addPageFooter();
-
-  // ========== LUCKY ELEMENTS ==========
-  if (analysis.luckyElements) {
-    addSectionHeader('LUCKY ELEMENTS (Shubh Tatva)');
-
-    const elements = [
-      { label: 'Colors', values: analysis.luckyElements.colors },
-      { label: 'Gemstones', values: analysis.luckyElements.gemstones },
-      { label: 'Auspicious Days', values: analysis.luckyElements.days },
-      { label: 'Lucky Numbers', values: analysis.luckyElements.numbers?.map(String) },
-      { label: 'Directions', values: analysis.luckyElements.directions },
-      { label: 'Metals', values: analysis.luckyElements.metals },
-    ];
-
-    elements.forEach(elem => {
-      if (!elem.values || elem.values.length === 0) return;
-      checkPageBreak(8);
-      doc.setFontSize(9);
-      doc.setTextColor(...secondaryColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${elem.label}:`, margin + 3, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...textColor);
-      doc.text(truncate(elem.values.map(v => getSafeText(String(v))).join(', '), 70), margin + 40, yPos);
-      yPos += 6;
-    });
-    yPos += 5;
-  }
-
-  // ========== MANTRAS ==========
-  if (analysis.luckyElements?.mantras && analysis.luckyElements.mantras.length > 0) {
-    addSectionHeader('RECOMMENDED MANTRAS');
-
-    analysis.luckyElements.mantras.slice(0, 3).forEach(mantra => {
-      checkPageBreak(25);
-
-      if (typeof mantra === 'string') {
-        const safeMantra = getSafeText(mantra);
-        const mLines: string[] = doc.splitTextToSize(safeMantra, contentWidth - 14);
-        const mHeight = Math.max(mLines.length * 5 + 6, 18);
-
-        doc.setFillColor(255, 248, 240);
-        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'F');
-        doc.setDrawColor(...goldColor);
-        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'S');
-
-        doc.setFontSize(10);
-        doc.setTextColor(...textColor);
-        doc.setFont('helvetica', 'italic');
-        doc.text(mLines.slice(0, 3), margin + 5, yPos + 6);
-        yPos += mHeight + 4;
-      } else {
-        const transText = getSafeText(mantra.transliteration || mantra.sanskrit);
-        const meaningText = getSafeText(mantra.meaning);
-        const tLines: string[] = doc.splitTextToSize(transText, contentWidth - 14);
-        const meLines: string[] = meaningText ? doc.splitTextToSize(meaningText, contentWidth - 14) : [];
-        const mHeight = tLines.length * 5 + meLines.slice(0, 2).length * 4 + 10;
-
-        doc.setFillColor(255, 248, 240);
-        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'F');
-        doc.setDrawColor(...goldColor);
-        doc.roundedRect(margin, yPos, contentWidth, mHeight, 2, 2, 'S');
-
-        doc.setFontSize(10);
-        doc.setTextColor(...secondaryColor);
-        doc.setFont('helvetica', 'bold');
-        doc.text(tLines.slice(0, 2), margin + 5, yPos + 7);
-
-        if (meaningText) {
-          doc.setFontSize(8);
-          doc.setTextColor(...mutedColor);
-          doc.setFont('helvetica', 'italic');
-          doc.text(meLines.slice(0, 2), margin + 5, yPos + 7 + tLines.slice(0, 2).length * 5 + 2);
-        }
-        yPos += mHeight + 4;
+      if (col === 1 || i === entries.length - 1) {
+        y += 44;
       }
     });
   }
 
-  // ========== YOGAS ==========
-  if (analysis.yogas && analysis.yogas.length > 0) {
-    addSectionHeader('SPECIAL YOGAS DETECTED');
-
-    analysis.yogas.slice(0, 5).forEach(yoga => {
-      checkPageBreak(10);
-      doc.setFontSize(9);
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'normal');
-      const safeYoga = getSafeText(yoga);
-      const lines: string[] = doc.splitTextToSize(`* ${truncate(safeYoga, 150)}`, contentWidth - 10);
-      doc.text(lines.slice(0, 2), margin + 3, yPos);
-      yPos += lines.slice(0, 2).length * 4 + 2;
-    });
-    yPos += 5;
-  }
-
-  // ========== TIMING PREDICTIONS ==========
-  const tp = (analysis as any).timingPredictions;
+  // ========== SECTION 3: AGE TIMELINE ==========
+  const tp = analysis.timingPredictions;
   if (tp) {
-    addSectionHeader('TIMING PREDICTIONS (Kaal Drishti)');
+    checkSpace(80);
+    sectionHeader(3, 'Aayu Rekha Timeline', 'Age-based Predictions');
 
-    const timingItems = [
-      { label: 'Next 1 Year', value: tp.next_1_year },
-      { label: 'Next 3 Years', value: tp.next_3_years },
-      { label: 'Next 7 Years', value: tp.next_7_years },
-      { label: 'Peak Success Age', value: tp.age_of_peak_success },
-    ];
+    doc.setFillColor(...CARD_BG);
+    doc.roundedRect(M, y, CW, 2, 0, 0, 'F');
+    y += 2;
 
-    timingItems.forEach(item => {
-      if (!item.value) return;
-      checkPageBreak(18);
-      doc.setFontSize(10);
-      doc.setTextColor(...goldColor);
-      doc.setFont('helvetica', 'bold');
-      doc.text(item.label, margin + 3, yPos);
-      yPos += 5;
+    const timelineItems: { label: string; text: string; active?: boolean }[] = [];
+    if (tp.next_1_year) timelineItems.push({ label: 'Next 1 Year', text: tp.next_1_year, active: true });
+    if (tp.next_3_years) timelineItems.push({ label: 'Next 3 Years', text: tp.next_3_years });
+    if (tp.next_7_years) timelineItems.push({ label: 'Next 7 Years', text: tp.next_7_years });
+    if (tp.age_of_peak_success) timelineItems.push({ label: 'Peak Success', text: tp.age_of_peak_success });
+
+    timelineItems.forEach((item, i) => {
+      checkSpace(22);
+      const dotX = M + 8;
+
+      // Vertical line
+      if (i < timelineItems.length - 1) {
+        doc.setDrawColor(200, 195, 190);
+        doc.setLineWidth(0.5);
+        doc.line(dotX, y + 4, dotX, y + 22);
+      }
+
+      // Dot
+      doc.setFillColor(item.active ? SAFFRON[0] : 180, item.active ? SAFFRON[1] : 175, item.active ? SAFFRON[2] : 170);
+      doc.circle(dotX, y + 3, item.active ? 3 : 2, 'F');
+
+      // Label
       doc.setFontSize(9);
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'normal');
-      const lines: string[] = doc.splitTextToSize(truncate(getSafeText(item.value), 300), contentWidth - 10);
-      doc.text(lines.slice(0, 4), margin + 5, yPos);
-      yPos += lines.slice(0, 4).length * 4 + 3;
+      doc.setTextColor(item.active ? SAFFRON[0] : TEXT[0], item.active ? SAFFRON[1] : TEXT[1], item.active ? SAFFRON[2] : TEXT[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.text(item.label, dotX + 8, y + 5);
+
+      // Text
+      doc.setFontSize(7.5);
+      doc.setTextColor(...TEXT);
+      setFont(doc, item.text);
+      const lines: string[] = doc.splitTextToSize(truncate(item.text, 200), CW - 30);
+      doc.text(lines.slice(0, 2), dotX + 8, y + 10);
+      y += Math.max(lines.slice(0, 2).length * 4 + 12, 18);
     });
 
+    // Financial growth periods
     if (tp.financial_growth_periods?.length) {
-      checkPageBreak(12);
-      doc.setFontSize(10);
-      doc.setTextColor(...goldColor);
+      y += 2;
+      doc.setFontSize(8);
+      doc.setTextColor(...GOLD);
       doc.setFont('helvetica', 'bold');
-      doc.text('Financial Growth Periods', margin + 3, yPos);
-      yPos += 5;
-      tp.financial_growth_periods.slice(0, 3).forEach((p: string) => {
-        checkPageBreak(8);
-        doc.setFontSize(9);
-        doc.setTextColor(...textColor);
+      doc.text('Financial Growth Periods:', M + 16, y);
+      y += 5;
+      tp.financial_growth_periods.slice(0, 3).forEach(p => {
+        checkSpace(8);
+        doc.setFontSize(7.5);
+        doc.setTextColor(...TEXT);
         doc.setFont('helvetica', 'normal');
-        const lines: string[] = doc.splitTextToSize(`> ${truncate(getSafeText(p), 200)}`, contentWidth - 10);
-        doc.text(lines.slice(0, 2), margin + 5, yPos);
-        yPos += lines.slice(0, 2).length * 4 + 2;
+        wrapText(`> ${p}`, M + 18, CW - 22, 4, 150);
       });
     }
-    yPos += 5;
+    y += 4;
   }
 
-  // ========== REMEDIES ==========
-  if (analysis.remedies && analysis.remedies.length > 0) {
-    addSectionHeader('REMEDIES & RECOMMENDATIONS (Upay)');
+  // ========== SECTION 4: MOUNTS ==========
+  if (analysis.mountAnalysis) {
+    sectionHeader(4, 'Parvat', 'Mounts');
 
-    analysis.remedies.slice(0, 7).forEach((remedy, index) => {
-      checkPageBreak(12);
-      doc.setFontSize(9);
-      doc.setTextColor(...textColor);
+    const mounts = Object.entries(analysis.mountAnalysis).filter(([, v]) => v);
+    const colW3 = (CW - 8) / 3;
+
+    mounts.forEach(([key, mount], i) => {
+      if (!mount) return;
+      const col = i % 3;
+      const x = M + col * (colW3 + 4);
+
+      if (col === 0) checkSpace(30);
+
+      const cardY = y;
+      doc.setFillColor(...CARD_BG);
+      doc.roundedRect(x, cardY, colW3, 24, 3, 3, 'F');
+
+      doc.setFontSize(8);
+      doc.setTextColor(...PURPLE);
+      doc.setFont('helvetica', 'bold');
+      doc.text(MOUNT_LABELS[key] || key, x + 3, cardY + 7);
+
+      const dev = safeStr(mount.development || mount.strength, 'Medium');
+      doc.setFontSize(7);
+      doc.setTextColor(...MUTED);
       doc.setFont('helvetica', 'normal');
-      const safeRemedy = getSafeText(remedy);
-      const lines: string[] = doc.splitTextToSize(`${index + 1}. ${truncate(safeRemedy, 200)}`, contentWidth - 10);
-      doc.text(lines.slice(0, 3), margin + 3, yPos);
-      yPos += lines.slice(0, 3).length * 4 + 2;
+      doc.text(dev, x + 3, cardY + 13);
+
+      // Progress bar
+      const r = mount.rating || (dev.includes('Well') || dev.includes('Prominent') || dev.includes('Very') ? 8 : dev.includes('Flat') ? 3 : 5);
+      drawProgressBar(x + 3, cardY + 16, r, colW3 - 6);
+
+      // Interpretation snippet
+      const interp = truncate(safeStr(mount.interpretation || mount.meaning || mount.observed, ''), 40);
+      if (interp) {
+        doc.setFontSize(6);
+        doc.setTextColor(...MUTED);
+        doc.text(interp, x + 3, cardY + 22);
+      }
+
+      if (col === 2 || i === mounts.length - 1) {
+        y += 28;
+      }
     });
-    yPos += 5;
   }
 
-  // ========== WARNINGS ==========
-  if (analysis.warnings && analysis.warnings.length > 0) {
-    addSectionHeader('CAUTION PERIODS');
-    // Override header color for warnings
-    doc.setTextColor(220, 50, 50);
+  // ========== SECTION 5: MARRIAGE & SECONDARY LINES ==========
+  if (analysis.secondaryLines) {
+    sectionHeader(5, 'Vivah Rekhayein', 'Marriage & Secondary Lines');
+    const sl = analysis.secondaryLines;
 
-    analysis.warnings.slice(0, 5).forEach(warning => {
-      checkPageBreak(10);
-      doc.setFontSize(9);
-      doc.setTextColor(...textColor);
+    if (sl.marriageLines) {
+      doc.setFillColor(...CARD_BG);
+      checkSpace(20);
+      const mh = 16;
+      doc.roundedRect(M, y, CW / 2 - 3, mh, 3, 3, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(...PURPLE);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Marriage Lines', M + 4, y + 6);
+      doc.setFontSize(7);
+      doc.setTextColor(...TEXT);
       doc.setFont('helvetica', 'normal');
-      const safeWarning = getSafeText(warning);
-      const lines: string[] = doc.splitTextToSize(`! ${truncate(safeWarning, 150)}`, contentWidth - 10);
-      doc.text(lines.slice(0, 2), margin + 3, yPos);
-      yPos += lines.slice(0, 2).length * 4 + 2;
+      doc.text(`Count: ${sl.marriageLines.count ?? 'N/A'} · ${safeStr(sl.marriageLines.depth, '')}`, M + 4, y + 11);
+
+      // Children lines
+      if (sl.childrenLines) {
+        doc.setFillColor(...CARD_BG);
+        doc.roundedRect(M + CW / 2 + 3, y, CW / 2 - 3, mh, 3, 3, 'F');
+        doc.setFontSize(8);
+        doc.setTextColor(...PURPLE);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Children Lines', M + CW / 2 + 7, y + 6);
+        doc.setFontSize(7);
+        doc.setTextColor(...TEXT);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Count: ${sl.childrenLines.count ?? 'N/A'}`, M + CW / 2 + 7, y + 11);
+      }
+      y += mh + 4;
+
+      if (sl.marriageLines.interpretation) {
+        doc.setFontSize(7);
+        doc.setTextColor(...MUTED);
+        setFont(doc, sl.marriageLines.interpretation, 'italic');
+        wrapText(sl.marriageLines.interpretation, M + 2, CW - 4, 3.5, 200);
+        y += 3;
+      }
+    }
+
+    // Other secondary lines
+    const otherLines: [string, string, string][] = [];
+    if (sl.healthLine) otherLines.push(['Health Line', sl.healthLine.present ? 'Present' : 'Not visible', safeStr(sl.healthLine.interpretation)]);
+    if (sl.travelLines) otherLines.push(['Travel Lines', `Count: ${sl.travelLines.count ?? 0}`, safeStr(sl.travelLines.interpretation)]);
+    if (sl.intuitionLine) otherLines.push(['Intuition Line', sl.intuitionLine.present ? 'Present' : 'Not visible', safeStr(sl.intuitionLine.interpretation)]);
+    if (sl.girdleOfVenus) otherLines.push(['Girdle of Venus', sl.girdleOfVenus.present ? 'Present' : 'Not visible', safeStr(sl.girdleOfVenus.interpretation)]);
+
+    otherLines.forEach(([name2, info, interp]) => {
+      checkSpace(10);
+      doc.setFontSize(7.5);
+      doc.setTextColor(...PURPLE);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${name2}:`, M + 2, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...TEXT);
+      doc.text(truncate(info, 40), M + 30, y);
+      y += 4;
+      if (interp) {
+        doc.setFontSize(6.5);
+        doc.setTextColor(...MUTED);
+        doc.text(truncate(interp, 80), M + 4, y);
+        y += 4;
+      }
     });
-    yPos += 5;
+    y += 4;
   }
 
-  // ========== BLESSINGS (FINAL) ==========
-  if (analysis.blessings) {
-    checkPageBreak(50);
-    addThinDivider();
+  // ========== SECTION 6: SPECIAL MARKINGS ==========
+  const sm = analysis.specialMarkings;
+  if (sm) {
+    const hasMarkings = sm.stars?.length || sm.crosses?.length || sm.triangles?.length || sm.squares?.length || sm.grilles?.length || sm.mysticCross?.present || sm.simianLine?.present || sm.ringOfSolomon?.present;
+    if (hasMarkings) {
+      sectionHeader(6, 'Vishesh Chinh', 'Special Markings');
 
-    const safeBlessings = truncate(getSafeText(analysis.blessings), 500);
-    const blessingLines: string[] = doc.splitTextToSize(safeBlessings, contentWidth - 20);
-    const cappedBlessingLines = blessingLines.slice(0, 8);
-    const blessingHeight = cappedBlessingLines.length * 5 + 20;
+      const chipData: { symbol: string; label: string; items: Array<{ location?: string; interpretation?: string }> }[] = [];
+      if (sm.stars?.length) chipData.push({ symbol: '★', label: 'Star', items: sm.stars });
+      if (sm.triangles?.length) chipData.push({ symbol: '◇', label: 'Triangle', items: sm.triangles });
+      if (sm.squares?.length) chipData.push({ symbol: '□', label: 'Square', items: sm.squares });
+      if (sm.crosses?.length) chipData.push({ symbol: '+', label: 'Cross', items: sm.crosses });
+      if (sm.grilles?.length) chipData.push({ symbol: '#', label: 'Grille', items: sm.grilles });
 
-    doc.setFillColor(255, 248, 225);
-    doc.roundedRect(margin, yPos, contentWidth, blessingHeight, 5, 5, 'F');
-    doc.setDrawColor(...goldColor);
-    doc.setLineWidth(1);
-    doc.roundedRect(margin, yPos, contentWidth, blessingHeight, 5, 5, 'S');
+      const chipW = (CW - 8) / Math.min(chipData.length, 3);
+      chipData.forEach((chip, i) => {
+        const col = i % 3;
+        if (col === 0 && i > 0) y += 30;
+        if (col === 0) checkSpace(28);
+        const x = M + col * (chipW + 4);
 
-    doc.setFontSize(12);
-    doc.setTextColor(...goldColor);
+        doc.setFillColor(...CARD_BG);
+        doc.roundedRect(x, y, chipW, 26, 3, 3, 'F');
+
+        doc.setFontSize(14);
+        doc.setTextColor(...SAFFRON);
+        doc.setFont('helvetica', 'bold');
+        doc.text(chip.symbol, x + 4, y + 9);
+
+        doc.setFontSize(8);
+        doc.setTextColor(...TEXT);
+        doc.text(chip.label, x + 14, y + 8);
+
+        chip.items.slice(0, 2).forEach((item, j) => {
+          doc.setFontSize(6.5);
+          doc.setTextColor(...MUTED);
+          doc.setFont('helvetica', 'normal');
+          doc.text(truncate(`${safeStr(item.location, '')} — ${safeStr(item.interpretation, '')}`, 45), x + 4, y + 14 + j * 5);
+        });
+      });
+      if (chipData.length > 0) y += 30;
+
+      // Special marks (mystic cross, simian, ring of solomon)
+      const specials: [string, string][] = [];
+      if (sm.mysticCross?.present) specials.push(['Mystic Cross', safeStr(sm.mysticCross.interpretation)]);
+      if (sm.simianLine?.present) specials.push(['Simian Line', safeStr(sm.simianLine.interpretation)]);
+      if (sm.ringOfSolomon?.present) specials.push(['Ring of Solomon', safeStr(sm.ringOfSolomon.interpretation)]);
+
+      specials.forEach(([n, interp]) => {
+        checkSpace(8);
+        doc.setFontSize(7.5);
+        doc.setTextColor(...GOLD);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`✦ ${n}:`, M + 2, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...TEXT);
+        doc.text(truncate(interp, 60), M + 30, y);
+        y += 5;
+      });
+      y += 4;
+    }
+  }
+
+  // ========== SECTION 7: REMEDIES ==========
+  const hasRemedies = analysis.remedies?.length || analysis.luckyElements?.gemstones?.length || analysis.luckyElements?.mantras?.length;
+  if (hasRemedies) {
+    sectionHeader(7, 'Upay aur Sujhav', 'Remedies & Recommendations');
+
+    // 2x2 grid
+    const halfW = (CW - 6) / 2;
+    const cards: { title: string; content: string }[] = [];
+
+    if (analysis.luckyElements?.gemstones?.length) {
+      cards.push({ title: 'Ratna (Gemstone)', content: analysis.luckyElements.gemstones.join(', ') });
+    }
+    if (analysis.luckyElements?.mantras?.length) {
+      const m = analysis.luckyElements.mantras[0];
+      const mantraText = typeof m === 'string' ? m : safeStr(m.transliteration || m.sanskrit);
+      cards.push({ title: 'Mantra', content: mantraText });
+    }
+    if (analysis.remedies?.length) {
+      cards.push({ title: 'Jeevan Sujhav', content: analysis.remedies.slice(0, 2).join('. ') });
+    }
+    if (analysis.luckyElements?.colors?.length || analysis.luckyElements?.numbers?.length) {
+      const lucky: string[] = [];
+      if (analysis.luckyElements?.colors?.length) lucky.push(`Colors: ${analysis.luckyElements.colors.join(', ')}`);
+      if (analysis.luckyElements?.numbers?.length) lucky.push(`Numbers: ${analysis.luckyElements.numbers.join(', ')}`);
+      if (analysis.luckyElements?.days?.length) lucky.push(`Days: ${analysis.luckyElements.days.join(', ')}`);
+      cards.push({ title: 'Lucky Elements', content: lucky.join(' · ') });
+    }
+
+    cards.slice(0, 4).forEach((card, i) => {
+      const col = i % 2;
+      const x = M + col * (halfW + 6);
+      if (col === 0) checkSpace(30);
+
+      doc.setFillColor(...CARD_BG);
+      doc.roundedRect(x, y, halfW, 24, 3, 3, 'F');
+
+      doc.setFontSize(8);
+      doc.setTextColor(...SAFFRON);
+      doc.setFont('helvetica', 'bold');
+      doc.text(card.title, x + 4, y + 7);
+
+      doc.setFontSize(7);
+      doc.setTextColor(...TEXT);
+      setFont(doc, card.content);
+      const lines: string[] = doc.splitTextToSize(truncate(card.content, 100), halfW - 8);
+      doc.text(lines.slice(0, 3), x + 4, y + 13);
+
+      if (col === 1 || i === Math.min(cards.length, 4) - 1) y += 28;
+    });
+
+    // Additional remedies list
+    if (analysis.remedies && analysis.remedies.length > 2) {
+      y += 2;
+      analysis.remedies.slice(2, 7).forEach((remedy, i) => {
+        checkSpace(10);
+        doc.setFontSize(7.5);
+        doc.setTextColor(...TEXT);
+        doc.setFont('helvetica', 'normal');
+        wrapText(`${i + 3}. ${remedy}`, M + 2, CW - 4, 3.5, 150);
+        y += 1;
+      });
+    }
+    y += 4;
+  }
+
+  // ========== SECTION 8: CATEGORY PREDICTIONS ==========
+  if (analysis.categories) {
+    sectionHeader(8, 'Kshetra Bhavishyavani', 'Category Predictions');
+
+    Object.entries(analysis.categories).forEach(([key, cat]) => {
+      if (!cat) return;
+      checkSpace(35);
+
+      doc.setFillColor(...CARD_BG);
+      doc.roundedRect(M, y, CW, 30, 3, 3, 'F');
+
+      // Header
+      doc.setFontSize(9);
+      doc.setTextColor(...PURPLE);
+      doc.setFont('helvetica', 'bold');
+      doc.text(CATEGORY_LABELS[key] || key, M + 4, y + 7);
+
+      doc.setFontSize(8);
+      doc.setTextColor(...SAFFRON);
+      doc.text(`${cat.rating || 8}/10`, M + CW - 20, y + 7);
+      drawProgressBar(M + CW - 60, y + 4, cat.rating || 8, 35);
+
+      // Prediction
+      if (cat.prediction) {
+        doc.setFontSize(7);
+        doc.setTextColor(...TEXT);
+        setFont(doc, cat.prediction);
+        const lines: string[] = doc.splitTextToSize(truncate(cat.prediction, 300), CW - 10);
+        doc.text(lines.slice(0, 4), M + 4, y + 13);
+      }
+
+      // Guidance
+      if (cat.guidance) {
+        doc.setFontSize(6.5);
+        doc.setTextColor(...GREEN);
+        doc.setFont('helvetica', 'italic');
+        doc.text(truncate(`Guidance: ${cat.guidance}`, 100), M + 4, y + 27);
+      }
+
+      y += 34;
+    });
+  }
+
+  // ========== SECTION 9: OVERALL SUMMARY ==========
+  checkSpace(60);
+  sectionHeader(9, 'Sarvangeen Saar', 'Overall Summary');
+
+  // Summary pills
+  const summPillW = (CW - 8) / 3;
+  const archetype = safeStr((analysis as any).personalityType, 'Spiritual Seeker');
+  const lifeTheme = safeStr((analysis as any).lifeTheme || analysis.overallDestiny, 'Growth & Wisdom');
+  const peakAge = safeStr(tp?.age_of_peak_success, 'N/A');
+
+  drawPill(M, y, 'Personality archetype', truncate(archetype, 18), summPillW);
+  drawPill(M + summPillW + 4, y, 'Life theme', truncate(lifeTheme, 18), summPillW);
+  drawPill(M + (summPillW + 4) * 2, y, 'Peak success age', truncate(peakAge, 18), summPillW);
+  y += 18;
+
+  // Yogas
+  if (analysis.yogas?.length) {
+    doc.setFontSize(8);
+    doc.setTextColor(...GOLD);
     doc.setFont('helvetica', 'bold');
-    doc.text("PANDIT VISIONHAST'S BLESSINGS", pageWidth / 2, yPos + 10, { align: 'center' });
-
-    doc.setFontSize(10);
-    doc.setTextColor(...textColor);
-    doc.setFont('helvetica', 'italic');
-    doc.text(cappedBlessingLines, margin + 10, yPos + 20);
-
-    yPos += blessingHeight + 10;
+    doc.text('Special Yogas Detected:', M, y);
+    y += 5;
+    analysis.yogas.slice(0, 4).forEach(yoga => {
+      checkSpace(8);
+      doc.setFontSize(7);
+      doc.setTextColor(...TEXT);
+      doc.setFont('helvetica', 'normal');
+      wrapText(`• ${yoga}`, M + 4, CW - 8, 3.5, 120);
+    });
+    y += 3;
   }
 
-  // Final disclaimer
-  checkPageBreak(30);
-  addThinDivider();
-  doc.setFontSize(8);
-  doc.setTextColor(...mutedColor);
-  doc.setFont('helvetica', 'normal');
-  doc.text('This report is generated by BhaktVerse AI based on Vedic palmistry traditions (Samudrika Shastra).', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
-  doc.text('For spiritual guidance purposes. Consult a qualified astrologer for specific advice.', pageWidth / 2, yPos, { align: 'center' });
+  // Warnings
+  if (analysis.warnings?.length) {
+    doc.setFontSize(8);
+    doc.setTextColor(...RED);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Caution Periods:', M, y);
+    y += 5;
+    analysis.warnings.slice(0, 3).forEach(w => {
+      checkSpace(8);
+      doc.setFontSize(7);
+      doc.setTextColor(...TEXT);
+      doc.setFont('helvetica', 'normal');
+      wrapText(`⚠ ${w}`, M + 4, CW - 8, 3.5, 120);
+    });
+    y += 3;
+  }
 
-  addPageFooter();
+  // Jyotishi note
+  if (analysis.blessings) {
+    checkSpace(30);
+    doc.setFillColor(...CARD_BG);
+    doc.roundedRect(M, y, CW, 28, 4, 4, 'F');
+    doc.setDrawColor(...SAFFRON);
+    doc.setLineWidth(1);
+    doc.line(M + 3, y + 4, M + 3, y + 24);
+
+    doc.setFontSize(8);
+    doc.setTextColor(...SAFFRON);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Jyotishi ki Tippani — Pandit VisionHast", M + 8, y + 8);
+
+    doc.setFontSize(7.5);
+    doc.setTextColor(...TEXT);
+    setFont(doc, analysis.blessings, 'italic');
+    const bLines: string[] = doc.splitTextToSize(truncate(analysis.blessings, 400), CW - 16);
+    doc.text(bLines.slice(0, 4), M + 8, y + 14);
+    y += 32;
+  }
+
+  // ========== FINAL: DISCLAIMER & PAGE NUMBERS ==========
+  checkSpace(15);
+  doc.setDrawColor(200, 195, 190);
+  doc.setLineWidth(0.3);
+  doc.line(M + 20, y, W - M - 20, y);
+  y += 6;
+  doc.setFontSize(7);
+  doc.setTextColor(...MUTED);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Reading ID: ${readingId} · Generated: ${dateStr}`, W / 2, y, { align: 'center' });
+  y += 4;
+  doc.text('Powered by BhaktVerse AI — Samudrika Shastra + Western Chiromancy', W / 2, y, { align: 'center' });
+
+  addFooter();
 
   // Add page numbers to all pages
-  const totalPageCount = doc.internal.pages.length - 1;
-  for (let i = 1; i <= totalPageCount; i++) {
+  const totalPages = doc.internal.pages.length - 1;
+  for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(...mutedColor);
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Page ${i} of ${totalPageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+    doc.text(`Page ${i} of ${totalPages}`, W - M, H - 8, { align: 'right' });
   }
 
-  // Save PDF
-  const safeName = getSafeText(userName, 'Seeker').replace(/[^a-zA-Z0-9]/g, '_');
+  const safeName = name.replace(/[^a-zA-Z0-9]/g, '_');
   doc.save(`BhaktVerse_Palm_Reading_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
 };
-
