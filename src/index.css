@@ -154,13 +154,16 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  }
-
-  html {
-    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* Ensure minimum 44px touch targets on mobile */
