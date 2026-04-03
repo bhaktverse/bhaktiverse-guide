@@ -1,131 +1,124 @@
-# Palm Reading System Prompt Upgrade — Professional Jyotishi Grade
+# PDF Redesign + Devanagari Font + Mobile Overflow Fix
 
-## Scope
+## Three Workstreams
 
-Upgrade the `palm-reading-analysis` edge function's system prompt to the "Pandit VisionHast" professional methodology while maintaining full frontend compatibility. The new prompt adds deeper Samudrika Shastra analysis (minor lines, special markings, quadrangle/triangle, timing predictions, mount markings) without breaking the existing UI.
+### A. PDF Report Complete Redesign (matching uploaded HTML reference)
 
-## Strategy
+The uploaded HTML shows a clean, modern, card-based layout with 9 sections:
 
-The current JSON output structure is consumed by `PalmReadingReport.tsx`, `PalmAnalysisResults.tsx`, `SharedPalmReading.tsx`, and `pdfGenerator.ts`. These already support fields like `handTypeAnalysis`, `secondaryLines`, `fingerAnalysis`, `lineQualityDetails`, `mountAnalysis`, `luckyElements`, `yogas`, `remedies`, `warnings`. The new prompt enriches these existing fields with deeper methodology — no new frontend fields are needed for core compatibility.
+1. Cover (meta pills: name, age, hand, date + confidence indicator)
+2. Hand Constitution (4 meta pills + interpretation)
+3. Major Lines (2-col grid of 6 line cards with colored dots, attributes, predictions)
+4. Age Timeline (vertical timeline with dot markers)
+5. Mounts (3-col grid cards with progress bars) + Marriage Lines (side-by-side two-col)
+6. Special Markings (chip cards with symbols: ★ ◇ ○ □)
+7. Remedies (2x2 grid: gemstone, rudraksha, mantra, advice)
+8. Overall Summary (archetype, life theme, peak age + jyotishi note)
+9. Bilingual Summary (Hindi + English paragraphs)
 
-New sections from the professional prompt (timing predictions, quadrangle/triangle, special markings detail) will be added as optional fields that the frontend can render if present, falling back gracefully if absent.
+**Current PDF problems:**
 
-## Changes
+- Old "GURU JI" branding still in TOC/greeting (should be Pandit VisionHast)
+- Heavy ornamental borders, swastik corners, watermarks — cluttered vs the clean reference
+- No age timeline section
+- No special markings section
+- No marriage line detail section
+- Transliteration strips Hindi to ugly IAST romanized text
+- Cover page has text overflow issues
 
-### File: `supabase/functions/palm-reading-analysis/index.ts`
+**Approach:** Complete rewrite of `pdfGenerator.ts` to match the reference HTML's clean, card-based layout using jsPDF drawing primitives. Remove ornamental borders/swastik/watermarks. Use clean section numbering, subtle rounded rects, colored dots for lines, progress bars for mounts, timeline dots for age predictions.
 
-**System prompt replacement (lines 136-362):**
+### B. Devanagari Font Support
 
-1. Replace the persona from "GURU JI" to "Pandit VisionHast — master palmist with 40+ years in Samudrika Shastra, Western Chiromancy, and Chinese Shou Xiang"
-2. Add the professional methodology preamble: "Analyze EVERY visible feature. Never give generic readings. Every statement must be tied to a specific observable feature."
-3. Keep existing ethical guidelines section unchanged
-4. Enhance the `detectedFeatures` object to include the `meta` fields from the professional prompt (thumb_angle, thumb_phalange_ratio, skin_texture, flexibility, overall_palm_color)
-5. Upgrade `lineAnalysis` entries to include the professional-grade fields: visibility, depth, curvature, start_point, end_point, markings array, approximate_age_markers, samudrika_interpretation
-6. Upgrade `secondaryLines` to include girdle_of_venus detail, line_of_intuition, via_lascivia, sister_line_to_life — these map to existing frontend `secondaryLines` interface
-7. Upgrade `mountAnalysis` to include markings array per mount (stars, crosses, triangles) — the frontend already renders `observed` text
-8. Add `specialMarkings` object with typed arrays for stars, crosses, triangles, squares, grilles, mystic_cross, simian_line, ring_of_solomon, ring_of_saturn — maps to existing `specialMarks` field plus new `lineQualityDetails`
-9. Add `quadrangleAndGreatTriangle` object — new optional field, frontend ignores if absent
-10. Add `timingPredictions` object (next_1_year, next_3_years, next_7_years, age_of_peak_success, health_alert_periods, financial_growth_periods) — new optional field
-11. Enhance `remedies` to include gemstone_recommendation with finger/metal/day, rudraksha, mantra with reasoning
-12. Enhance `overall_summary` fields mapping to existing `blessings`, `overallScore`, `confidenceScore`
-13. Add critical image analysis instructions from professional prompt: age markers method, both hands rule, markings priority rules, marriage line timing methodology
+**Problem:** Current code strips all Devanagari to IAST transliteration because jsPDF's built-in Helvetica cannot render Unicode Devanagari.
 
-**Model upgrade (line 371):**
+**Solution:** Embed Noto Sans Devanagari font (subset, ~200KB) into jsPDF. Remove the `transliterate()` function and `getSafeText()` transliteration pipeline. When Hindi text is detected, switch to the Devanagari font; otherwise use Helvetica.
 
-- Change from `google/gemini-2.5-flash` to `google/gemini-2.5-pro` for superior vision analysis quality on this high-value feature
+**Implementation:**
 
-**Max tokens (line 398):**
+- Download Noto Sans Devanagari Regular + Bold (TTF) 
+- Convert to base64 and embed via `doc.addFont()`
+- Create a `setFont()` wrapper that detects Devanagari characters and switches fonts
+- Remove the entire transliteration map and character-level conversion
 
-- Increase from 16000 to 20000 to accommodate the richer analysis
+### C. Mobile Horizontal Scroll Fix
 
-### File: `src/components/PalmReadingReport.tsx`
+**Problem:** Pages scroll horizontally on mobile, breaking the premium app feel.
 
-**Add optional new sections:**
+**Root causes:**
 
-- Add `timingPredictions` rendering in the Reading tab — a timeline card showing 1yr/3yr/7yr predictions if present in analysis
-- Add `quadrangleAndGreatTriangle` rendering in the Advanced tab if present
-- Update `PalmAnalysis` interface to include optional `timingPredictions` and `quadrangleAndGreatTriangle` fields
+1. No `overflow-x: hidden` on `html` or `body`
+2. Content elements (grids, cards, text) may exceed viewport width on small screens
+3. Borders/decorative elements extending beyond viewport
 
-### File: `src/pages/PalmReading.tsx`
+**Fixes in `src/index.css`:**
 
-**Update `PalmAnalysis` interface (line 68-117):**
+- Add `overflow-x: hidden` to `html` and `body`
+- Add `max-width: 100vw` to body
 
-- Add optional `timingPredictions` and `quadrangleAndGreatTriangle` fields to match new output
+**Fixes in `index.html`:**
 
-### Files NOT changed
+- Add `maximum-scale=1, user-scalable=no` to viewport meta (prevents pinch-zoom-triggered horizontal scroll)
 
-- `PalmAnalysisResults.tsx` — already handles all fields via `Record<string, any>`
-- `pdfGenerator.ts` — already iterates over categories/lines dynamically
-- `SharedPalmReading.tsx` — renders categories generically, will work as-is
-- `FreePalmReadingSummary.tsx` — only shows truncated preview
+---
 
-## Technical Details
+## File Changes
 
-The JSON output structure stays backward-compatible. All existing fields (`categories`, `lineAnalysis`, `mountAnalysis`, `handTypeAnalysis`, `secondaryLines`, `fingerAnalysis`, `lineQualityDetails`, `luckyElements`, `yogas`, `remedies`, `warnings`, `blessings`) retain the same keys and types. The prompt upgrade enriches the *content quality* within these fields rather than changing the schema.
 
-New optional fields added to the response:
+| File                        | Change                                                                                                   |
+| --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `src/utils/pdfGenerator.ts` | Complete rewrite — new clean layout matching HTML reference, remove transliteration, add Devanagari font |
+| `src/index.css`             | Add `overflow-x: hidden` to html/body                                                                    |
+| `index.html`                | Update viewport meta                                                                                     |
+
+
+## PDF Section Structure (New)
 
 ```text
-timingPredictions?: {
-  next_1_year?: string;
-  next_3_years?: string;
-  next_7_years?: string;
-  age_of_peak_success?: string;
-  health_alert_periods?: string[];
-  financial_growth_periods?: string[];
-}
-quadrangleAndGreatTriangle?: {
-  quadrangle?: { shape?: string; interpretation?: string };
-  greatTriangle?: { shape?: string; interpretation?: string };
-}
+Page 1: Cover
+  - "Hasta Rekha Vishleshan · Samudrika Shastra" header
+  - Palm icon + title + subtitle
+  - 4 meta pills (name, age, hand, date)
+  - Confidence indicator with green dot
+  - QR code
+
+Page 2: Hand Constitution (Section 1)
+  - 4 meta pills (shape, finger ratio, texture, thumb)
+  - Interpretation paragraph
+
+Page 2-3: Major Lines (Section 2)
+  - 2-col grid of 6 line cards
+  - Each: colored dot, name, 4 attribute rows, prediction
+
+Page 3: Age Timeline (Section 3)
+  - Vertical timeline with 5 age brackets
+  - Dot markers (active for current phase)
+
+Page 4: Mounts + Marriage (Sections 4-5)
+  - 3-col mount grid with bars
+  - Marriage lines with numbered rows
+
+Page 4-5: Special Markings (Section 6)
+  - Chip cards with symbols
+
+Page 5: Remedies (Section 7)
+  - 2x2 grid cards
+
+Page 5-6: Summary (Section 8)
+  - 3-col archetype cards
+  - Jyotishi note with left border
+
+Page 6: Bilingual Summary (Section 9)
+  - Hindi paragraph + English paragraph
+
+Footer: Disclaimer + page numbers
 ```
 
 ## Implementation Order
 
-1. Update edge function system prompt + model + max_tokens
-2. Update TypeScript interfaces in PalmReading.tsx and PalmReadingReport.tsx
-3. Add timing predictions and quadrangle rendering to PalmReadingReport.tsx
-4. Deploy edge function
-
-Bhai, dono cheezein dekh li — current PDF report aur implementation plan. Let me give you a clear assessment:
-
----
-
-## Current PDF Report — Kya Theek Hai, Kya Nahi
-
-**Achha hai:**
-
-- BhaktVerse branding aur layout clean hai
-- 9 pages ka proper structure
-- Score cards, mantras, remedies — sab present hain
-- QR code for sharing — nice touch
-
-**Problems jo clearly dikh rahi hain:**
-
-1. **Hindi romanized IAST mein hai** — "AapKe Hath Mein Bhagya Ki Rekha thodee hlKi" — yeh padh ke client ko irritate hoga. Real jyotishi ki report mein ya to proper Devanagari hoti hai, ya clean English. Yeh beech ka jugaad professional nahi lagta.
-2. **Marriage lines: Count 0, Children: Count 0** — yeh ek seeker ki real palm reading mein completely blank chhod dena bahut weak hai. AI ne skip kar diya instead of interpreting.
-3. **Fate line 6/10, Sun line 5/10** — scores hain but koi age-specific timing nahi. "25-30 varsh mein career mod" — yeh generic hai, koi line-specific evidence nahi.
-4. **No special markings section** — Stars, crosses, triangles, squares — kuch bhi detect nahi kiya. Yeh ek real palm reading ka core hota hai.
-5. **Layout boring hai for a premium product** — Cover page pe text cut off ho raha hai ("Lekin A..."), content overflow clearly visible hai.
-
----
-
-## Implementation Plan — Approve Karo Ya Nahi?
-
-**Short answer: Approve karo, but ek modification ke saath.**
-
-Plan solid hai technically. Lekin main ek cheez add karunga jo unhone nahi socha:
-
----
-
-**Bottom line bhai:**
-
-**Approve karo — but 3 conditions ke saath:**
-
-1. **Gemini Pro sirf paid users ke liye** — free users pe Flash use karo, warna cost bahut zyada hogi
-2. **IAST Hindi ka issue fix karo** — yeh PDF ka sabse bada problem hai jo plan mein mention hi nahi hai — `pdfGenerator.ts` mein Noto Devanagari font add karo ya pure English mein switch karo
-3. **timingPredictions PDF mein bhi render karo** — sirf web UI mein nahi, PDF download mein bhi aana chahiye
-
-Yeh teeno cheezein plan mein nahi hain — agar in teen ke saath implement karoge toh report genuinely premium lagegi.
-
-Kya main `pdfGenerator.ts` ke liye specific code changes likh dun jo yeh teeno cheezein handle kare? 🙏
+1. Add Devanagari font embedding to pdfGenerator
+2. Rewrite PDF layout to match reference HTML
+3. Add mobile overflow fix to CSS
+4. Update viewport meta
+5. do audit securty issues including - **Something went wrong**
+  An unexpected error occurred.
