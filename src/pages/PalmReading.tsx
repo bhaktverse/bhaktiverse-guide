@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { usePremium } from '@/hooks/usePremium';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -235,36 +236,22 @@ const PalmReading = () => {
   const [showVisualization, setShowVisualization] = useState(false);
   
   const [showFullReading, setShowFullReading] = useState(false);
-  const [isPremiumUser, setIsPremiumUser] = useState(false);
+  const { isPremium: isPremiumUser } = usePremium();
   const [showReportView, setShowReportView] = useState(false);
   const [lastSavedReadingId, setLastSavedReadingId] = useState<string | null>(null);
 
   // Auto-transition to report view when analysis completes
   useEffect(() => {
     if (analysis && !showReportView) {
-      // Small delay for smooth transition after analysis toast
       const timer = setTimeout(() => setShowReportView(true), 800);
       return () => clearTimeout(timer);
     }
   }, [analysis]);
 
-  // Check premium status
+  // Auto-show full reading for premium users
   useEffect(() => {
-    const checkPremiumStatus = async () => {
-      if (!user) { setIsPremiumUser(false); return; }
-      try {
-        const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
-        if (roles?.some(r => r.role === 'admin' || r.role === 'moderator')) {
-          setIsPremiumUser(true); setShowFullReading(true); return;
-        }
-        const { data: journey } = await supabase.from('spiritual_journey').select('level, experience_points').eq('user_id', user.id).maybeSingle();
-        if (journey && (journey.level >= 3 || journey.experience_points >= 500)) {
-          setIsPremiumUser(true); setShowFullReading(true);
-        }
-      } catch (error) { console.error('Error checking premium status:', error); }
-    };
-    checkPremiumStatus();
-  }, [user]);
+    if (isPremiumUser) setShowFullReading(true);
+  }, [isPremiumUser]);
 
   useEffect(() => { if (user) loadHistory(); }, [user]);
 
