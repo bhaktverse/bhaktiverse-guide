@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { usePremium } from '@/hooks/usePremium';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
