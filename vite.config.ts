@@ -23,6 +23,6 @@ export default defineConfig(({ mode }) => ({
     'global': 'globalThis',
   },
   optimizeDeps: {
-    include: ['@react-pdf/renderer', 'buffer'],
+    include: ['@react-pdf/renderer'],
   },
 }));
