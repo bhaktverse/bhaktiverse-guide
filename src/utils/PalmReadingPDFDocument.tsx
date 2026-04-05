@@ -3,12 +3,13 @@ import {
   Document, Page, Text, View, StyleSheet, Font, Image
 } from '@react-pdf/renderer';
 
-// ─── FONT REGISTRATION (module-level, local files) ────────────────
+// ─── FONT REGISTRATION (module-level) ─────────────────────────────
+// Use cdn.jsdelivr.net for stable, versioned font URLs
 Font.register({
   family: 'NotoSans',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyD9A-9a6Vc.ttf', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyAjBe9a6Vc.ttf', fontWeight: 700 },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.6/files/noto-sans-latin-400-normal.woff2', fontWeight: 400 },
+    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.6/files/noto-sans-latin-700-normal.woff2', fontWeight: 700 },
   ]
 });
 
@@ -17,6 +18,9 @@ Font.register({
   src: '/fonts/NotoSansDevanagari-Regular.ttf',
   fontWeight: 400,
 });
+
+// Disable hyphenation — it causes crashes with non-Latin scripts
+Font.registerHyphenationCallback((word) => [word]);
 
 // ─── COLORS ───────────────────────────────────────────────────────
 const C = {
