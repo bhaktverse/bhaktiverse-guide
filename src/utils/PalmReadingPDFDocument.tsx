@@ -4,12 +4,13 @@ import {
 } from '@react-pdf/renderer';
 
 // ─── FONT REGISTRATION (module-level) ─────────────────────────────
-// Use cdn.jsdelivr.net for stable, versioned font URLs
+// Use Google Fonts direct TTF URLs for maximum compatibility
 Font.register({
   family: 'NotoSans',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.6/files/noto-sans-latin-400-normal.woff2', fontWeight: 400 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.6/files/noto-sans-latin-700-normal.woff2', fontWeight: 700 },
+    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0IIpQlx3QUlC5A4PNr5TRA.woff2', fontWeight: 400, fontStyle: 'normal' },
+    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0NIpQlx3QUlC5A4PNjXhFlY9A.woff2', fontWeight: 700, fontStyle: 'normal' },
+    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0OIpQlx3QUlC5A4PNr4ARPQ_m87A.woff2', fontWeight: 400, fontStyle: 'italic' },
   ]
 });
 
@@ -112,7 +113,7 @@ const s = StyleSheet.create({
   // Jyotishi note
   jyotishiNote: { borderLeft: `3pt solid ${C.gold}`, paddingLeft: 10, marginTop: 8 },
   jyotishiLabel: { fontSize: 7, color: C.muted, marginBottom: 3 },
-  jyotishiText: { fontSize: 8, color: C.dark, lineHeight: 1.6, fontStyle: 'italic' },
+  jyotishiText: { fontSize: 8, color: C.dark, lineHeight: 1.6, fontStyle: 'italic' as const },
   // Footer
   footer: { position: 'absolute' as const, bottom: 18, left: 36, right: 36, flexDirection: 'row', justifyContent: 'space-between', borderTop: `0.5pt solid ${C.border}`, paddingTop: 6 },
   footerText: { fontSize: 6, color: C.muted },

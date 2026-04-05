@@ -19,7 +19,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    'global': 'globalThis',
+  },
   optimizeDeps: {
-    include: ['@react-pdf/renderer'],
+    include: ['@react-pdf/renderer', 'buffer'],
   },
 }));
