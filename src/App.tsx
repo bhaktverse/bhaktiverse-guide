@@ -1,7 +1,7 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PremiumProvider } from "@/hooks/usePremium";
 import { ThemeProvider } from "next-themes";
@@ -104,6 +104,7 @@ const App = () => (
                 <Route path="/spiritual-calendar" element={<SpiritualCalendar />} />
                 <Route path="/palm-reading/shared/:readingId" element={<SharedPalmReading />} />
                 <Route path="/deity/:deitySlug" element={<DeityPage />} />
+                <Route path="/shorts" element={<Navigate to="/dashboard" replace />} />
 
                 {/* Protected Routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
