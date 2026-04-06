@@ -22,6 +22,7 @@ import PalmScannerBiometric from '@/components/PalmScannerBiometric';
 import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
+import PalmReadingHistory from '@/components/PalmReadingHistory';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
