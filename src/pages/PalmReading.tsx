@@ -529,6 +529,22 @@ const PalmReading = () => {
     setPalmImages([]); setAnalysis(null); setAudioUrl(null); setIsNarrating(false);
     setCompatibilityResult(null); setSelectedForCompatibility(null);
     setUserName(''); setUserDob(''); setUserTimeOfBirth(''); setShowReportView(false);
+    setSelectedHistoryItem(null);
+  };
+
+  // View a reading from history without re-scanning
+  const viewHistoryReading = (record: PalmReadingRecord) => {
+    setAnalysis(record.analysis);
+    setUserName(record.user_name || '');
+    setUserDob(record.user_dob || '');
+    setSelectedLanguage(record.language || 'hi');
+    setLastSavedReadingId(record.id);
+    if (record.palm_image_url) {
+      setPalmImages([record.palm_image_url]);
+    }
+    setShowReportView(true);
+    setSelectedHistoryItem(record);
+    toast.success(`📋 Loaded ${record.user_name || 'Anonymous'}'s reading from history`);
   };
 
   if (authLoading) {
