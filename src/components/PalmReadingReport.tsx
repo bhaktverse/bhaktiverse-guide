@@ -217,7 +217,7 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
     : (analysis.overallScore || 8.0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-24">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-gradient-to-br from-background via-background to-primary/5 pb-24">
       {/* Sacred Geometry Background Pattern */}
       <div className="fixed inset-0 pointer-events-none opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRjY2MDAiIHN0cm9rZS13aWR0aD0iMC41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGNjYwMCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]" />
 
@@ -232,7 +232,7 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/20 to-transparent rounded-full -mr-48 -mt-48" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-secondary/20 to-transparent rounded-full -ml-32 -mb-32" />
           
-          <div className="container mx-auto px-4 py-8 relative z-10">
+          <div className="container relative z-10 mx-auto max-w-full overflow-x-hidden px-4 py-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
               {/* Palm Image with Sacred Border */}
               <div className="relative">
@@ -302,7 +302,7 @@ const PalmReadingReport: React.FC<PalmReadingReportProps> = ({
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto max-w-full overflow-x-hidden px-4 py-8">
         {/* Language Toggle */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
           <div className="flex items-center gap-2 bg-card rounded-full p-1 border border-border/50">

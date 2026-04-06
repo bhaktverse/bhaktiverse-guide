@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, X, Plus, Trash2, Youtube, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { getYouTubeThumbnailUrl } from "@/services/youtubeShorts";
 
 export default function AdminShorts() {
   const [shorts, setShorts] = useState<any[]>([]);
@@ -56,7 +57,7 @@ export default function AdminShorts() {
         return;
       }
       const videoId = match[1];
-      const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      const thumbnail = getYouTubeThumbnailUrl(videoId);
 
       // Normalize URL to shorts format
       const videoUrl = `https://www.youtube.com/shorts/${videoId}`;

@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Play, Search, X } from "lucide-react";
-import { fetchYouTubeShorts, SHORTS_CATEGORIES, type YouTubeShort } from "@/services/youtubeShorts";
+import { fetchYouTubeShorts, getYouTubeThumbnailUrl, SHORTS_CATEGORIES, type YouTubeShort } from "@/services/youtubeShorts";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ShortsFeedProps {
@@ -28,7 +28,7 @@ const ShortsFeed: React.FC<ShortsFeedProps> = ({ dbShorts = [] }) => {
     return {
       videoId,
       title: s.title,
-      thumbnail: s.thumbnail_url || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : ""),
+      thumbnail: getYouTubeThumbnailUrl(videoId, s.thumbnail_url),
       channelTitle: s.category,
     };
   });
@@ -125,7 +125,22 @@ const ShortsFeed: React.FC<ShortsFeedProps> = ({ dbShorts = [] }) => {
                     <div className="relative rounded-xl overflow-hidden border border-border/50 shadow-sm group-hover:shadow-divine transition-all duration-300 group-hover:-translate-y-1">
                       <AspectRatio ratio={9 / 16}>
                         {short.thumbnail ? (
-                          <img src={short.thumbnail} alt={short.title} className="w-full h-full object-cover" loading="lazy" />
+                          <img
+                            src={short.thumbnail}
+                            alt={short.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              if (short.videoId && !img.dataset.fallbackApplied) {
+                                img.dataset.fallbackApplied = "true";
+                                img.src = `https://i.ytimg.com/vi/${short.videoId}/default.jpg`;
+                                return;
+                              }
+                              img.onerror = null;
+                              img.src = "/placeholder.svg";
+                            }}
+                          />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center text-4xl">🎬</div>
                         )}
