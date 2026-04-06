@@ -3,21 +3,13 @@ import {
   Document, Page, Text, View, StyleSheet, Font, Image
 } from '@react-pdf/renderer';
 
-// ─── FONT REGISTRATION (module-level) ─────────────────────────────
-// Use Google Fonts direct TTF URLs for maximum compatibility
-Font.register({
-  family: 'NotoSans',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0IIpQlx3QUlC5A4PNr5TRA.woff2', fontWeight: 400, fontStyle: 'normal' },
-    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0NIpQlx3QUlC5A4PNjXhFlY9A.woff2', fontWeight: 700, fontStyle: 'normal' },
-    { src: 'https://fonts.gstatic.com/s/notosans/v36/o-0OIpQlx3QUlC5A4PNr4ARPQ_m87A.woff2', fontWeight: 400, fontStyle: 'italic' },
-  ]
-});
-
 Font.register({
   family: 'NotoSansDevanagari',
-  src: '/fonts/NotoSansDevanagari-Regular.ttf',
-  fontWeight: 400,
+  fonts: [
+    { src: '/fonts/NotoSansDevanagari-Regular.ttf', fontWeight: 400, fontStyle: 'normal' },
+    { src: '/fonts/NotoSansDevanagari-Regular.ttf', fontWeight: 700, fontStyle: 'normal' },
+    { src: '/fonts/NotoSansDevanagari-Regular.ttf', fontWeight: 400, fontStyle: 'italic' },
+  ],
 });
 
 // Disable hyphenation — it causes crashes with non-Latin scripts
@@ -45,7 +37,7 @@ const C = {
 
 // ─── STYLES ───────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  page: { backgroundColor: C.cream, fontFamily: 'NotoSans', paddingTop: 36, paddingBottom: 50, paddingHorizontal: 36 },
+  page: { backgroundColor: C.cream, fontFamily: 'NotoSansDevanagari', paddingTop: 36, paddingBottom: 50, paddingHorizontal: 36 },
   // Cover banner
   coverBanner: { backgroundColor: C.primary, borderRadius: 8, padding: 20, alignItems: 'center', marginBottom: 16 },
   coverBannerSub: { fontSize: 8, color: '#E8D5B0', letterSpacing: 2, marginBottom: 6, textTransform: 'uppercase' },
@@ -113,7 +105,7 @@ const s = StyleSheet.create({
   // Jyotishi note
   jyotishiNote: { borderLeft: `3pt solid ${C.gold}`, paddingLeft: 10, marginTop: 8 },
   jyotishiLabel: { fontSize: 7, color: C.muted, marginBottom: 3 },
-  jyotishiText: { fontSize: 8, color: C.dark, lineHeight: 1.6, fontStyle: 'italic' as const },
+  jyotishiText: { fontSize: 8, color: C.dark, lineHeight: 1.6 },
   // Footer
   footer: { position: 'absolute' as const, bottom: 18, left: 36, right: 36, flexDirection: 'row', justifyContent: 'space-between', borderTop: `0.5pt solid ${C.border}`, paddingTop: 6 },
   footerText: { fontSize: 6, color: C.muted },
