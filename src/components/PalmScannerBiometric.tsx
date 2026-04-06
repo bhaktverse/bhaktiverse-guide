@@ -62,7 +62,7 @@ const PalmScannerBiometric = ({
   
   const [showLanguageSelector, setShowLanguageSelector] = useState(true);
   const [palmImages, setPalmImages] = useState<string[]>([]);
-  const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(true);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
   const [imageSource, setImageSource] = useState<'none' | 'upload' | 'camera'>('none');
   const [showTutorial, setShowTutorial] = useState(() => {
@@ -148,6 +148,11 @@ const PalmScannerBiometric = ({
       toast.error("Please upload or capture a palm image first");
       return;
     }
+    if (!userMetadata.name || userMetadata.name.trim().length < 2) {
+      toast.error("Please enter the person's name (at least 2 characters) — this helps identify readings in history");
+      setShowOptionalFields(true);
+      return;
+    }
     
     // Notify parent to start analysis
     onAnalyze(palmImages, userMetadata);
@@ -219,7 +224,7 @@ const PalmScannerBiometric = ({
                 <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
                   <span className="flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Optional: Add personal details for enhanced reading
+             Whose palm are you reading? (helps save to history)
                   </span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`} />
                 </Button>
@@ -229,20 +234,22 @@ const PalmScannerBiometric = ({
                   <div className="space-y-2">
                     <Label htmlFor="name" className="flex items-center gap-2">
                       <User className="h-4 w-4 text-primary" />
-                      Name (Optional)
+                      Name <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="name"
-                      placeholder="Enter your name"
+                      placeholder="e.g. Rahul, Mom, Papa"
                       value={userMetadata.name}
                       onChange={(e) => setUserMetadata(prev => ({ ...prev, name: e.target.value }))}
                       className="border-primary/30"
+                      required
                     />
+                    <p className="text-[10px] text-muted-foreground">Required — helps identify readings in history</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dob" className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-primary" />
-                      Date of Birth (Optional)
+                      Date of Birth
                     </Label>
                     <Input
                       id="dob"
@@ -255,7 +262,7 @@ const PalmScannerBiometric = ({
                   <div className="space-y-2">
                     <Label htmlFor="tob" className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-primary" />
-                      Time of Birth (Optional)
+                      Time of Birth
                     </Label>
                     <Input
                       id="tob"
@@ -431,12 +438,12 @@ const PalmScannerBiometric = ({
                 </div>
 
                 {/* User metadata input */}
-                <Collapsible open={showOptionalFields} onOpenChange={setShowOptionalFields}>
+                <Collapsible open={showOptionalFields} onOpenChange={setShowOptionalFields} defaultOpen={true}>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground text-sm">
                       <span className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Add personal details for personalized reading
+                        Whose palm? (Name required for history)
                       </span>
                       <ChevronDown className={`h-4 w-4 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`} />
                     </Button>
@@ -444,12 +451,13 @@ const PalmScannerBiometric = ({
                   <CollapsibleContent className="space-y-4 pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name2">Name</Label>
+                        <Label htmlFor="name2">Name <span className="text-destructive">*</span></Label>
                         <Input
                           id="name2"
-                          placeholder="Your name"
+                          placeholder="e.g. Rahul, Mom, Papa"
                           value={userMetadata.name}
                           onChange={(e) => setUserMetadata(prev => ({ ...prev, name: e.target.value }))}
+                          required
                         />
                       </div>
                       <div className="space-y-2">

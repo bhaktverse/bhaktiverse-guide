@@ -22,6 +22,7 @@ import PalmScannerBiometric from '@/components/PalmScannerBiometric';
 import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
+import PalmReadingHistory from '@/components/PalmReadingHistory';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -528,6 +529,22 @@ const PalmReading = () => {
     setPalmImages([]); setAnalysis(null); setAudioUrl(null); setIsNarrating(false);
     setCompatibilityResult(null); setSelectedForCompatibility(null);
     setUserName(''); setUserDob(''); setUserTimeOfBirth(''); setShowReportView(false);
+    setSelectedHistoryItem(null);
+  };
+
+  // View a reading from history without re-scanning
+  const viewHistoryReading = (record: PalmReadingRecord) => {
+    setAnalysis(record.analysis);
+    setUserName(record.user_name || '');
+    setUserDob(record.user_dob || '');
+    setSelectedLanguage(record.language || 'hi');
+    setLastSavedReadingId(record.id);
+    if (record.palm_image_url) {
+      setPalmImages([record.palm_image_url]);
+    }
+    setShowReportView(true);
+    setSelectedHistoryItem(record);
+    toast.success(`📋 Loaded ${record.user_name || 'Anonymous'}'s reading from history`);
   };
 
   if (authLoading) {
@@ -699,6 +716,19 @@ const PalmReading = () => {
             </Card>
           )}
         </div>
+
+        {/* Reading History Section */}
+        {!analyzing && !analysis && history.length > 0 && (
+          <div className="max-w-4xl mx-auto mt-8">
+            <PalmReadingHistory
+              history={history}
+              loading={loadingHistory}
+              onViewReading={viewHistoryReading}
+              onDeleteReading={deleteFromHistory}
+              isPremium={isPremiumUser}
+            />
+          </div>
+        )}
 
         {/* Disclaimer */}
         <div className="mt-8 text-center">
