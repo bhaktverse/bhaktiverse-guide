@@ -717,6 +717,19 @@ const PalmReading = () => {
           )}
         </div>
 
+        {/* Reading History Section */}
+        {!analyzing && !analysis && history.length > 0 && (
+          <div className="max-w-4xl mx-auto mt-8">
+            <PalmReadingHistory
+              history={history}
+              loading={loadingHistory}
+              onViewReading={viewHistoryReading}
+              onDeleteReading={deleteFromHistory}
+              isPremium={isPremiumUser}
+            />
+          </div>
+        )}
+
         {/* Disclaimer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-muted-foreground max-w-2xl mx-auto leading-relaxed">
