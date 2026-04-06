@@ -433,12 +433,12 @@ const PalmScannerBiometric = ({
                 </div>
 
                 {/* User metadata input */}
-                <Collapsible open={showOptionalFields} onOpenChange={setShowOptionalFields}>
+                <Collapsible open={showOptionalFields} onOpenChange={setShowOptionalFields} defaultOpen={true}>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground text-sm">
                       <span className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Add personal details for personalized reading
+                        Whose palm? (Name required for history)
                       </span>
                       <ChevronDown className={`h-4 w-4 transition-transform ${showOptionalFields ? 'rotate-180' : ''}`} />
                     </Button>
@@ -446,12 +446,13 @@ const PalmScannerBiometric = ({
                   <CollapsibleContent className="space-y-4 pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name2">Name</Label>
+                        <Label htmlFor="name2">Name <span className="text-destructive">*</span></Label>
                         <Input
                           id="name2"
-                          placeholder="Your name"
+                          placeholder="e.g. Rahul, Mom, Papa"
                           value={userMetadata.name}
                           onChange={(e) => setUserMetadata(prev => ({ ...prev, name: e.target.value }))}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
