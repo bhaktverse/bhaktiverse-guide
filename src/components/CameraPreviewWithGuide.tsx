@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Hand } from 'lucide-react';
+import HandLandmarkDetector from './HandLandmarkDetector';
 
 interface CameraPreviewWithGuideProps {
   onCapture: (imageData: string) => void;
@@ -21,8 +22,11 @@ const CameraPreviewWithGuide = ({
 }: CameraPreviewWithGuideProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const [handDetected, setHandDetected] = useState(false);
 
   useEffect(() => {
     startCamera();
@@ -38,6 +42,7 @@ const CameraPreviewWithGuide = ({
       });
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.onloadeddata = () => setVideoReady(true);
       }
       setStream(mediaStream);
     } catch (err) {
@@ -92,17 +97,34 @@ const CameraPreviewWithGuide = ({
           className="w-full aspect-[3/4] object-cover"
         />
 
-        {/* Palm guide overlay */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-56 h-72 border-2 border-dashed border-primary/60 rounded-2xl flex items-center justify-center">
-            <Hand className="h-12 w-12 text-primary/40" />
+        {/* MediaPipe landmark overlay canvas */}
+        <canvas
+          ref={overlayCanvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ objectFit: 'cover' }}
+        />
+
+        {/* Palm guide overlay - only show when hand NOT detected */}
+        {!handDetected && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-56 h-72 border-2 border-dashed border-primary/60 rounded-2xl flex items-center justify-center">
+              <Hand className="h-12 w-12 text-primary/40" />
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* MediaPipe Hand Detector */}
+        <HandLandmarkDetector
+          videoElement={videoReady ? videoRef.current : null}
+          canvasElement={overlayCanvasRef.current}
+          enabled={videoReady}
+          onHandDetected={setHandDetected}
+        />
 
         {/* Step label */}
-        <div className="absolute top-4 left-0 right-0 text-center">
+        <div className="absolute top-3 left-0 right-0 text-center pointer-events-none">
           <span className="bg-black/60 text-white text-sm px-3 py-1 rounded-full">
-            {stepLabel} — {stepTip}
+            {handDetected ? '✅ Palm detected — Capture when ready' : `${stepLabel} — ${stepTip}`}
           </span>
         </div>
 
@@ -118,7 +140,11 @@ const CameraPreviewWithGuide = ({
           </Button>
           <Button
             size="icon"
-            className="rounded-full h-14 w-14 bg-primary hover:bg-primary/90"
+            className={`rounded-full h-14 w-14 transition-all ${
+              handDetected
+                ? 'bg-green-500 hover:bg-green-600 ring-4 ring-green-300/50'
+                : 'bg-primary hover:bg-primary/90'
+            }`}
             onClick={handleCapture}
           >
             <Camera className="h-6 w-6" />
