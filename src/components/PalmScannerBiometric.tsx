@@ -148,6 +148,11 @@ const PalmScannerBiometric = ({
       toast.error("Please upload or capture a palm image first");
       return;
     }
+    if (!userMetadata.name || userMetadata.name.trim().length < 2) {
+      toast.error("Please enter the person's name (at least 2 characters) — this helps identify readings in history");
+      setShowOptionalFields(true);
+      return;
+    }
     
     // Notify parent to start analysis
     onAnalyze(palmImages, userMetadata);
