@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminContent() {
@@ -19,7 +19,22 @@ export default function AdminContent() {
   const [saints, setSaints] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{ type: string; item?: any } | null>(null);
+
+  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints', label: string) => {
+    setSyncing(fn);
+    try {
+      const { data, error } = await supabase.functions.invoke(fn);
+      if (error) throw error;
+      toast.success(`${label}: +${data?.inserted_count ?? 0} added, ${data?.updated_count ?? 0} updated, ${data?.skipped_count ?? 0} skipped`);
+      load();
+    } catch (e: any) {
+      toast.error(`${label} failed: ${e?.message ?? 'unknown error'}`);
+    } finally {
+      setSyncing(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -105,7 +120,13 @@ export default function AdminContent() {
           <AdminDataTable data={mantras} columns={mantraColumns} searchKey="deity" loading={loading} actions={makeActions("mantras_library", "mantra")} />
         </TabsContent>
         <TabsContent value="audio">
-          <div className="mb-3"><Button size="sm" onClick={() => setDialog({ type: "audio" })}><Plus className="h-4 w-4 mr-1" /> Add Audio</Button></div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setDialog({ type: "audio" })}><Plus className="h-4 w-4 mr-1" /> Add Audio</Button>
+            <Button size="sm" variant="outline" disabled={syncing === 'sync-archive-audio'} onClick={() => runSync('sync-archive-audio', 'Archive.org sync')}>
+              {syncing === 'sync-archive-audio' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sync from Archive.org
+            </Button>
+          </div>
           <AdminDataTable data={audio} columns={audioColumns} searchKey="title" loading={loading} actions={makeActions("audio_library", "audio")} />
         </TabsContent>
         <TabsContent value="scriptures">
@@ -113,7 +134,13 @@ export default function AdminContent() {
           <AdminDataTable data={scriptures} columns={scriptureColumns} searchKey="title" loading={loading} actions={makeActions("scriptures", "scripture")} />
         </TabsContent>
         <TabsContent value="saints">
-          <div className="mb-3"><Button size="sm" onClick={() => setDialog({ type: "saint" })}><Plus className="h-4 w-4 mr-1" /> Add Saint</Button></div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setDialog({ type: "saint" })}><Plus className="h-4 w-4 mr-1" /> Add Saint</Button>
+            <Button size="sm" variant="outline" disabled={syncing === 'sync-wikipedia-saints'} onClick={() => runSync('sync-wikipedia-saints', 'Wikipedia sync')}>
+              {syncing === 'sync-wikipedia-saints' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sync from Wikipedia
+            </Button>
+          </div>
           <AdminDataTable data={saints} columns={saintColumns} searchKey="name" loading={loading} actions={makeActions("saints", "saint")} />
         </TabsContent>
         <TabsContent value="faqs">
