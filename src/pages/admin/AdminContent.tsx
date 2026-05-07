@@ -22,12 +22,16 @@ export default function AdminContent() {
   const [syncing, setSyncing] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{ type: string; item?: any } | null>(null);
 
-  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints', label: string) => {
+  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints' | 'check-audio-health', label: string) => {
     setSyncing(fn);
     try {
       const { data, error } = await supabase.functions.invoke(fn);
       if (error) throw error;
-      toast.success(`${label}: +${data?.inserted_count ?? 0} added, ${data?.updated_count ?? 0} updated, ${data?.skipped_count ?? 0} skipped`);
+      if (fn === 'check-audio-health') {
+        toast.success(`${label}: ${data?.ok ?? 0} OK, ${data?.broken ?? 0} broken / ${data?.checked ?? 0} checked`);
+      } else {
+        toast.success(`${label}: +${data?.inserted_count ?? 0} added, ${data?.updated_count ?? 0} updated, ${data?.skipped_count ?? 0} skipped`);
+      }
       load();
     } catch (e: any) {
       toast.error(`${label} failed: ${e?.message ?? 'unknown error'}`);
@@ -125,6 +129,10 @@ export default function AdminContent() {
             <Button size="sm" variant="outline" disabled={syncing === 'sync-archive-audio'} onClick={() => runSync('sync-archive-audio', 'Archive.org sync')}>
               {syncing === 'sync-archive-audio' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
               Sync from Archive.org
+            </Button>
+            <Button size="sm" variant="outline" disabled={syncing === 'check-audio-health'} onClick={() => runSync('check-audio-health', 'Audio health check')}>
+              {syncing === 'check-audio-health' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Check audio URLs
             </Button>
           </div>
           <AdminDataTable data={audio} columns={audioColumns} searchKey="title" loading={loading} actions={makeActions("audio_library", "audio")} />
