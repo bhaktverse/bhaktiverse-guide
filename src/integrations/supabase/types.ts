@@ -170,6 +170,7 @@ export type Database = {
           duration: number
           id: string
           language: string
+          last_checked_at: string | null
           lyrics: string | null
           meaning: string | null
           occasion: Json | null
@@ -177,6 +178,7 @@ export type Database = {
           rating: number | null
           title: string
           updated_at: string | null
+          url_status: string | null
         }
         Insert: {
           artist?: string | null
@@ -189,6 +191,7 @@ export type Database = {
           duration: number
           id?: string
           language: string
+          last_checked_at?: string | null
           lyrics?: string | null
           meaning?: string | null
           occasion?: Json | null
@@ -196,6 +199,7 @@ export type Database = {
           rating?: number | null
           title: string
           updated_at?: string | null
+          url_status?: string | null
         }
         Update: {
           artist?: string | null
@@ -208,6 +212,7 @@ export type Database = {
           duration?: number
           id?: string
           language?: string
+          last_checked_at?: string | null
           lyrics?: string | null
           meaning?: string | null
           occasion?: Json | null
@@ -215,6 +220,7 @@ export type Database = {
           rating?: number | null
           title?: string
           updated_at?: string | null
+          url_status?: string | null
         }
         Relationships: []
       }
