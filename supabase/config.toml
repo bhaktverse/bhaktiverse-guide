@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.sync-wikipedia-saints]
 verify_jwt = false
+
+[functions.check-audio-health]
+verify_jwt = false
