@@ -130,6 +130,9 @@ export default function AdminContent() {
               {syncing === 'sync-archive-audio' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
               Sync from Archive.org
             </Button>
+            <Button size="sm" variant="outline" disabled={syncing === 'check-audio-health'} onClick={() => runSync('check-audio-health', 'Audio health check')}>
+              {syncing === 'check-audio-health' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Check audio URLs
           </div>
           <AdminDataTable data={audio} columns={audioColumns} searchKey="title" loading={loading} actions={makeActions("audio_library", "audio")} />
         </TabsContent>
