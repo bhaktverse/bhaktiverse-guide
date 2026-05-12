@@ -6,10 +6,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
   History, Download, Eye, Trash2, Calendar, User, Globe,
-  Loader2, FileText, Hand, ChevronRight
+  Loader2, FileText, Hand, ChevronRight, Printer
 } from 'lucide-react';
 import { generatePalmReadingPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface PalmReadingRecord {
   id: string;
@@ -171,6 +172,17 @@ const PalmReadingHistory = ({
                           title="View reading"
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          asChild
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Open print/export view"
+                        >
+                          <Link to={`/palm-reading/print/${record.id}`} target="_blank" rel="noopener">
+                            <Printer className="h-4 w-4" />
+                          </Link>
                         </Button>
                         <Button
                           variant="ghost"
