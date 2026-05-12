@@ -332,15 +332,36 @@
     animation-delay: 0.4s;
   }
 }
-/* === Print stylesheet for palm reading report (native Ctrl+P fallback) === */
+/* === Print stylesheet for palm reading report (native Ctrl+P + /palm-reading/print/:id) === */
 @media print {
   body * { visibility: hidden !important; }
   #palm-report-print, #palm-report-print * { visibility: visible !important; }
   #palm-report-print {
     position: absolute !important; left: 0; top: 0; width: 100%;
     background: white !important; color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Force readable text + preserve gradients on print */
+  #palm-report-print * {
+    color: black !important;
+    text-shadow: none !important;
+  }
+  #palm-report-print .bg-gradient-to-r,
+  #palm-report-print [class*="bg-gradient"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Each Card/section should not split across pages */
+  #palm-report-print [class*="rounded"][class*="border"],
+  #palm-report-print section,
+  #palm-report-print article {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   nav, header, footer, .no-print, [data-no-print] { display: none !important; }
-  .animate-spin, .animate-sacred-float, .animate-om-pulse { animation: none !important; }
+  .animate-spin, .animate-sacred-float, .animate-om-pulse,
+  [class*="animate-"] { animation: none !important; }
   @page { size: A4; margin: 12mm; }
 }
+
