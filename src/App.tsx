@@ -39,6 +39,7 @@ const Premium = lazy(() => import("./pages/Premium"));
 const Numerology = lazy(() => import("./pages/Numerology"));
 const DailyDevotion = lazy(() => import("./pages/DailyDevotion"));
 const PalmReading = lazy(() => import("./pages/PalmReading"));
+const PalmReadingPrint = lazy(() => import("./pages/PalmReadingPrint"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Horoscope = lazy(() => import("./pages/Horoscope"));
 const KundaliMatch = lazy(() => import("./pages/KundaliMatch"));
@@ -112,6 +113,7 @@ const App = () => (
                 <Route path="/scriptures/:scriptureId" element={<ProtectedRoute><ScriptureReader /></ProtectedRoute>} />
                 <Route path="/numerology" element={<ProtectedRoute><Numerology /></ProtectedRoute>} />
                 <Route path="/palm-reading" element={<ProtectedRoute><PalmReading /></ProtectedRoute>} />
+                <Route path="/palm-reading/print/:id" element={<ProtectedRoute><PalmReadingPrint /></ProtectedRoute>} />
                 <Route path="/horoscope" element={<ProtectedRoute><Horoscope /></ProtectedRoute>} />
                 <Route path="/kundali-match" element={<ProtectedRoute><KundaliMatch /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
