@@ -20,8 +20,18 @@ import {
   Share2,
   Clock,
   Music,
-  ChevronUp
+  ChevronUp,
+  Timer,
+  Gauge
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface AudioTrack {
@@ -65,6 +75,10 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [ttsAudioEl, setTtsAudioEl] = useState<HTMLAudioElement | null>(null);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
+  const [sleepRemaining, setSleepRemaining] = useState<number | null>(null);
+  const sleepTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -123,6 +137,32 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  // Apply playback rate when changed or track switches
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = playbackRate;
+  }, [playbackRate, track]);
+
+  // Sleep timer countdown
+  useEffect(() => {
+    if (sleepMinutes == null) {
+      setSleepRemaining(null);
+      if (sleepTimerRef.current) { clearInterval(sleepTimerRef.current); sleepTimerRef.current = null; }
+      return;
+    }
+    const endAt = Date.now() + sleepMinutes * 60 * 1000;
+    setSleepRemaining(sleepMinutes * 60);
+    sleepTimerRef.current = window.setInterval(() => {
+      const left = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+      setSleepRemaining(left);
+      if (left <= 0) {
+        if (audioRef.current) { audioRef.current.pause(); setIsPlaying(false); }
+        toast.info('Sleep timer ended — playback paused');
+        setSleepMinutes(null);
+      }
+    }, 1000);
+    return () => { if (sleepTimerRef.current) clearInterval(sleepTimerRef.current); };
+  }, [sleepMinutes]);
 
   const togglePlay = async () => {
     if (!audioRef.current || !track) return;
