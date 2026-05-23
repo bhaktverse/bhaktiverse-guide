@@ -383,13 +383,59 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         </Button>
       </div>
 
-      {/* Volume Control - hidden on mobile */}
-      <div className="hidden md:flex items-center gap-3 mb-4 sm:mb-6">
-        <Button variant="ghost" size="icon" onClick={toggleMute}>
+      {/* Volume + Speed + Sleep Timer */}
+      <div className="flex items-center gap-2 mb-4 sm:mb-6 flex-wrap">
+        <Button variant="ghost" size="icon" onClick={toggleMute} className="hidden md:inline-flex">
           {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </Button>
-        <Slider value={[isMuted ? 0 : volume]} max={1} step={0.1} onValueChange={handleVolumeChange} className="flex-1" />
+        <Slider value={[isMuted ? 0 : volume]} max={1} step={0.1} onValueChange={handleVolumeChange} className="flex-1 min-w-[120px] hidden md:flex" />
+
+        {/* Playback speed */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1 h-9">
+              <Gauge className="h-4 w-4" /> {playbackRate}x
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Playback speed</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(r => (
+              <DropdownMenuItem key={r} onClick={() => setPlaybackRate(r)}>
+                {r}x {playbackRate === r && '✓'}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Sleep timer */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1 h-9">
+              <Timer className="h-4 w-4" />
+              {sleepRemaining != null
+                ? `${Math.floor(sleepRemaining / 60)}:${(sleepRemaining % 60).toString().padStart(2, '0')}`
+                : 'Sleep'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Sleep timer</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {[5, 10, 15, 30, 45, 60].map(m => (
+              <DropdownMenuItem key={m} onClick={() => setSleepMinutes(m)}>
+                {m} minutes
+              </DropdownMenuItem>
+            ))}
+            {sleepMinutes != null && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSleepMinutes(null)}>Cancel timer</DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
 
       {/* Lyrics and Meaning */}
       <div className="space-y-4">
