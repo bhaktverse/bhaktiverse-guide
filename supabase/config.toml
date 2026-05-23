@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.check-audio-health]
 verify_jwt = false
+
+[functions.astro-engine]
+verify_jwt = false

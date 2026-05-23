@@ -20,8 +20,18 @@ import {
   Share2,
   Clock,
   Music,
-  ChevronUp
+  ChevronUp,
+  Timer,
+  Gauge
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface AudioTrack {
@@ -65,6 +75,10 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [ttsAudioEl, setTtsAudioEl] = useState<HTMLAudioElement | null>(null);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
+  const [sleepRemaining, setSleepRemaining] = useState<number | null>(null);
+  const sleepTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -123,6 +137,32 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  // Apply playback rate when changed or track switches
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = playbackRate;
+  }, [playbackRate, track]);
+
+  // Sleep timer countdown
+  useEffect(() => {
+    if (sleepMinutes == null) {
+      setSleepRemaining(null);
+      if (sleepTimerRef.current) { clearInterval(sleepTimerRef.current); sleepTimerRef.current = null; }
+      return;
+    }
+    const endAt = Date.now() + sleepMinutes * 60 * 1000;
+    setSleepRemaining(sleepMinutes * 60);
+    sleepTimerRef.current = window.setInterval(() => {
+      const left = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+      setSleepRemaining(left);
+      if (left <= 0) {
+        if (audioRef.current) { audioRef.current.pause(); setIsPlaying(false); }
+        toast.info('Sleep timer ended — playback paused');
+        setSleepMinutes(null);
+      }
+    }, 1000);
+    return () => { if (sleepTimerRef.current) clearInterval(sleepTimerRef.current); };
+  }, [sleepMinutes]);
 
   const togglePlay = async () => {
     if (!audioRef.current || !track) return;
@@ -343,13 +383,59 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         </Button>
       </div>
 
-      {/* Volume Control - hidden on mobile */}
-      <div className="hidden md:flex items-center gap-3 mb-4 sm:mb-6">
-        <Button variant="ghost" size="icon" onClick={toggleMute}>
+      {/* Volume + Speed + Sleep Timer */}
+      <div className="flex items-center gap-2 mb-4 sm:mb-6 flex-wrap">
+        <Button variant="ghost" size="icon" onClick={toggleMute} className="hidden md:inline-flex">
           {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </Button>
-        <Slider value={[isMuted ? 0 : volume]} max={1} step={0.1} onValueChange={handleVolumeChange} className="flex-1" />
+        <Slider value={[isMuted ? 0 : volume]} max={1} step={0.1} onValueChange={handleVolumeChange} className="flex-1 min-w-[120px] hidden md:flex" />
+
+        {/* Playback speed */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1 h-9">
+              <Gauge className="h-4 w-4" /> {playbackRate}x
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Playback speed</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(r => (
+              <DropdownMenuItem key={r} onClick={() => setPlaybackRate(r)}>
+                {r}x {playbackRate === r && '✓'}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Sleep timer */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1 h-9">
+              <Timer className="h-4 w-4" />
+              {sleepRemaining != null
+                ? `${Math.floor(sleepRemaining / 60)}:${(sleepRemaining % 60).toString().padStart(2, '0')}`
+                : 'Sleep'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Sleep timer</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {[5, 10, 15, 30, 45, 60].map(m => (
+              <DropdownMenuItem key={m} onClick={() => setSleepMinutes(m)}>
+                {m} minutes
+              </DropdownMenuItem>
+            ))}
+            {sleepMinutes != null && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSleepMinutes(null)}>Cancel timer</DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
 
       {/* Lyrics and Meaning */}
       <div className="space-y-4">
