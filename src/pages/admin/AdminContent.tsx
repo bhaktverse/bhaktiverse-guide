@@ -126,6 +126,7 @@ export default function AdminContent() {
           <TabsTrigger value="audio">Audio ({audio.length})</TabsTrigger>
           <TabsTrigger value="scriptures">Scriptures ({scriptures.length})</TabsTrigger>
           <TabsTrigger value="saints">Saints ({saints.length})</TabsTrigger>
+          <TabsTrigger value="temples">Temples ({temples.length})</TabsTrigger>
           <TabsTrigger value="faqs">FAQs ({faqs.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="mantras">
