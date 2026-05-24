@@ -18,6 +18,7 @@ export default function AdminContent() {
   const [scriptures, setScriptures] = useState<any[]>([]);
   const [saints, setSaints] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<any[]>([]);
+  const [temples, setTemples] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{ type: string; item?: any } | null>(null);
