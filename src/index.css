@@ -190,6 +190,18 @@
       min-width: 44px;
     }
   }
+
+  /* Mobile: reserve space for fixed bottom nav + iOS safe area */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  /* Safe-area helper utility (matches old `safe-area-inset-bottom` class usage) */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 @layer components {
