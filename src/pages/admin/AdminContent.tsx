@@ -167,6 +167,15 @@ export default function AdminContent() {
           </div>
           <AdminDataTable data={saints} columns={saintColumns} searchKey="name" loading={loading} actions={makeActions("saints", "saint")} />
         </TabsContent>
+        <TabsContent value="temples">
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={syncing === 'sync-wikidata-temples'} onClick={() => runSync('sync-wikidata-temples', 'Temple sync')}>
+              {syncing === 'sync-wikidata-temples' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sync major temples (Wikipedia)
+            </Button>
+          </div>
+          <AdminDataTable data={temples} columns={templeColumns} searchKey="name" loading={loading} actions={makeActions("temples", "temple")} />
+        </TabsContent>
         <TabsContent value="faqs">
           <div className="mb-3"><Button size="sm" onClick={() => setDialog({ type: "faq" })}><Plus className="h-4 w-4 mr-1" /> Add FAQ</Button></div>
           <AdminDataTable data={faqs} columns={faqColumns} searchKey="question" loading={loading} actions={makeActions("spiritual_faqs", "faq")} />
