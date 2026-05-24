@@ -22,7 +22,7 @@ export default function AdminContent() {
   const [syncing, setSyncing] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{ type: string; item?: any } | null>(null);
 
-  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints' | 'check-audio-health', label: string) => {
+  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints' | 'check-audio-health' | 'sync-wikidata-temples' | 'sync-scriptures', label: string) => {
     setSyncing(fn);
     try {
       const { data, error } = await supabase.functions.invoke(fn);
