@@ -93,6 +93,13 @@ export default function AdminContent() {
     { key: "category", label: "Category", render: (r) => <Badge variant="secondary" className="text-[10px]">{r.category}</Badge> },
     { key: "verified_by_scholar", label: "Verified", render: (r) => r.verified_by_scholar ? "✓" : "—" },
   ];
+  const templeColumns: Column<any>[] = [
+    { key: "name", label: "Name" },
+    { key: "primary_deity", label: "Deity" },
+    { key: "tradition", label: "Tradition" },
+    { key: "location", label: "City", render: (r) => <span className="text-xs">{r.location?.city ?? '—'}, {r.location?.state ?? ''}</span> },
+    { key: "verified", label: "✓", render: (r) => r.verified ? <Badge className="bg-[hsl(var(--success))] text-[10px]">✓</Badge> : <Badge variant="outline" className="text-[10px]">No</Badge> },
+  ];
 
   const makeActions = (table: string, type: string) => (row: any) => (
     <div className="flex gap-1">
