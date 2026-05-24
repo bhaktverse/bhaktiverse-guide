@@ -86,3 +86,9 @@ verify_jwt = false
 
 [functions.astro-engine]
 verify_jwt = false
+
+[functions.sync-wikidata-temples]
+verify_jwt = false
+
+[functions.sync-scriptures]
+verify_jwt = false

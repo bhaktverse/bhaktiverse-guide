@@ -18,11 +18,12 @@ export default function AdminContent() {
   const [scriptures, setScriptures] = useState<any[]>([]);
   const [saints, setSaints] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<any[]>([]);
+  const [temples, setTemples] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [dialog, setDialog] = useState<{ type: string; item?: any } | null>(null);
 
-  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints' | 'check-audio-health', label: string) => {
+  const runSync = async (fn: 'sync-archive-audio' | 'sync-wikipedia-saints' | 'check-audio-health' | 'sync-wikidata-temples' | 'sync-scriptures', label: string) => {
     setSyncing(fn);
     try {
       const { data, error } = await supabase.functions.invoke(fn);
@@ -42,15 +43,16 @@ export default function AdminContent() {
 
   const load = async () => {
     setLoading(true);
-    const [m, a, s, sa, f] = await Promise.all([
+    const [m, a, s, sa, f, t] = await Promise.all([
       supabase.from("mantras_library").select("*").order("created_at", { ascending: false }),
       supabase.from("audio_library").select("*").order("created_at", { ascending: false }),
       supabase.from("scriptures").select("*").order("created_at", { ascending: false }),
       supabase.from("saints").select("*").order("created_at", { ascending: false }),
       supabase.from("spiritual_faqs").select("*").order("created_at", { ascending: false }),
+      supabase.from("temples").select("*").order("created_at", { ascending: false }),
     ]);
     setMantras(m.data ?? []); setAudio(a.data ?? []); setScriptures(s.data ?? []);
-    setSaints(sa.data ?? []); setFaqs(f.data ?? []); setLoading(false);
+    setSaints(sa.data ?? []); setFaqs(f.data ?? []); setTemples(t.data ?? []); setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -91,6 +93,13 @@ export default function AdminContent() {
     { key: "category", label: "Category", render: (r) => <Badge variant="secondary" className="text-[10px]">{r.category}</Badge> },
     { key: "verified_by_scholar", label: "Verified", render: (r) => r.verified_by_scholar ? "✓" : "—" },
   ];
+  const templeColumns: Column<any>[] = [
+    { key: "name", label: "Name" },
+    { key: "primary_deity", label: "Deity" },
+    { key: "tradition", label: "Tradition" },
+    { key: "location", label: "City", render: (r) => <span className="text-xs">{r.location?.city ?? '—'}, {r.location?.state ?? ''}</span> },
+    { key: "verified", label: "✓", render: (r) => r.verified ? <Badge className="bg-[hsl(var(--success))] text-[10px]">✓</Badge> : <Badge variant="outline" className="text-[10px]">No</Badge> },
+  ];
 
   const makeActions = (table: string, type: string) => (row: any) => (
     <div className="flex gap-1">
@@ -117,6 +126,7 @@ export default function AdminContent() {
           <TabsTrigger value="audio">Audio ({audio.length})</TabsTrigger>
           <TabsTrigger value="scriptures">Scriptures ({scriptures.length})</TabsTrigger>
           <TabsTrigger value="saints">Saints ({saints.length})</TabsTrigger>
+          <TabsTrigger value="temples">Temples ({temples.length})</TabsTrigger>
           <TabsTrigger value="faqs">FAQs ({faqs.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="mantras">
@@ -138,7 +148,13 @@ export default function AdminContent() {
           <AdminDataTable data={audio} columns={audioColumns} searchKey="title" loading={loading} actions={makeActions("audio_library", "audio")} />
         </TabsContent>
         <TabsContent value="scriptures">
-          <div className="mb-3"><Button size="sm" onClick={() => setDialog({ type: "scripture" })}><Plus className="h-4 w-4 mr-1" /> Add Scripture</Button></div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setDialog({ type: "scripture" })}><Plus className="h-4 w-4 mr-1" /> Add Scripture</Button>
+            <Button size="sm" variant="outline" disabled={syncing === 'sync-scriptures'} onClick={() => runSync('sync-scriptures', 'Scripture sync')}>
+              {syncing === 'sync-scriptures' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sync canonical scriptures
+            </Button>
+          </div>
           <AdminDataTable data={scriptures} columns={scriptureColumns} searchKey="title" loading={loading} actions={makeActions("scriptures", "scripture")} />
         </TabsContent>
         <TabsContent value="saints">
@@ -150,6 +166,15 @@ export default function AdminContent() {
             </Button>
           </div>
           <AdminDataTable data={saints} columns={saintColumns} searchKey="name" loading={loading} actions={makeActions("saints", "saint")} />
+        </TabsContent>
+        <TabsContent value="temples">
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={syncing === 'sync-wikidata-temples'} onClick={() => runSync('sync-wikidata-temples', 'Temple sync')}>
+              {syncing === 'sync-wikidata-temples' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sync major temples (Wikipedia)
+            </Button>
+          </div>
+          <AdminDataTable data={temples} columns={templeColumns} searchKey="name" loading={loading} actions={makeActions("temples", "temple")} />
         </TabsContent>
         <TabsContent value="faqs">
           <div className="mb-3"><Button size="sm" onClick={() => setDialog({ type: "faq" })}><Plus className="h-4 w-4 mr-1" /> Add FAQ</Button></div>
