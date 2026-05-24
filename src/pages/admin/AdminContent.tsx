@@ -138,7 +138,13 @@ export default function AdminContent() {
           <AdminDataTable data={audio} columns={audioColumns} searchKey="title" loading={loading} actions={makeActions("audio_library", "audio")} />
         </TabsContent>
         <TabsContent value="scriptures">
-          <div className="mb-3"><Button size="sm" onClick={() => setDialog({ type: "scripture" })}><Plus className="h-4 w-4 mr-1" /> Add Scripture</Button></div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setDialog({ type: "scripture" })}><Plus className="h-4 w-4 mr-1" /> Add Scripture</Button>
+            <Button size="sm" variant="outline" disabled={syncing === 'sync-scriptures'} onClick={() => runSync('sync-scriptures', 'Scripture sync')}>
+              {syncing === 'sync-scriptures' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sync canonical scriptures
+            </Button>
+          </div>
           <AdminDataTable data={scriptures} columns={scriptureColumns} searchKey="title" loading={loading} actions={makeActions("scriptures", "scripture")} />
         </TabsContent>
         <TabsContent value="saints">
