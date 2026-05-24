@@ -43,15 +43,16 @@ export default function AdminContent() {
 
   const load = async () => {
     setLoading(true);
-    const [m, a, s, sa, f] = await Promise.all([
+    const [m, a, s, sa, f, t] = await Promise.all([
       supabase.from("mantras_library").select("*").order("created_at", { ascending: false }),
       supabase.from("audio_library").select("*").order("created_at", { ascending: false }),
       supabase.from("scriptures").select("*").order("created_at", { ascending: false }),
       supabase.from("saints").select("*").order("created_at", { ascending: false }),
       supabase.from("spiritual_faqs").select("*").order("created_at", { ascending: false }),
+      supabase.from("temples").select("*").order("created_at", { ascending: false }),
     ]);
     setMantras(m.data ?? []); setAudio(a.data ?? []); setScriptures(s.data ?? []);
-    setSaints(sa.data ?? []); setFaqs(f.data ?? []); setLoading(false);
+    setSaints(sa.data ?? []); setFaqs(f.data ?? []); setTemples(t.data ?? []); setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
