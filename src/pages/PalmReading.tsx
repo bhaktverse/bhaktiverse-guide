@@ -331,7 +331,50 @@ const PalmReading = () => {
     setUserTimeOfBirth(metadata.timeOfBirth || '');
   };
 
-  const handleBiometricScanCancel = () => { setPalmImages([]); setAnalysis(null); };
+  const handleBiometricScanCancel = () => { setPalmImages([]); setAnalysis(null); setCvResult(null); };
+
+  // Merge CV-detected line positions into analysis.lineAnalysis (CV wins over AI guess)
+  const mergeCVLines = (a: PalmAnalysis, cv: CVResult | null): PalmAnalysis => {
+    if (!cv || cv.detectedCount === 0) return a;
+    const la: any = { ...(a.lineAnalysis || {}) };
+    (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
+      const cvLine = cv.lines[k];
+      if (cvLine) {
+        la[k] = {
+          ...(la[k] || {}),
+          position: {
+            startX: cvLine.startX, startY: cvLine.startY,
+            endX: cvLine.endX, endY: cvLine.endY,
+            curveIntensity: la[k]?.position?.curveIntensity || 'moderate',
+          },
+          cvConfidence: cvLine.confidence,
+          cvDepth: cvLine.depthScore,
+          source: 'cv',
+        };
+      }
+    });
+    return { ...a, lineAnalysis: la };
+  };
+
+  // Build compact geometry payload for the AI edge function
+  const buildLineGeometry = (cv: CVResult | null) => {
+    if (!cv) return undefined;
+    const out: any = {};
+    (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
+      const l = cv.lines[k];
+      if (l) {
+        out[k] = {
+          startX: Math.round(l.startX), startY: Math.round(l.startY),
+          endX: Math.round(l.endX), endY: Math.round(l.endY),
+          length: Math.round(l.length),
+          angle: Math.round(l.angle),
+          depthScore: Math.round(l.depthScore * 100) / 100,
+          confidence: Math.round(l.confidence * 100) / 100,
+        };
+      }
+    });
+    return Object.keys(out).length ? out : undefined;
+  };
 
   const handleBiometricAnalyze = async (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
     setPalmImages(images);
