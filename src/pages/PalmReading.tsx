@@ -215,6 +215,7 @@ const PalmReading = () => {
   const [palmImages, setPalmImages] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
+  const [cvResult, setCvResult] = useState<CVResult | null>(null);
   
   const [userName, setUserName] = useState<string>('');
   const [userDob, setUserDob] = useState<string>('');
