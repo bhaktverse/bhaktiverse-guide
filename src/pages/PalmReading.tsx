@@ -724,6 +724,12 @@ const PalmReading = () => {
                   <div className="rounded-xl overflow-hidden border border-border/50">
                     <img src={palmImages[palmImages.length - 1]} alt="Palm" className="w-full h-auto max-h-[350px] object-contain" />
                   </div>
+                  <div className="flex justify-center">
+                    <PalmCVProcessor
+                      imageUrl={palmImages[palmImages.length - 1]}
+                      onLinesDetected={setCvResult}
+                    />
+                  </div>
                   <div className="flex gap-3">
                     <Button onClick={analyzePalm} disabled={analyzing} className="flex-1 gap-2">
                       {analyzing ? <><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</> : <><Sparkles className="h-4 w-4" />Get Reading</>}
