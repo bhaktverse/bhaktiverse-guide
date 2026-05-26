@@ -90,7 +90,7 @@ serve(async (req) => {
     }
 
     const requestBody = await req.json();
-    const { imageData, language = 'en', userName, userDob, userTimeOfBirth } = requestBody;
+    const { imageData, language = 'en', userName, userDob, userTimeOfBirth, lineGeometry } = requestBody;
 
     if (!imageData) {
       return new Response(
@@ -427,6 +427,14 @@ IMPORTANT REQUIREMENTS:
 4. Do NOT use generic templates - describe what you actually see
 5. Reference specific line positions, depths, lengths in your observations
 6. Each analysis must be unique to THIS palm's characteristics
+${lineGeometry ? `
+
+## COMPUTER-VISION PRE-ANALYSIS (OpenCV Canny + Hough)
+The following palm line coordinates were extracted from the image using edge detection (normalized 0-100, origin top-left). Use these as ground truth for line positions in your lineAnalysis.position fields, and tailor your "observed" descriptions to match the detected length/angle/depth:
+
+${JSON.stringify(lineGeometry, null, 2)}
+
+Higher depthScore = deeper crease. Higher confidence = more reliable detection. If a line is missing from this payload, the CV pipeline couldn't detect it confidently — describe it as faint or absent in your analysis.` : ''}
 
 Return valid JSON only.`
               },

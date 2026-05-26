@@ -23,6 +23,8 @@ import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
 import PalmReadingHistory from '@/components/PalmReadingHistory';
+import PalmCVProcessor from '@/components/PalmCVProcessor';
+import type { CVResult } from '@/lib/palmCV';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -213,6 +215,7 @@ const PalmReading = () => {
   const [palmImages, setPalmImages] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
+  const [cvResult, setCvResult] = useState<CVResult | null>(null);
   
   const [userName, setUserName] = useState<string>('');
   const [userDob, setUserDob] = useState<string>('');
@@ -328,7 +331,50 @@ const PalmReading = () => {
     setUserTimeOfBirth(metadata.timeOfBirth || '');
   };
 
-  const handleBiometricScanCancel = () => { setPalmImages([]); setAnalysis(null); };
+  const handleBiometricScanCancel = () => { setPalmImages([]); setAnalysis(null); setCvResult(null); };
+
+  // Merge CV-detected line positions into analysis.lineAnalysis (CV wins over AI guess)
+  const mergeCVLines = (a: PalmAnalysis, cv: CVResult | null): PalmAnalysis => {
+    if (!cv || cv.detectedCount === 0) return a;
+    const la: any = { ...(a.lineAnalysis || {}) };
+    (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
+      const cvLine = cv.lines[k];
+      if (cvLine) {
+        la[k] = {
+          ...(la[k] || {}),
+          position: {
+            startX: cvLine.startX, startY: cvLine.startY,
+            endX: cvLine.endX, endY: cvLine.endY,
+            curveIntensity: la[k]?.position?.curveIntensity || 'moderate',
+          },
+          cvConfidence: cvLine.confidence,
+          cvDepth: cvLine.depthScore,
+          source: 'cv',
+        };
+      }
+    });
+    return { ...a, lineAnalysis: la };
+  };
+
+  // Build compact geometry payload for the AI edge function
+  const buildLineGeometry = (cv: CVResult | null) => {
+    if (!cv) return undefined;
+    const out: any = {};
+    (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
+      const l = cv.lines[k];
+      if (l) {
+        out[k] = {
+          startX: Math.round(l.startX), startY: Math.round(l.startY),
+          endX: Math.round(l.endX), endY: Math.round(l.endY),
+          length: Math.round(l.length),
+          angle: Math.round(l.angle),
+          depthScore: Math.round(l.depthScore * 100) / 100,
+          confidence: Math.round(l.confidence * 100) / 100,
+        };
+      }
+    });
+    return Object.keys(out).length ? out : undefined;
+  };
 
   const handleBiometricAnalyze = async (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {
     setPalmImages(images);
@@ -365,12 +411,13 @@ const PalmReading = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
-        body: { imageData: images[0], language: selectedLanguage, userName: metadata.name || undefined, userDob: metadata.dob || undefined, userTimeOfBirth: metadata.timeOfBirth || undefined }
+        body: { imageData: images[0], language: selectedLanguage, userName: metadata.name || undefined, userDob: metadata.dob || undefined, userTimeOfBirth: metadata.timeOfBirth || undefined, lineGeometry: buildLineGeometry(cvResult) }
       });
       if (error) throw error;
       if (data?.analysis) {
-        setAnalysis(data.analysis);
-        await saveToHistory(data.analysis, images[0]);
+        const merged = mergeCVLines(data.analysis, cvResult);
+        setAnalysis(merged);
+        await saveToHistory(merged, images[0]);
         toast.success("🙏 Palm Reading Complete — Your detailed destiny reading is ready");
       } else throw new Error('No analysis returned');
     } catch (error) {
@@ -415,12 +462,13 @@ const PalmReading = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
-        body: { imageData: palmImages[0], language: selectedLanguage, userName: userName || undefined, userDob: userDob || undefined, userTimeOfBirth: userTimeOfBirth || undefined }
+        body: { imageData: palmImages[0], language: selectedLanguage, userName: userName || undefined, userDob: userDob || undefined, userTimeOfBirth: userTimeOfBirth || undefined, lineGeometry: buildLineGeometry(cvResult) }
       });
       if (error) throw error;
       if (data?.analysis) {
-        setAnalysis(data.analysis);
-        await saveToHistory(data.analysis, palmImages[0]);
+        const merged = mergeCVLines(data.analysis, cvResult);
+        setAnalysis(merged);
+        await saveToHistory(merged, palmImages[0]);
         toast.success("🙏 Palm Reading Complete — Your detailed destiny reading is ready");
       } else throw new Error('No analysis returned');
     } catch (error) {
@@ -526,7 +574,7 @@ const PalmReading = () => {
   const handleUpgradeToPremium = () => navigate('/premium');
 
   const resetScan = () => {
-    setPalmImages([]); setAnalysis(null); setAudioUrl(null); setIsNarrating(false);
+    setPalmImages([]); setAnalysis(null); setCvResult(null); setAudioUrl(null); setIsNarrating(false);
     setCompatibilityResult(null); setSelectedForCompatibility(null);
     setUserName(''); setUserDob(''); setUserTimeOfBirth(''); setShowReportView(false);
     setSelectedHistoryItem(null);
@@ -675,6 +723,12 @@ const PalmReading = () => {
                 <CardContent className="space-y-4">
                   <div className="rounded-xl overflow-hidden border border-border/50">
                     <img src={palmImages[palmImages.length - 1]} alt="Palm" className="w-full h-auto max-h-[350px] object-contain" />
+                  </div>
+                  <div className="flex justify-center">
+                    <PalmCVProcessor
+                      imageUrl={palmImages[palmImages.length - 1]}
+                      onLinesDetected={setCvResult}
+                    />
                   </div>
                   <div className="flex gap-3">
                     <Button onClick={analyzePalm} disabled={analyzing} className="flex-1 gap-2">
