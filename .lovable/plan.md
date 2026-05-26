@@ -1,133 +1,74 @@
-# BhaktVerse — Full Platform Audit & Pro Upgrade Plan
+## Phase C — Real OpenCV.js Palm Line Detection
 
-Goal: bring every module to competitor-grade quality (AstroSage, AstroTalk, Sri Mandir, Palmistry HD), fix broken pieces (audio library, PDF/print), add MediaPipe/OpenCV depth, enrich datasets from real APIs, and harden for 1M users.
+Currently the platform uses MediaPipe for hand landmark detection (skeleton + approximate dashed line overlays), and the AI Vision model produces narrative line analysis. Actual pixel-level palm crease detection (Canny edge → Hough lines / contour tracing) is still TODO. This phase adds genuine computer-vision line extraction so the overlay reflects the user's real palm creases — closing the gap with top palmistry apps.
 
----
+### Goals
+1. Detect real palm creases from the captured image using OpenCV.js.
+2. Use MediaPipe landmarks to crop and rectify the palm ROI (rotation + scale normalization) before edge detection.
+3. Classify detected line segments into Heart / Head / Life / Fate / Sun based on angle + position relative to landmarks.
+4. Feed real line coordinates (not LLM-guessed positions) into `AILineDetectionOverlay` for accurate animated rendering.
+5. Improve AI analysis prompt by sending detected line geometry (length, curvature, depth proxy) alongside the image.
 
-## Phase A — Audit & Triage (read-only, ~1 iteration)
+### Deliverables
 
-1. **Automated sweep**
-   - Run `supabase--linter` + `security--get_scan_results` for backend issues.
-   - Browser tool: walk every route at 375px and 1280px, capture console + network errors, log broken images / 404 audio / dead buttons.
-   - Read every page in `src/pages/*` + admin pages, score each on: works / partial / broken, mobile-OK, empty-state, loading-state, error-state.
-2. **Output**: a single `AUDIT_REPORT.md` with a per-page status table + prioritized defect list. This drives every later phase.
+**1. New module `src/lib/palmCV.ts`**
+- Lazy-load OpenCV.js from CDN (`https://docs.opencv.org/4.x/opencv.js`) with a singleton loader + ready promise.
+- Function `extractPalmLines(imageDataUrl, landmarks)`:
+  - Convert to grayscale → CLAHE contrast boost → bilateral filter → Canny edges → morphological close.
+  - Mask to palm polygon built from MediaPipe landmarks `[0,1,5,9,13,17]` (excludes finger area).
+  - Run Probabilistic Hough Line Transform + contour-based skeleton extraction.
+  - Return normalized `{startX,startY,endX,endY,length,angle,depthScore}[]` (0-100 percentages).
+- Function `classifyLines(segments, landmarks)`:
+  - Heart: horizontal, upper third, below finger bases.
+  - Head: horizontal, middle, slight downward slope.
+  - Life: curved arc, near thumb base (landmarks 1-2-0).
+  - Fate: vertical, center palm.
+  - Sun: vertical, ring-finger side.
+  - Score by angle + bounding-box position; return best match per category.
 
----
+**2. New component `src/components/PalmCVProcessor.tsx`**
+- Accepts `imageUrl` and `landmarks` (passed from capture step or re-detected on uploaded image).
+- Runs `extractPalmLines` + `classifyLines` off the main thread via `requestIdleCallback`.
+- Emits `onLinesDetected(linesByCategory)` with real coordinates.
+- Renders a small status badge ("CV: 4/5 lines found · 92% confidence").
 
-## Phase B — Palm Reading & Print perfection
+**3. Static-image MediaPipe pass `src/lib/handLandmarksStatic.ts`**
+- For uploaded (non-camera) images, run MediaPipe Hands once in `staticImageMode: true` to get landmarks needed for ROI/classification.
 
-1. **Dedicated print route** `/palm-reading/print/:id`
-   - Server-rendered-style React page that loads the saved reading from `palm_reading_history` and renders the full `PalmReadingReport` in print-optimized CSS (A4, no nav, no animations, page-break rules per section).
-   - Two export buttons:
-     a. **Native Print → Save as PDF** (via `window.print()` — pixel perfect, Devanagari perfect, zero deps).
-     b. **Download PDF** via existing `html2canvas + jsPDF` (already in place, kept as fallback).
-     c. **Download HTML** (single self-contained `.html` with inlined CSS + base64 images — competitor parity for "share/email report").
-2. **Layout hardening**
-   - Audit `PalmReadingReport.tsx`: add explicit `break-inside: avoid` on each card, force `print-color-adjust: exact`, embed Noto Sans Devanagari via `@font-face` so print captures it.
-   - Add a cover page (user name, age, DOB, date, palm thumbnail) and a back page (disclaimer + share QR).
-3. **Re-view flow**: from `PalmReadingHistory`, "View Report" opens the print route inline (no re-scan, no AI credit burn). Already saving to DB — just wire the link.
+**4. Wire into `src/pages/PalmReading.tsx`**
+- After capture/upload + before/parallel to AI analysis call, run `PalmCVProcessor`.
+- Pass detected coordinates as `lineAnalysis.{x}Line.position` override into `AILineDetectionOverlay` so the animated overlay traces real creases.
+- Also POST the CV geometry to `supabase/functions/palm-reading-analysis` as a new `lineGeometry` field.
 
----
+**5. Update edge function `supabase/functions/palm-reading-analysis/index.ts`**
+- Accept optional `lineGeometry` payload.
+- Inject into Gemini prompt: "Computer-vision pre-analysis detected these lines (normalized 0-100): …". This grounds the model and reduces hallucinated positions.
 
-## Phase C — MediaPipe + OpenCV depth
+**6. Update `AILineDetectionOverlay`**
+- Prefer CV-supplied positions when present; fall back to AI/default positions.
+- Add a "Source: CV / AI / Default" badge per line for transparency.
 
-1. Upgrade `HandLandmarkDetector.tsx`:
-   - Real-time **palm-quality score** (lighting, distance, openness, blur via OpenCV.js Laplacian) — block capture until ≥80%.
-   - Auto-capture when quality holds ≥80% for 1.5s.
-2. **Line projection**: after capture, run OpenCV.js Canny + Hough on the cropped palm to extract heart/head/life line pixels, overlay them on the result page (already partially in `AILineDetectionOverlay.tsx` — finish wiring).
-3. Lazy-load both libs only when camera opens (keep initial bundle lean).
+**7. Performance & UX**
+- OpenCV.js (~8 MB) lazy-loaded only when user opens Palm Reading; cached by browser.
+- Show loading state "Loading CV engine…" first time.
+- Run detection in <1.5s on mid-range mobile (downscale ROI to 512px max).
+- Fail gracefully → fall back to AI-only positions (current behavior) if OpenCV fails to load or no lines pass confidence threshold.
 
----
+### Technical notes
+- No new npm package — OpenCV.js loaded via `<script>` injection to keep bundle size unchanged.
+- MediaPipe already loaded for camera path; static-image mode reuses same `@mediapipe/hands` dependency.
+- All processing client-side (privacy preserved — image never leaves device for CV step).
+- Types: `PalmLineGeometry` interface added to `src/lib/palmCV.ts`, imported where needed.
 
-## Phase D — Astrology accuracy (vs AstroSage)
+### Out of scope (future phases)
+- Minor lines (Mercury, Marriage, Children) — focus on the 5 major lines first.
+- ML-based line classifier — heuristic classifier is sufficient for v1.
+- Mount/finger-shape analysis — separate iteration.
 
-1. New edge function `astro-engine` using `astronomia` (npm) to compute:
-   - Sidereal planetary positions (Lahiri ayanamsa)
-   - Lagna, navamsa, nakshatra + pada, current Vimshottari dasha/bhukti
-   - Moon rashi (replaces current approximation)
-2. Replace approximations in `numerology-analysis`, `daily-horoscope`, `kundali-match`, `hindu-panchang` to read from `astro-engine` for any planetary data.
-3. Cache per (dob, tob, place) hash in `astro_profiles.planets_data`.
-
----
-
-## Phase E — Audio Library fix & upgrade
-
-1. Run `check-audio-health` → mark all broken rows `url_status='broken'`.
-2. Run `sync-archive-audio` on each category (mantra, bhajan, aarti, meditation) to repopulate with verified Archive.org tracks.
-3. Add **YouTube fallback player**: if `audio_url` broken, look up associated `youtube_video_id` (new column) and embed via existing `youtube-shorts` infra.
-4. Fix `EnhancedAudioPlayer`:
-   - Persistent across route changes (portal at App root).
-   - Sleep timer, playback speed, A-B loop, sleep-fade.
-   - Lyrics scroll synced via simple LRC parser when present.
-5. **Playlists**: enable add/remove from any audio card; surface "My Playlists" tab.
-
----
-
-## Phase F — Dataset enrichment (real, clean, multilingual)
-
-| Module | Source | Method |
-|---|---|---|
-| Saints | Wikipedia REST + Wikidata SPARQL | Extend `sync-wikipedia-saints` to pull 200+ saints with bio, image, dates, tradition |
-| Temples | Wikidata (`P31=temple`, India filter) + Google Places (lat/lng, photos) | New `sync-wikidata-temples` edge fn |
-| Festivals / Calendar | Drik Panchang scrape (cached) + manual seed for 2026/2027 | Edge fn `sync-festivals` |
-| Mantras | Manual curated SQL seed (~150 verified, multilingual) | Migration |
-| Scriptures | Sacred-Texts Archive + GRETIL (CC source) | Edge fn `sync-scriptures` for Gita/Ramayana/Upanishads chapters |
-| Bhakti Shorts | YouTube Data API curated channels | Existing `youtube-shorts` cron daily |
-
-All sync fns: admin-only, idempotent (upsert on natural key), report inserted/updated counts via toast.
-
----
-
-## Phase G — Mobile + UX pass
-
-- 375px audit on every route; fix horizontal scroll, tap targets <44px, sticky-header overlaps.
-- Standardize: skeleton loaders, empty states with CTA, toast errors via `sonner`, Breadcrumbs on every non-home page.
-- Add global `<CommandPalette>` (⌘K) for power users.
-- Onboarding wizard polish: ask DOB/TOB/place once → drives astro everywhere.
-
----
-
-## Phase H — Scale to 1M users
-
-- Verify Phase 4 indexes already shipped; add missing ones uncovered in audit.
-- Add `pg_trgm` GIN indexes on `saints.name`, `temples.name`, `audio_library.title` for fast search.
-- Materialised view `mv_leaderboard` refreshed hourly via `pg_cron`.
-- React Query: set `staleTime` per query class (static content 1h, user data 60s, realtime 0).
-- Image pipeline: rewrite all storage URLs through Supabase image transformation (`?width=…&format=webp`).
-- Edge function rate limiting via `check_and_increment_api_usage` already exists — apply to every public fn.
-- Sentry + simple `/admin/health` page.
-
----
-
-## Phase I — Final QA & competitive comparison
-
-- Re-walk every route (browser tool, mobile + desktop), zero console errors.
-- Side-by-side checklist vs AstroSage / Sri Mandir / Palmistry HD; document gaps closed.
-- Update `mem://index.md` with new modules.
-- Publish.
-
----
-
-## Technical notes
-
-- **No new heavy deps** beyond `astronomia` (~80kb) and `opencv.js` (lazy CDN, only on /palm-reading).
-- All edge fns: `verify_jwt = true` for admin-only sync; `false` for public read.
-- All new tables get RLS + admin policy via `has_role()`.
-- Print CSS lives in `src/index.css` `@media print` — already started, will extend.
-- HTML export = single file, inline `<style>` + base64 images, generated from same `PalmReadingReport` via `outerHTML` + asset inlining.
-
----
-
-## Execution order (each phase = 1 message/iteration)
-
-1. Phase A audit report
-2. Phase B palm print perfection
-3. Phase C MediaPipe/OpenCV
-4. Phase D astro-engine
-5. Phase E audio library fix
-6. Phase F dataset sync fns + run them
-7. Phase G mobile/UX polish
-8. Phase H scale hardening
-9. Phase I final QA + publish
-
-Approve and I'll start with Phase A (audit report) so every later fix is grounded in real findings.
+### Files
+- create `src/lib/palmCV.ts`
+- create `src/lib/handLandmarksStatic.ts`
+- create `src/components/PalmCVProcessor.tsx`
+- edit `src/pages/PalmReading.tsx`
+- edit `src/components/AILineDetectionOverlay.tsx`
+- edit `supabase/functions/palm-reading-analysis/index.ts`
