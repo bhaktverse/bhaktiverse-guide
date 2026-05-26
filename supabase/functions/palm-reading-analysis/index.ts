@@ -90,7 +90,7 @@ serve(async (req) => {
     }
 
     const requestBody = await req.json();
-    const { imageData, language = 'en', userName, userDob, userTimeOfBirth } = requestBody;
+    const { imageData, language = 'en', userName, userDob, userTimeOfBirth, lineGeometry } = requestBody;
 
     if (!imageData) {
       return new Response(
