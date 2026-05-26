@@ -18,11 +18,10 @@ async function getHands() {
         `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
     });
     hands.setOptions({
-      staticImageMode: true,
       maxNumHands: 1,
       modelComplexity: 1,
       minDetectionConfidence: 0.5,
-    });
+    } as any);
     return hands;
   })();
   return handsPromise;
