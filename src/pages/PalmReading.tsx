@@ -23,6 +23,8 @@ import TarotPull from '@/components/TarotPull';
 import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
 import PalmReadingHistory from '@/components/PalmReadingHistory';
+import PalmCVProcessor from '@/components/PalmCVProcessor';
+import type { CVResult } from '@/lib/palmCV';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
