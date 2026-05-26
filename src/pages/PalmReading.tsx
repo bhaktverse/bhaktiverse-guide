@@ -574,7 +574,7 @@ const PalmReading = () => {
   const handleUpgradeToPremium = () => navigate('/premium');
 
   const resetScan = () => {
-    setPalmImages([]); setAnalysis(null); setAudioUrl(null); setIsNarrating(false);
+    setPalmImages([]); setAnalysis(null); setCvResult(null); setAudioUrl(null); setIsNarrating(false);
     setCompatibilityResult(null); setSelectedForCompatibility(null);
     setUserName(''); setUserDob(''); setUserTimeOfBirth(''); setShowReportView(false);
     setSelectedHistoryItem(null);
