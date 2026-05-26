@@ -462,12 +462,13 @@ const PalmReading = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('palm-reading-analysis', {
-        body: { imageData: palmImages[0], language: selectedLanguage, userName: userName || undefined, userDob: userDob || undefined, userTimeOfBirth: userTimeOfBirth || undefined }
+        body: { imageData: palmImages[0], language: selectedLanguage, userName: userName || undefined, userDob: userDob || undefined, userTimeOfBirth: userTimeOfBirth || undefined, lineGeometry: buildLineGeometry(cvResult) }
       });
       if (error) throw error;
       if (data?.analysis) {
-        setAnalysis(data.analysis);
-        await saveToHistory(data.analysis, palmImages[0]);
+        const merged = mergeCVLines(data.analysis, cvResult);
+        setAnalysis(merged);
+        await saveToHistory(merged, palmImages[0]);
         toast.success("🙏 Palm Reading Complete — Your detailed destiny reading is ready");
       } else throw new Error('No analysis returned');
     } catch (error) {
