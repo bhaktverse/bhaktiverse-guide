@@ -363,9 +363,10 @@ export function classifyLines(
 // ---------- High-level orchestrator ----------
 export async function analyzePalmCV(
   imageUrl: string,
-  landmarks: NormalizedPoint[] | null
+  landmarks: NormalizedPoint[] | null,
+  opts: ExtractOptions = {}
 ): Promise<CVResult> {
-  const raw = await extractPalmLines(imageUrl, landmarks);
+  const raw = await extractPalmLines(imageUrl, landmarks, opts);
   const classified = classifyLines(raw, landmarks);
   const found = Object.values(classified).filter(Boolean) as PalmLineGeometry[];
   const avg = found.length ? found.reduce((a, b) => a + b.confidence, 0) / found.length : 0;
@@ -376,3 +377,4 @@ export async function analyzePalmCV(
     avgConfidence: avg,
   };
 }
+
