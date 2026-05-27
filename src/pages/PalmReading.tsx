@@ -338,9 +338,10 @@ const PalmReading = () => {
 
   const handleBiometricScanCancel = () => { setPalmImages([]); setAnalysis(null); setCvResult(null); };
 
-  // Merge CV-detected line positions into analysis.lineAnalysis (CV wins over AI guess)
+  // Merge CV-detected line positions into analysis.lineAnalysis (CV wins over AI guess).
+  // No-op when user disabled CV grounding.
   const mergeCVLines = (a: PalmAnalysis, cv: CVResult | null): PalmAnalysis => {
-    if (!cv || cv.detectedCount === 0) return a;
+    if (!isCvGrounded || !cv || cv.detectedCount === 0) return a;
     const la: any = { ...(a.lineAnalysis || {}) };
     (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
       const cvLine = cv.lines[k];
@@ -361,9 +362,9 @@ const PalmReading = () => {
     return { ...a, lineAnalysis: la };
   };
 
-  // Build compact geometry payload for the AI edge function
+  // Build compact geometry payload for the AI edge function (skipped in AI-only mode).
   const buildLineGeometry = (cv: CVResult | null) => {
-    if (!cv) return undefined;
+    if (!isCvGrounded || !cv) return undefined;
     const out: any = {};
     (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
       const l = cv.lines[k];
