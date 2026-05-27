@@ -24,6 +24,9 @@ import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
 import PalmReadingHistory from '@/components/PalmReadingHistory';
 import PalmCVProcessor from '@/components/PalmCVProcessor';
+import PalmCVDebugOverlay from '@/components/PalmCVDebugOverlay';
+import PalmAnalysisModeToggle from '@/components/PalmAnalysisModeToggle';
+import { usePalmAnalysisMode } from '@/hooks/usePalmAnalysisMode';
 import type { CVResult } from '@/lib/palmCV';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -216,6 +219,8 @@ const PalmReading = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
   const [cvResult, setCvResult] = useState<CVResult | null>(null);
+  const [showCvDebug, setShowCvDebug] = useState(false);
+  const { isCvGrounded } = usePalmAnalysisMode();
   
   const [userName, setUserName] = useState<string>('');
   const [userDob, setUserDob] = useState<string>('');
