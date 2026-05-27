@@ -63,7 +63,7 @@ const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint, enabled = t
     schedule(run);
 
     return () => { cancelled = true; };
-  }, [imageUrl, landmarksHint, onLinesDetected]);
+  }, [imageUrl, landmarksHint, onLinesDetected, enabled]);
 
   if (status === 'idle') return null;
 
