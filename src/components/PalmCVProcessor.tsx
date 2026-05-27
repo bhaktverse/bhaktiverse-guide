@@ -9,7 +9,13 @@ interface PalmCVProcessorProps {
   onLinesDetected?: (result: CVResult) => void;
   /** Optional pre-computed landmarks (e.g. from live camera). */
   landmarksHint?: { x: number; y: number }[] | null;
+  /** When false, processing is skipped entirely (AI-only mode). */
+  enabled?: boolean;
 }
+
+type Status = 'idle' | 'loading-cv' | 'detecting-hand' | 'extracting' | 'done' | 'failed';
+
+const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint, enabled = true }: PalmCVProcessorProps) => {
 
 type Status = 'idle' | 'loading-cv' | 'detecting-hand' | 'extracting' | 'done' | 'failed';
 
