@@ -727,15 +727,32 @@ const PalmReading = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-xl overflow-hidden border border-border/50">
+                  <div className="relative rounded-xl overflow-hidden border border-border/50">
                     <img src={palmImages[palmImages.length - 1]} alt="Palm" className="w-full h-auto max-h-[350px] object-contain" />
+                    {isCvGrounded && (
+                      <PalmCVDebugOverlay result={cvResult} visible={showCvDebug} />
+                    )}
                   </div>
-                  <div className="flex justify-center">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <PalmCVProcessor
                       imageUrl={palmImages[palmImages.length - 1]}
                       onLinesDetected={setCvResult}
+                      enabled={isCvGrounded}
                     />
+                    {isCvGrounded && cvResult && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={showCvDebug ? 'default' : 'outline'}
+                        onClick={() => setShowCvDebug((v) => !v)}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <Eye className="h-3 w-3" />
+                        {showCvDebug ? 'Hide' : 'Show'} CV Debug
+                      </Button>
+                    )}
                   </div>
+                  <PalmAnalysisModeToggle />
                   <div className="flex gap-3">
                     <Button onClick={analyzePalm} disabled={analyzing} className="flex-1 gap-2">
                       {analyzing ? <><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</> : <><Sparkles className="h-4 w-4" />Get Reading</>}
