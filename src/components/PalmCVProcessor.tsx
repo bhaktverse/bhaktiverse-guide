@@ -16,16 +16,13 @@ interface PalmCVProcessorProps {
 type Status = 'idle' | 'loading-cv' | 'detecting-hand' | 'extracting' | 'done' | 'failed';
 
 const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint, enabled = true }: PalmCVProcessorProps) => {
-
-type Status = 'idle' | 'loading-cv' | 'detecting-hand' | 'extracting' | 'done' | 'failed';
-
-const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint }: PalmCVProcessorProps) => {
   const [status, setStatus] = useState<Status>('idle');
   const [result, setResult] = useState<CVResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const lastUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) { setStatus('idle'); lastUrlRef.current = null; return; }
     if (!imageUrl || lastUrlRef.current === imageUrl) return;
     lastUrlRef.current = imageUrl;
     let cancelled = false;
