@@ -24,6 +24,9 @@ import FreePalmReadingSummary from '@/components/FreePalmReadingSummary';
 import PalmReadingReport from '@/components/PalmReadingReport';
 import PalmReadingHistory from '@/components/PalmReadingHistory';
 import PalmCVProcessor from '@/components/PalmCVProcessor';
+import PalmCVDebugOverlay from '@/components/PalmCVDebugOverlay';
+import PalmAnalysisModeToggle from '@/components/PalmAnalysisModeToggle';
+import { usePalmAnalysisMode } from '@/hooks/usePalmAnalysisMode';
 import type { CVResult } from '@/lib/palmCV';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -216,6 +219,8 @@ const PalmReading = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
   const [cvResult, setCvResult] = useState<CVResult | null>(null);
+  const [showCvDebug, setShowCvDebug] = useState(false);
+  const { isCvGrounded } = usePalmAnalysisMode();
   
   const [userName, setUserName] = useState<string>('');
   const [userDob, setUserDob] = useState<string>('');
@@ -333,9 +338,10 @@ const PalmReading = () => {
 
   const handleBiometricScanCancel = () => { setPalmImages([]); setAnalysis(null); setCvResult(null); };
 
-  // Merge CV-detected line positions into analysis.lineAnalysis (CV wins over AI guess)
+  // Merge CV-detected line positions into analysis.lineAnalysis (CV wins over AI guess).
+  // No-op when user disabled CV grounding.
   const mergeCVLines = (a: PalmAnalysis, cv: CVResult | null): PalmAnalysis => {
-    if (!cv || cv.detectedCount === 0) return a;
+    if (!isCvGrounded || !cv || cv.detectedCount === 0) return a;
     const la: any = { ...(a.lineAnalysis || {}) };
     (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
       const cvLine = cv.lines[k];
@@ -356,9 +362,9 @@ const PalmReading = () => {
     return { ...a, lineAnalysis: la };
   };
 
-  // Build compact geometry payload for the AI edge function
+  // Build compact geometry payload for the AI edge function (skipped in AI-only mode).
   const buildLineGeometry = (cv: CVResult | null) => {
-    if (!cv) return undefined;
+    if (!isCvGrounded || !cv) return undefined;
     const out: any = {};
     (['heartLine', 'headLine', 'lifeLine', 'fateLine', 'sunLine'] as const).forEach((k) => {
       const l = cv.lines[k];
@@ -721,15 +727,32 @@ const PalmReading = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-xl overflow-hidden border border-border/50">
+                  <div className="relative rounded-xl overflow-hidden border border-border/50">
                     <img src={palmImages[palmImages.length - 1]} alt="Palm" className="w-full h-auto max-h-[350px] object-contain" />
+                    {isCvGrounded && (
+                      <PalmCVDebugOverlay result={cvResult} visible={showCvDebug} />
+                    )}
                   </div>
-                  <div className="flex justify-center">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <PalmCVProcessor
                       imageUrl={palmImages[palmImages.length - 1]}
                       onLinesDetected={setCvResult}
+                      enabled={isCvGrounded}
                     />
+                    {isCvGrounded && cvResult && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={showCvDebug ? 'default' : 'outline'}
+                        onClick={() => setShowCvDebug((v) => !v)}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <Eye className="h-3 w-3" />
+                        {showCvDebug ? 'Hide' : 'Show'} CV Debug
+                      </Button>
+                    )}
                   </div>
+                  <PalmAnalysisModeToggle />
                   <div className="flex gap-3">
                     <Button onClick={analyzePalm} disabled={analyzing} className="flex-1 gap-2">
                       {analyzing ? <><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</> : <><Sparkles className="h-4 w-4" />Get Reading</>}

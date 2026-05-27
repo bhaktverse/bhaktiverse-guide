@@ -9,17 +9,20 @@ interface PalmCVProcessorProps {
   onLinesDetected?: (result: CVResult) => void;
   /** Optional pre-computed landmarks (e.g. from live camera). */
   landmarksHint?: { x: number; y: number }[] | null;
+  /** When false, processing is skipped entirely (AI-only mode). */
+  enabled?: boolean;
 }
 
 type Status = 'idle' | 'loading-cv' | 'detecting-hand' | 'extracting' | 'done' | 'failed';
 
-const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint }: PalmCVProcessorProps) => {
+const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint, enabled = true }: PalmCVProcessorProps) => {
   const [status, setStatus] = useState<Status>('idle');
   const [result, setResult] = useState<CVResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const lastUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) { setStatus('idle'); lastUrlRef.current = null; return; }
     if (!imageUrl || lastUrlRef.current === imageUrl) return;
     lastUrlRef.current = imageUrl;
     let cancelled = false;
@@ -60,7 +63,7 @@ const PalmCVProcessor = ({ imageUrl, onLinesDetected, landmarksHint }: PalmCVPro
     schedule(run);
 
     return () => { cancelled = true; };
-  }, [imageUrl, landmarksHint, onLinesDetected]);
+  }, [imageUrl, landmarksHint, onLinesDetected, enabled]);
 
   if (status === 'idle') return null;
 

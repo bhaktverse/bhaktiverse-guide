@@ -84,8 +84,35 @@ export function loadOpenCV(): Promise<any> {
   return cvReadyPromise;
 }
 
-// ---------- Image -> ImageData (downscaled) ----------
-async function imageDataFromUrl(url: string, maxDim = 512): Promise<{ data: ImageData; width: number; height: number }> {
+// ---------- Image -> ImageData (downscaled, cached) ----------
+// Reusable offscreen canvas — avoids creating a new canvas + context per call.
+let sharedCanvas: HTMLCanvasElement | null = null;
+let sharedCtx: CanvasRenderingContext2D | null = null;
+const imageDataCache = new Map<string, { data: ImageData; width: number; height: number }>();
+
+function getCanvas() {
+  if (!sharedCanvas) {
+    sharedCanvas = document.createElement('canvas');
+    sharedCtx = sharedCanvas.getContext('2d', { willReadFrequently: true });
+  }
+  return { canvas: sharedCanvas!, ctx: sharedCtx! };
+}
+
+/** Pick a target max dimension based on viewport — mobiles get smaller for speed. */
+function autoMaxDim(): number {
+  if (typeof window === 'undefined') return 480;
+  const w = window.innerWidth || 1024;
+  if (w < 480) return 384;   // phones: ~6x fewer pixels than 1024
+  if (w < 900) return 448;
+  return 512;
+}
+
+async function imageDataFromUrl(url: string, maxDim?: number): Promise<{ data: ImageData; width: number; height: number }> {
+  const target = maxDim ?? autoMaxDim();
+  const cacheKey = `${url}@${target}`;
+  const cached = imageDataCache.get(cacheKey);
+  if (cached) return cached;
+
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const i = new Image();
     i.crossOrigin = 'anonymous';
@@ -94,15 +121,26 @@ async function imageDataFromUrl(url: string, maxDim = 512): Promise<{ data: Imag
     i.src = url;
   });
 
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const scale = Math.min(1, target / Math.max(img.width, img.height));
   const w = Math.round(img.width * scale);
   const h = Math.round(img.height * scale);
-  const canvas = document.createElement('canvas');
+  const { canvas, ctx } = getCanvas();
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0, w, h);
-  return { data: ctx.getImageData(0, 0, w, h), width: w, height: h };
+  const result = { data: ctx.getImageData(0, 0, w, h), width: w, height: h };
+
+  // Keep cache tiny — only the most recent 2 images.
+  if (imageDataCache.size >= 2) {
+    const firstKey = imageDataCache.keys().next().value;
+    if (firstKey) imageDataCache.delete(firstKey);
+  }
+  imageDataCache.set(cacheKey, result);
+  return result;
+}
+
+export function clearPalmCVCache() {
+  imageDataCache.clear();
 }
 
 // ---------- Core: extract raw line segments ----------
@@ -111,12 +149,17 @@ interface RawSegment {
   length: number; angle: number; depth: number;
 }
 
+export interface ExtractOptions {
+  maxDim?: number;
+}
+
 export async function extractPalmLines(
   imageUrl: string,
-  landmarks: NormalizedPoint[] | null
+  landmarks: NormalizedPoint[] | null,
+  opts: ExtractOptions = {}
 ): Promise<{ segments: RawSegment[]; width: number; height: number }> {
   const cv = await loadOpenCV();
-  const { data: imgData, width, height } = await imageDataFromUrl(imageUrl, 512);
+  const { data: imgData, width, height } = await imageDataFromUrl(imageUrl, opts.maxDim);
 
   const src = cv.matFromImageData(imgData);
   const gray = new cv.Mat();
@@ -320,9 +363,10 @@ export function classifyLines(
 // ---------- High-level orchestrator ----------
 export async function analyzePalmCV(
   imageUrl: string,
-  landmarks: NormalizedPoint[] | null
+  landmarks: NormalizedPoint[] | null,
+  opts: ExtractOptions = {}
 ): Promise<CVResult> {
-  const raw = await extractPalmLines(imageUrl, landmarks);
+  const raw = await extractPalmLines(imageUrl, landmarks, opts);
   const classified = classifyLines(raw, landmarks);
   const found = Object.values(classified).filter(Boolean) as PalmLineGeometry[];
   const avg = found.length ? found.reduce((a, b) => a + b.confidence, 0) / found.length : 0;
@@ -333,3 +377,4 @@ export async function analyzePalmCV(
     avgConfidence: avg,
   };
 }
+
