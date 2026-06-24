@@ -46,6 +46,7 @@ const PalmReadingPrint = () => {
 
   const handlePrint = () => window.print();
 
+  /** Server-rendered pixel-perfect PDF via Browserless (Devanagari-safe). */
   const handleDownloadPDF = async () => {
     if (!isPremium) {
       toast.error('Premium required to download PDF');
@@ -53,18 +54,49 @@ const PalmReadingPrint = () => {
     }
     setDownloading(true);
     try {
-      await generatePalmReadingPDF(
-        record.analysis,
-        record.user_name,
-        record.language,
-        record.user_dob,
-        undefined,
-        record.id
-      );
+      const root = document.getElementById('palm-report-print');
+      if (!root) throw new Error('Report not on page');
+
+      // Inline same stylesheets we use for HTML export, so server render matches preview.
+      const styles: string[] = [];
+      document.querySelectorAll('style').forEach((s) => styles.push(s.innerHTML));
+      for (const link of Array.from(document.querySelectorAll('link[rel="stylesheet"]'))) {
+        try {
+          const href = (link as HTMLLinkElement).href;
+          const css = await fetch(href).then((r) => r.text()).catch(() => '');
+          if (css) styles.push(css);
+        } catch {/* skip */}
+      }
+      const safeName = (record.user_name || 'Seeker').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      const html = `<style>${styles.join('\n')}
+body{background:#fff;color:#111}
+.no-print{display:none!important}
+[lang="hi"],[lang="sa"],.devanagari{font-family:'Noto Sans Devanagari',serif!important}
+</style><div class="dark" style="max-width:1024px;margin:0 auto;padding:24px">${root.outerHTML}</div>`;
+
+      const { data, error } = await supabase.functions.invoke('render-pdf', {
+        body: { html, filename: `BhaktVerse_Palm_${safeName}` },
+      });
+      if (error) throw error;
+
+      // supabase-js returns a Blob for binary responses.
+      const blob: Blob = data instanceof Blob ? data : new Blob([data as any], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `BhaktVerse_Palm_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
       toast.success('PDF downloaded');
     } catch (e) {
       console.error(e);
-      toast.error('PDF generation failed');
+      // Fallback to client-side jsPDF if Browserless fails.
+      try {
+        await generatePalmReadingPDF(record.analysis, record.user_name, record.language, record.user_dob, undefined, record.id);
+        toast.success('PDF downloaded (offline mode)');
+      } catch {
+        toast.error('PDF generation failed');
+      }
     } finally {
       setDownloading(false);
     }

@@ -92,3 +92,9 @@ verify_jwt = false
 
 [functions.sync-scriptures]
 verify_jwt = false
+
+[functions.render-pdf]
+verify_jwt = false
+
+[functions.sync-genius-lyrics]
+verify_jwt = false

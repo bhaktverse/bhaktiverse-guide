@@ -107,6 +107,84 @@ export type Database = {
         }
         Relationships: []
       }
+      api_response_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          function_name: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          function_name: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          function_name?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
+      astro_charts: {
+        Row: {
+          cache_key: string
+          chart: Json
+          computed_with: string | null
+          created_at: string
+          dashas: Json | null
+          dob: string
+          doshas: Json | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          tob: string | null
+          tz_offset: number | null
+          updated_at: string
+          user_id: string | null
+          yogas: Json | null
+        }
+        Insert: {
+          cache_key: string
+          chart: Json
+          computed_with?: string | null
+          created_at?: string
+          dashas?: Json | null
+          dob: string
+          doshas?: Json | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          tob?: string | null
+          tz_offset?: number | null
+          updated_at?: string
+          user_id?: string | null
+          yogas?: Json | null
+        }
+        Update: {
+          cache_key?: string
+          chart?: Json
+          computed_with?: string | null
+          created_at?: string
+          dashas?: Json | null
+          dob?: string
+          doshas?: Json | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          tob?: string | null
+          tz_offset?: number | null
+          updated_at?: string
+          user_id?: string | null
+          yogas?: Json | null
+        }
+        Relationships: []
+      }
       astro_profiles: {
         Row: {
           chart_hash: string | null

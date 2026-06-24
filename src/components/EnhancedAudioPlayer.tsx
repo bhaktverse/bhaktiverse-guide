@@ -143,6 +143,43 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     if (audioRef.current) audioRef.current.playbackRate = playbackRate;
   }, [playbackRate, track]);
 
+  // ---- MediaSession API: OS lock-screen / Bluetooth / Android Auto controls ----
+  useEffect(() => {
+    if (!track || typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist || 'BhaktVerse',
+        album: track.category,
+        artwork: [
+          { src: '/placeholder.svg', sizes: '512x512', type: 'image/svg+xml' },
+        ],
+      });
+      navigator.mediaSession.setActionHandler('play', () => { audioRef.current?.play(); setIsPlaying(true); });
+      navigator.mediaSession.setActionHandler('pause', () => { audioRef.current?.pause(); setIsPlaying(false); });
+      navigator.mediaSession.setActionHandler('previoustrack', handlePrevious);
+      navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+      navigator.mediaSession.setActionHandler('seekto', (d: any) => {
+        if (audioRef.current && d.seekTime != null) audioRef.current.currentTime = d.seekTime;
+      });
+    } catch {/* older browsers */}
+    return () => {
+      try {
+        if ('mediaSession' in navigator) {
+          ['play','pause','previoustrack','nexttrack','seekto'].forEach((a) =>
+            navigator.mediaSession.setActionHandler(a as MediaSessionAction, null));
+        }
+      } catch {/* noop */}
+    };
+  }, [track]);
+
+  // Update lock-screen playback state
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      try { navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'; } catch {/* noop */}
+    }
+  }, [isPlaying]);
+
   // Sleep timer countdown
   useEffect(() => {
     if (sleepMinutes == null) {
@@ -493,7 +530,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   if (isMobile) {
     return (
       <>
-        <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
+        <audio ref={audioRef} src={track?.audio_url} preload="metadata" crossOrigin="anonymous" />
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           {/* Mini Player Bar - fixed at bottom above MobileBottomNav */}
           <DrawerTrigger asChild>
@@ -532,7 +569,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   // ----- Desktop: Sticky card -----
   return (
     <>
-      <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
+      <audio ref={audioRef} src={track?.audio_url} preload="metadata" crossOrigin="anonymous" />
       <Card className="card-sacred sticky top-24 shadow-divine">
         <CardContent className="p-0">
           {fullPlayerContent}
