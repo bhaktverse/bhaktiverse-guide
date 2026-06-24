@@ -530,7 +530,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   if (isMobile) {
     return (
       <>
-        <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
+        <audio ref={audioRef} src={track?.audio_url} preload="metadata" crossOrigin="anonymous" />
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           {/* Mini Player Bar - fixed at bottom above MobileBottomNav */}
           <DrawerTrigger asChild>
@@ -569,7 +569,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   // ----- Desktop: Sticky card -----
   return (
     <>
-      <audio ref={audioRef} src={track?.audio_url} preload="metadata" />
+      <audio ref={audioRef} src={track?.audio_url} preload="metadata" crossOrigin="anonymous" />
       <Card className="card-sacred sticky top-24 shadow-divine">
         <CardContent className="p-0">
           {fullPlayerContent}
