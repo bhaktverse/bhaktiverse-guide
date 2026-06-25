@@ -2,7 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Bot, Hand, Video, MessageSquare,
   Film, IndianRupee, CreditCard, BarChart3, Bell, CalendarDays,
-  Database, HardDrive, Shield, Settings, LifeBuoy, UserCog,
+  Database, HardDrive, Shield, Settings, LifeBuoy, UserCog, Activity,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
@@ -46,6 +46,7 @@ const groups = [
       { title: "Storage", url: "/admin/storage", icon: HardDrive },
       { title: "Roles", url: "/admin/roles", icon: UserCog },
       { title: "Security", url: "/admin/security", icon: Shield },
+      { title: "QA & Health", url: "/admin/qa", icon: Activity },
       { title: "Settings", url: "/admin/settings", icon: Settings },
       { title: "Support", url: "/admin/support", icon: LifeBuoy },
     ],

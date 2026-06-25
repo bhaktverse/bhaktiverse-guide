@@ -98,3 +98,12 @@ verify_jwt = false
 
 [functions.sync-genius-lyrics]
 verify_jwt = false
+
+[functions.qa-runner]
+verify_jwt = false
+
+[functions.ingest-orchestrator]
+verify_jwt = false
+
+[functions.audio-self-heal]
+verify_jwt = false

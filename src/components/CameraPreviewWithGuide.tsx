@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Hand } from 'lucide-react';
 import HandLandmarkDetector from './HandLandmarkDetector';
+import PalmQualityToggle from './PalmQualityToggle';
 
 interface CameraPreviewWithGuideProps {
   onCapture: (imageData: string) => void;
@@ -126,6 +127,11 @@ const CameraPreviewWithGuide = ({
           <span className="bg-black/60 text-white text-sm px-3 py-1 rounded-full">
             {handDetected ? '✅ Palm detected — Capture when ready' : `${stepLabel} — ${stepTip}`}
           </span>
+        </div>
+
+        {/* Processing quality toggle */}
+        <div className="absolute top-3 left-3 pointer-events-auto">
+          <PalmQualityToggle />
         </div>
 
         {/* Controls */}

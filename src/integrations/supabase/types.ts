@@ -242,6 +242,8 @@ export type Database = {
           associated_deity: string | null
           audio_url: string
           category: string
+          content_length: number | null
+          content_type: string | null
           created_at: string | null
           difficulty_level: string | null
           download_count: number | null
@@ -249,8 +251,10 @@ export type Database = {
           id: string
           language: string
           last_checked_at: string | null
+          last_error: string | null
           lyrics: string | null
           meaning: string | null
+          mirror_urls: Json | null
           occasion: Json | null
           pronunciation_guide: string | null
           rating: number | null
@@ -263,6 +267,8 @@ export type Database = {
           associated_deity?: string | null
           audio_url: string
           category: string
+          content_length?: number | null
+          content_type?: string | null
           created_at?: string | null
           difficulty_level?: string | null
           download_count?: number | null
@@ -270,8 +276,10 @@ export type Database = {
           id?: string
           language: string
           last_checked_at?: string | null
+          last_error?: string | null
           lyrics?: string | null
           meaning?: string | null
+          mirror_urls?: Json | null
           occasion?: Json | null
           pronunciation_guide?: string | null
           rating?: number | null
@@ -284,6 +292,8 @@ export type Database = {
           associated_deity?: string | null
           audio_url?: string
           category?: string
+          content_length?: number | null
+          content_type?: string | null
           created_at?: string | null
           difficulty_level?: string | null
           download_count?: number | null
@@ -291,8 +301,10 @@ export type Database = {
           id?: string
           language?: string
           last_checked_at?: string | null
+          last_error?: string | null
           lyrics?: string | null
           meaning?: string | null
+          mirror_urls?: Json | null
           occasion?: Json | null
           pronunciation_guide?: string | null
           rating?: number | null
@@ -596,6 +608,51 @@ export type Database = {
           prediction_data?: Json
           prediction_date?: string
           rashi_name?: string
+        }
+        Relationships: []
+      }
+      ingestion_runs: {
+        Row: {
+          duration_ms: number | null
+          error_count: number
+          finished_at: string | null
+          id: string
+          inserted_count: number
+          log: Json | null
+          skipped_count: number
+          source: string
+          started_at: string
+          status: string
+          trigger_kind: string
+          updated_count: number
+        }
+        Insert: {
+          duration_ms?: number | null
+          error_count?: number
+          finished_at?: string | null
+          id?: string
+          inserted_count?: number
+          log?: Json | null
+          skipped_count?: number
+          source: string
+          started_at?: string
+          status?: string
+          trigger_kind?: string
+          updated_count?: number
+        }
+        Update: {
+          duration_ms?: number | null
+          error_count?: number
+          finished_at?: string | null
+          id?: string
+          inserted_count?: number
+          log?: Json | null
+          skipped_count?: number
+          source?: string
+          started_at?: string
+          status?: string
+          trigger_kind?: string
+          updated_count?: number
         }
         Relationships: []
       }
@@ -1040,6 +1097,92 @@ export type Database = {
           streak_data?: Json | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      qa_results: {
+        Row: {
+          created_at: string
+          details: Json | null
+          duration_ms: number | null
+          error: string | null
+          id: string
+          run_id: string
+          status: string
+          suite: string
+          test_name: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          run_id: string
+          status: string
+          suite: string
+          test_name: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          run_id?: string
+          status?: string
+          suite?: string
+          test_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "qa_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_runs: {
+        Row: {
+          duration_ms: number | null
+          failed: number
+          finished_at: string | null
+          id: string
+          passed: number
+          skipped: number
+          started_at: string
+          status: string
+          total: number
+          trigger_kind: string
+          triggered_by: string | null
+        }
+        Insert: {
+          duration_ms?: number | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          passed?: number
+          skipped?: number
+          started_at?: string
+          status?: string
+          total?: number
+          trigger_kind?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          duration_ms?: number | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          passed?: number
+          skipped?: number
+          started_at?: string
+          status?: string
+          total?: number
+          trigger_kind?: string
+          triggered_by?: string | null
         }
         Relationships: []
       }
