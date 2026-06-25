@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Hand, CheckCircle2, AlertCircle } from 'lucide-react';
+import { usePalmQuality } from '@/hooks/usePalmQuality';
 
 interface HandLandmarkDetectorProps {
   videoElement: HTMLVideoElement | null;
@@ -34,12 +35,14 @@ const HandLandmarkDetector = ({
   enabled,
   onHandDetected,
 }: HandLandmarkDetectorProps) => {
+  const { preset } = usePalmQuality();
   const [handDetected, setHandDetected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const handsRef = useRef<any>(null);
   const animationRef = useRef<number>();
   const lastDetectionRef = useRef(false);
+  const smoothBufferRef = useRef<any[][]>([]);
 
   const drawLandmarks = useCallback(
     (ctx: CanvasRenderingContext2D, landmarks: any[], width: number, height: number) => {
@@ -165,8 +168,8 @@ const HandLandmarkDetector = ({
 
         hands.setOptions({
           maxNumHands: 1,
-          modelComplexity: 1,
-          minDetectionConfidence: 0.6,
+          modelComplexity: preset.modelComplexity,
+          minDetectionConfidence: preset.minDetectionConfidence,
           minTrackingConfidence: 0.5,
         });
 
@@ -181,7 +184,17 @@ const HandLandmarkDetector = ({
           canvas.height = videoElement.videoHeight || 480;
 
           if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            const landmarks = results.multiHandLandmarks[0];
+            const rawLandmarks = results.multiHandLandmarks[0];
+            // Rolling-median temporal stabilization for jitter reduction
+            const buf = smoothBufferRef.current;
+            buf.push(rawLandmarks);
+            if (buf.length > preset.smoothFrames) buf.shift();
+            const landmarks = rawLandmarks.map((_: any, idx: number) => {
+              const xs = buf.map(f => f[idx].x).sort((a, b) => a - b);
+              const ys = buf.map(f => f[idx].y).sort((a, b) => a - b);
+              const mid = Math.floor(xs.length / 2);
+              return { x: xs[mid], y: ys[mid], z: rawLandmarks[idx].z };
+            });
             drawLandmarks(ctx, landmarks, canvas.width, canvas.height);
 
             if (!lastDetectionRef.current) {
@@ -237,7 +250,7 @@ const HandLandmarkDetector = ({
         try { handsRef.current.close(); } catch {}
       }
     };
-  }, [enabled, videoElement, canvasElement, drawLandmarks, onHandDetected]);
+  }, [enabled, videoElement, canvasElement, drawLandmarks, onHandDetected, preset.modelComplexity, preset.minDetectionConfidence, preset.smoothFrames]);
 
   if (!enabled) return null;
 
