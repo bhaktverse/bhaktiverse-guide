@@ -73,6 +73,7 @@ const AdminRoles = lazy(() => import("./pages/admin/AdminRoles"));
 const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
+const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 
 const queryClient = new QueryClient();
 
@@ -142,6 +143,7 @@ const App = () => (
                   <Route path="security" element={<AdminSecurity />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="support" element={<AdminSupport />} />
+                  <Route path="qa" element={<AdminQA />} />
                 </Route>
 
                 {/* CATCH-ALL */}
