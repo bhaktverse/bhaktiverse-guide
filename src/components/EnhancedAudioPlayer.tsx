@@ -100,8 +100,21 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       }
     };
     
+    let retryCount = 0;
     const handleError = () => {
       setIsPlaying(false);
+      // Retry-with-backoff up to 2x before skipping
+      if (retryCount < 2 && track?.audio_url) {
+        const delay = 500 * Math.pow(2, retryCount);
+        retryCount++;
+        setTimeout(() => {
+          try {
+            audio.src = track.audio_url + (track.audio_url.includes("?") ? "&" : "?") + "_r=" + Date.now();
+            audio.load();
+          } catch { /* ignore */ }
+        }, delay);
+        return;
+      }
       setTimeout(() => {
         const currentIndex = playlist.findIndex(t => t.id === track?.id);
         if (currentIndex < playlist.length - 1) {
