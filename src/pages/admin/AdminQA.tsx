@@ -3,10 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AdminSyncCenter from "@/components/admin/AdminSyncCenter";
+import RegressionMatrix from "@/components/admin/RegressionMatrix";
+import AdminJobLogs from "@/components/admin/AdminJobLogs";
+import PalmTelemetryPanel from "@/components/admin/PalmTelemetryPanel";
+
 
 type Run = {
   id: string; status: string; total: number; passed: number; failed: number; skipped: number;
