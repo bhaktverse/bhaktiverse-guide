@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Hand, CheckCircle2, AlertCircle } from 'lucide-react';
 import { usePalmQuality } from '@/hooks/usePalmQuality';
+import { newSample, recordFrame, flushTelemetry, TelemetrySample } from '@/lib/palmTelemetry';
+
 
 interface HandLandmarkDetectorProps {
   videoElement: HTMLVideoElement | null;
@@ -35,7 +37,7 @@ const HandLandmarkDetector = ({
   enabled,
   onHandDetected,
 }: HandLandmarkDetectorProps) => {
-  const { preset } = usePalmQuality();
+  const { preset, quality } = usePalmQuality();
   const [handDetected, setHandDetected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,8 @@ const HandLandmarkDetector = ({
   const animationRef = useRef<number>();
   const lastDetectionRef = useRef(false);
   const smoothBufferRef = useRef<any[][]>([]);
+  const telemetryRef = useRef<TelemetrySample>(newSample());
+
 
   const drawLandmarks = useCallback(
     (ctx: CanvasRenderingContext2D, landmarks: any[], width: number, height: number) => {
@@ -183,7 +187,12 @@ const HandLandmarkDetector = ({
           canvas.width = videoElement.videoWidth || 640;
           canvas.height = videoElement.videoHeight || 480;
 
-          if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+          const detected = !!(results.multiHandLandmarks && results.multiHandLandmarks.length > 0);
+          const conf = results.multiHandedness?.[0]?.score ?? 0;
+          const wrist = detected ? { x: results.multiHandLandmarks[0][0].x, y: results.multiHandLandmarks[0][0].y } : null;
+          recordFrame(telemetryRef.current, { detected, confidence: conf, wrist, canvasWidth: canvas.width });
+
+          if (detected) {
             const rawLandmarks = results.multiHandLandmarks[0];
             // Rolling-median temporal stabilization for jitter reduction
             const buf = smoothBufferRef.current;
@@ -210,6 +219,7 @@ const HandLandmarkDetector = ({
               onHandDetected?.(false);
             }
           }
+
         });
 
         handsRef.current = hands;
@@ -249,8 +259,13 @@ const HandLandmarkDetector = ({
       if (handsRef.current) {
         try { handsRef.current.close(); } catch {}
       }
+      // Flush accuracy telemetry for the session and reset for next mount
+      const sample = telemetryRef.current;
+      telemetryRef.current = newSample();
+      void flushTelemetry(quality, sample);
     };
-  }, [enabled, videoElement, canvasElement, drawLandmarks, onHandDetected, preset.modelComplexity, preset.minDetectionConfidence, preset.smoothFrames]);
+  }, [enabled, videoElement, canvasElement, drawLandmarks, onHandDetected, preset.modelComplexity, preset.minDetectionConfidence, preset.smoothFrames, quality]);
+
 
   if (!enabled) return null;
 

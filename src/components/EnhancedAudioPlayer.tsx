@@ -33,6 +33,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AudioSyncIndicator from '@/components/AudioSyncIndicator';
+
 
 interface AudioTrack {
   id: string;
@@ -382,8 +384,10 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
                   {track.language === 'sanskrit' ? 'Sanskrit' : 
                    track.language === 'hindi' ? 'Hindi' : track.language}
                 </Badge>
+                <AudioSyncIndicator url={track.audio_url} />
               </>
             )}
+
           </div>
         </div>
         

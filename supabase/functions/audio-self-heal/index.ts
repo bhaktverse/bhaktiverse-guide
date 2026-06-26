@@ -49,7 +49,8 @@ Deno.serve(async (req) => {
   const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
   const supabase = createClient(SB_URL, SRV);
 
-  if (!(cronKey && cronKey === Deno.env.get("CRON_SECRET"))) {
+  const isCron = cronKey && cronKey === Deno.env.get("CRON_SECRET");
+  if (!isCron) {
     if (!auth) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     const u = createClient(SB_URL, ANON, { global: { headers: { Authorization: auth } } });
     const { data: user } = await u.auth.getUser();
@@ -58,39 +59,72 @@ Deno.serve(async (req) => {
     if (!ok) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
   }
 
-  const { data: tracks } = await supabase.from("audio_library").select("id, audio_url").limit(500);
-  let ok = 0, healed = 0, broken = 0;
-  for (const t of tracks ?? []) {
-    const p = await probe(t.audio_url);
-    if (p.ok) {
-      ok++;
-      await supabase.from("audio_library").update({
-        url_status: "ok",
-        content_type: (p as any).contentType, content_length: (p as any).contentLength,
-        last_error: null, last_checked_at: new Date().toISOString(),
-      }).eq("id", t.id);
-      continue;
-    }
-    const replacement = await rehostFromArchive(t.audio_url);
-    if (replacement) {
-      const p2 = await probe(replacement);
-      if (p2.ok) {
-        healed++;
+  const startedAt = Date.now();
+  const { data: runRow } = await supabase
+    .from("audio_heal_runs")
+    .insert({ status: "running", trigger_kind: isCron ? "cron" : "manual" })
+    .select("id").single();
+  const runId = runRow?.id as string | undefined;
+
+  let ok = 0, healed = 0, broken = 0, failed = 0;
+  const details: Array<Record<string, unknown>> = [];
+  try {
+    const { data: tracks } = await supabase.from("audio_library").select("id, title, audio_url").limit(500);
+    for (const t of tracks ?? []) {
+      const p = await probe(t.audio_url);
+      if (p.ok) {
+        ok++;
         await supabase.from("audio_library").update({
-          audio_url: replacement, url_status: "ok",
-          content_type: (p2 as any).contentType, content_length: (p2 as any).contentLength,
+          url_status: "ok",
+          content_type: (p as any).contentType, content_length: (p as any).contentLength,
           last_error: null, last_checked_at: new Date().toISOString(),
         }).eq("id", t.id);
         continue;
       }
+      const replacement = await rehostFromArchive(t.audio_url);
+      if (replacement) {
+        const p2 = await probe(replacement);
+        if (p2.ok) {
+          healed++;
+          details.push({ id: t.id, title: t.title, action: "healed", from: t.audio_url, to: replacement });
+          await supabase.from("audio_library").update({
+            audio_url: replacement, url_status: "ok",
+            content_type: (p2 as any).contentType, content_length: (p2 as any).contentLength,
+            last_error: null, last_checked_at: new Date().toISOString(),
+          }).eq("id", t.id);
+          continue;
+        }
+      }
+      broken++;
+      failed++;
+      details.push({ id: t.id, title: t.title, action: "broken", status: p.status });
+      await supabase.from("audio_library").update({
+        url_status: "broken", last_error: `HTTP ${p.status}`, last_checked_at: new Date().toISOString(),
+      }).eq("id", t.id);
     }
-    broken++;
-    await supabase.from("audio_library").update({
-      url_status: "broken", last_error: `HTTP ${p.status}`, last_checked_at: new Date().toISOString(),
-    }).eq("id", t.id);
-  }
 
-  return new Response(JSON.stringify({ checked: tracks?.length ?? 0, ok, healed, broken }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+    const totalChecked = (tracks?.length ?? 0);
+    if (runId) {
+      await supabase.from("audio_heal_runs").update({
+        status: "ok", total_checked: totalChecked,
+        healthy_count: ok, healed_count: healed, broken_count: broken, failed_count: failed,
+        details: details.slice(0, 200),
+        duration_ms: Date.now() - startedAt,
+        finished_at: new Date().toISOString(),
+      }).eq("id", runId);
+    }
+
+    return new Response(JSON.stringify({ checked: totalChecked, ok, healed, broken, runId }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    if (runId) {
+      await supabase.from("audio_heal_runs").update({
+        status: "failed", error: String(e),
+        duration_ms: Date.now() - startedAt, finished_at: new Date().toISOString(),
+      }).eq("id", runId);
+    }
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
 });
+

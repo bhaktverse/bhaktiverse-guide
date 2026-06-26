@@ -236,6 +236,54 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_heal_runs: {
+        Row: {
+          broken_count: number
+          details: Json | null
+          duration_ms: number | null
+          error: string | null
+          failed_count: number
+          finished_at: string | null
+          healed_count: number
+          healthy_count: number
+          id: string
+          started_at: string
+          status: string
+          total_checked: number
+          trigger_kind: string
+        }
+        Insert: {
+          broken_count?: number
+          details?: Json | null
+          duration_ms?: number | null
+          error?: string | null
+          failed_count?: number
+          finished_at?: string | null
+          healed_count?: number
+          healthy_count?: number
+          id?: string
+          started_at?: string
+          status?: string
+          total_checked?: number
+          trigger_kind?: string
+        }
+        Update: {
+          broken_count?: number
+          details?: Json | null
+          duration_ms?: number | null
+          error?: string | null
+          failed_count?: number
+          finished_at?: string | null
+          healed_count?: number
+          healthy_count?: number
+          id?: string
+          started_at?: string
+          status?: string
+          total_checked?: number
+          trigger_kind?: string
+        }
+        Relationships: []
+      }
       audio_library: {
         Row: {
           artist: string | null
@@ -896,6 +944,51 @@ export type Database = {
           report_text?: string | null
           soul_number?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      palm_quality_telemetry: {
+        Row: {
+          avg_confidence: number
+          created_at: string
+          detection_rate: number
+          device_info: Json | null
+          fps: number
+          frames_detected: number
+          frames_total: number
+          id: string
+          jitter_px: number
+          quality_preset: string
+          session_ms: number
+          user_id: string | null
+        }
+        Insert: {
+          avg_confidence?: number
+          created_at?: string
+          detection_rate?: number
+          device_info?: Json | null
+          fps?: number
+          frames_detected?: number
+          frames_total?: number
+          id?: string
+          jitter_px?: number
+          quality_preset: string
+          session_ms?: number
+          user_id?: string | null
+        }
+        Update: {
+          avg_confidence?: number
+          created_at?: string
+          detection_rate?: number
+          device_info?: Json | null
+          fps?: number
+          frames_detected?: number
+          frames_total?: number
+          id?: string
+          jitter_px?: number
+          quality_preset?: string
+          session_ms?: number
+          user_id?: string | null
         }
         Relationships: []
       }
