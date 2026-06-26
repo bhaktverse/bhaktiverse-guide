@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Hand, CheckCircle2, AlertCircle } from 'lucide-react';
 import { usePalmQuality } from '@/hooks/usePalmQuality';
+import { newSample, recordFrame, flushTelemetry, TelemetrySample } from '@/lib/palmTelemetry';
+
 
 interface HandLandmarkDetectorProps {
   videoElement: HTMLVideoElement | null;
