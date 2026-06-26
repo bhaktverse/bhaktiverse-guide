@@ -187,7 +187,12 @@ const HandLandmarkDetector = ({
           canvas.width = videoElement.videoWidth || 640;
           canvas.height = videoElement.videoHeight || 480;
 
-          if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+          const detected = !!(results.multiHandLandmarks && results.multiHandLandmarks.length > 0);
+          const conf = results.multiHandedness?.[0]?.score ?? 0;
+          const wrist = detected ? { x: results.multiHandLandmarks[0][0].x, y: results.multiHandLandmarks[0][0].y } : null;
+          recordFrame(telemetryRef.current, { detected, confidence: conf, wrist, canvasWidth: canvas.width });
+
+          if (detected) {
             const rawLandmarks = results.multiHandLandmarks[0];
             // Rolling-median temporal stabilization for jitter reduction
             const buf = smoothBufferRef.current;
@@ -214,6 +219,7 @@ const HandLandmarkDetector = ({
               onHandDetected?.(false);
             }
           }
+
         });
 
         handsRef.current = hands;
