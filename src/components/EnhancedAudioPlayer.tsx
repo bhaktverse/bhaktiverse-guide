@@ -33,6 +33,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AudioSyncIndicator from '@/components/AudioSyncIndicator';
+
 
 interface AudioTrack {
   id: string;
