@@ -382,8 +382,10 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
                   {track.language === 'sanskrit' ? 'Sanskrit' : 
                    track.language === 'hindi' ? 'Hindi' : track.language}
                 </Badge>
+                <AudioSyncIndicator url={track.audio_url} />
               </>
             )}
+
           </div>
         </div>
         
