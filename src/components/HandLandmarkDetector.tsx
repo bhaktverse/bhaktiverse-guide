@@ -259,8 +259,13 @@ const HandLandmarkDetector = ({
       if (handsRef.current) {
         try { handsRef.current.close(); } catch {}
       }
+      // Flush accuracy telemetry for the session and reset for next mount
+      const sample = telemetryRef.current;
+      telemetryRef.current = newSample();
+      void flushTelemetry(quality, sample);
     };
-  }, [enabled, videoElement, canvasElement, drawLandmarks, onHandDetected, preset.modelComplexity, preset.minDetectionConfidence, preset.smoothFrames]);
+  }, [enabled, videoElement, canvasElement, drawLandmarks, onHandDetected, preset.modelComplexity, preset.minDetectionConfidence, preset.smoothFrames, quality]);
+
 
   if (!enabled) return null;
 
