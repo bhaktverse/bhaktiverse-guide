@@ -102,48 +102,75 @@ export default function AdminQA() {
         </CardContent></Card>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-1">
-          <CardHeader><CardTitle className="text-sm">Recent Runs</CardTitle></CardHeader>
-          <CardContent className="space-y-2 max-h-[500px] overflow-y-auto">
-            {runs.map(r => (
-              <button key={r.id} onClick={() => selectRun(r)}
-                className={`w-full text-left p-3 rounded border transition ${activeRun?.id === r.id ? "border-primary bg-primary/5" : "border-border/40 hover:border-border"}`}>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs">{format(new Date(r.started_at), "MMM d, HH:mm")}</span>
-                  <Badge variant={r.status === "passed" ? "default" : r.status === "failed" ? "destructive" : "secondary"} className="text-[10px]">
-                    {r.status}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {r.passed}/{r.total} • {r.duration_ms ? `${(r.duration_ms / 1000).toFixed(1)}s` : "—"} • {r.trigger_kind}
-                </p>
-              </button>
-            ))}
-            {runs.length === 0 && <p className="text-xs text-muted-foreground p-4 text-center">No runs yet. Click "Run QA Now".</p>}
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="results">
+        <TabsList>
+          <TabsTrigger value="results">Test Results</TabsTrigger>
+          <TabsTrigger value="matrix">Coverage Matrix</TabsTrigger>
+          <TabsTrigger value="jobs">Job Logs</TabsTrigger>
+          <TabsTrigger value="palm">Palm Telemetry</TabsTrigger>
+          <TabsTrigger value="sync">Sync Center</TabsTrigger>
+        </TabsList>
 
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-sm">Test Results {activeRun && <span className="text-xs text-muted-foreground font-normal">— {format(new Date(activeRun.started_at), "PPp")}</span>}</CardTitle></CardHeader>
-          <CardContent className="space-y-1 max-h-[500px] overflow-y-auto">
-            {results.map(r => (
-              <div key={r.id} className="flex items-center gap-2 p-2 text-xs border-b border-border/20 last:border-0">
-                {r.status === "passed" ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                  : r.status === "failed" ? <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                  : <MinusCircle className="h-4 w-4 text-muted-foreground shrink-0" />}
-                <Badge variant="outline" className="text-[10px]">{r.suite}</Badge>
-                <span className="font-mono">{r.test_name}</span>
-                <span className="text-muted-foreground ml-auto">{r.duration_ms}ms</span>
-                {r.error && <span className="text-red-500 max-w-[220px] truncate" title={r.error}>{r.error}</span>}
-              </div>
-            ))}
-            {results.length === 0 && <p className="text-xs text-muted-foreground p-4 text-center">Select a run to view results.</p>}
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="results" className="mt-4">
+          <div className="grid lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-1">
+              <CardHeader><CardTitle className="text-sm">Recent Runs</CardTitle></CardHeader>
+              <CardContent className="space-y-2 max-h-[500px] overflow-y-auto">
+                {runs.map(r => (
+                  <button key={r.id} onClick={() => selectRun(r)}
+                    className={`w-full text-left p-3 rounded border transition ${activeRun?.id === r.id ? "border-primary bg-primary/5" : "border-border/40 hover:border-border"}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs">{format(new Date(r.started_at), "MMM d, HH:mm")}</span>
+                      <Badge variant={r.status === "passed" ? "default" : r.status === "failed" ? "destructive" : "secondary"} className="text-[10px]">
+                        {r.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {r.passed}/{r.total} • {r.duration_ms ? `${(r.duration_ms / 1000).toFixed(1)}s` : "—"} • {r.trigger_kind}
+                    </p>
+                  </button>
+                ))}
+                {runs.length === 0 && <p className="text-xs text-muted-foreground p-4 text-center">No runs yet. Click "Run QA Now".</p>}
+              </CardContent>
+            </Card>
 
-      <AdminSyncCenter />
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="text-sm">Test Results {activeRun && <span className="text-xs text-muted-foreground font-normal">— {format(new Date(activeRun.started_at), "PPp")}</span>}</CardTitle></CardHeader>
+              <CardContent className="space-y-1 max-h-[500px] overflow-y-auto">
+                {results.map(r => (
+                  <div key={r.id} className="flex items-center gap-2 p-2 text-xs border-b border-border/20 last:border-0">
+                    {r.status === "passed" ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                      : r.status === "failed" ? <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                      : <MinusCircle className="h-4 w-4 text-muted-foreground shrink-0" />}
+                    <Badge variant="outline" className="text-[10px]">{r.suite}</Badge>
+                    <span className="font-mono">{r.test_name}</span>
+                    <span className="text-muted-foreground ml-auto">{r.duration_ms}ms</span>
+                    {r.error && <span className="text-red-500 max-w-[220px] truncate" title={r.error}>{r.error}</span>}
+                  </div>
+                ))}
+                {results.length === 0 && <p className="text-xs text-muted-foreground p-4 text-center">Select a run to view results.</p>}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="matrix" className="mt-4">
+          <RegressionMatrix runId={activeRun?.id} />
+        </TabsContent>
+
+        <TabsContent value="jobs" className="mt-4">
+          <AdminJobLogs />
+        </TabsContent>
+
+        <TabsContent value="palm" className="mt-4">
+          <PalmTelemetryPanel />
+        </TabsContent>
+
+        <TabsContent value="sync" className="mt-4">
+          <AdminSyncCenter />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
