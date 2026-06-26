@@ -37,7 +37,7 @@ const HandLandmarkDetector = ({
   enabled,
   onHandDetected,
 }: HandLandmarkDetectorProps) => {
-  const { preset } = usePalmQuality();
+  const { preset, quality } = usePalmQuality();
   const [handDetected, setHandDetected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +45,8 @@ const HandLandmarkDetector = ({
   const animationRef = useRef<number>();
   const lastDetectionRef = useRef(false);
   const smoothBufferRef = useRef<any[][]>([]);
+  const telemetryRef = useRef<TelemetrySample>(newSample());
+
 
   const drawLandmarks = useCallback(
     (ctx: CanvasRenderingContext2D, landmarks: any[], width: number, height: number) => {
