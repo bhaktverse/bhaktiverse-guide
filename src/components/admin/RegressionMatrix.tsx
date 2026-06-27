@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COVERAGE_MATRIX } from "@/lib/regressionMatrix";
-import { CheckCircle2, XCircle, MinusCircle, ExternalLink, Search } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, ExternalLink, Search, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type ResultRow = { test_name: string; status: string; suite: string; error: string | null };
