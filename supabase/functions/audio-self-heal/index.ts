@@ -1,5 +1,6 @@
 // Admin/cron: probe every audio track, follow redirects, attempt rehost from Archive.org.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { notifyJobFailure } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
