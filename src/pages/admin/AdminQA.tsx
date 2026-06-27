@@ -163,8 +163,9 @@ export default function AdminQA() {
           <AdminJobLogs />
         </TabsContent>
 
-        <TabsContent value="palm" className="mt-4">
+        <TabsContent value="palm" className="mt-4 space-y-4">
           <PalmTelemetryPanel />
+          <AudioHealthTrendPanel />
         </TabsContent>
 
         <TabsContent value="sync" className="mt-4">
