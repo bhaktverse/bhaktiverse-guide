@@ -110,6 +110,17 @@ Deno.serve(async (req) => {
     duration_ms: Date.now() - started, finished_at: new Date().toISOString(),
   }).eq("id", runId);
 
+  if (failed > 0) {
+    const top = results.filter(r => r.status === "failed").slice(0, 5)
+      .map(r => `${r.suite}/${r.test_name}: ${r.error ?? "?"}`).join(" | ");
+    await notifyJobFailure({
+      job: "qa-runner", status: "failed", run_id: runId,
+      reason: `${failed}/${results.length} tests failed — ${top}`,
+      retry_url: `${PREVIEW_BASE}/admin/qa`,
+      details: { passed, failed, skipped, trigger },
+    });
+  }
+
   return new Response(JSON.stringify({ run_id: runId, total: results.length, passed, failed, skipped }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
