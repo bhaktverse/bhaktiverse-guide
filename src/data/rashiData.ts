@@ -440,50 +440,108 @@ export interface GunMilanResult {
   recommendation: string;
 }
 
+// Deterministic Ashta Koot Gun Milan based on rashi (sign).
+// Note: Tara and Nadi are most accurate with Nakshatra; we approximate via sign group.
+const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+
+// Varna order (high → low): Brahmin, Kshatriya, Vaishya, Shudra
+const VARNA: Record<number, number> = { 3:0, 7:0, 11:0, 0:1, 4:1, 8:1, 1:2, 5:2, 9:2, 2:3, 6:3, 10:3 };
+// Vashya groups
+const VASHYA_GROUP: Record<number, string> = { 0:"chatushpada",1:"chatushpada",2:"manav",3:"jalachar",4:"vanachar",5:"manav",6:"manav",7:"keet",8:"manav",9:"jalachar",10:"manav",11:"jalachar" };
+// Yoni animals (traditional, sign-approximation)
+const YONI: Record<number, string> = { 0:"mesh",1:"sarp",2:"marjar",3:"sarp",4:"mooshak",5:"mahisha",6:"vyaghra",7:"mrig",8:"ashwa",9:"nakul",10:"simha",11:"gau" };
+const YONI_FRIENDS: Record<string, string[]> = {
+  mesh:["gau"], sarp:["mooshak"], marjar:["mooshak"], mooshak:["marjar","sarp"],
+  mahisha:["ashwa"], vyaghra:["mrig"], mrig:["vyaghra"], ashwa:["mahisha"],
+  nakul:["sarp"], simha:["gau"], gau:["mesh","simha"],
+};
+// Gana: Deva / Manushya / Rakshasa (by sign approximation)
+const GANA: Record<number, string> = { 0:"manushya",1:"manushya",2:"deva",3:"deva",4:"rakshasa",5:"manushya",6:"rakshasa",7:"rakshasa",8:"deva",9:"manushya",10:"deva",11:"rakshasa" };
+// Nadi: Aadi / Madhya / Antya
+const NADI: Record<number, string> = { 0:"adi",1:"madhya",2:"antya",3:"adi",4:"madhya",5:"antya",6:"adi",7:"madhya",8:"antya",9:"adi",10:"madhya",11:"antya" };
+// Planetary friendship (lord-of-sign based)
+const LORDS: Record<number, string> = { 0:"mars",1:"venus",2:"mercury",3:"moon",4:"sun",5:"mercury",6:"venus",7:"mars",8:"jupiter",9:"saturn",10:"saturn",11:"jupiter" };
+const MAITRI_TABLE: Record<string, Record<string, number>> = {
+  sun:{sun:5,moon:5,mars:5,mercury:3,jupiter:5,venus:1,saturn:1},
+  moon:{sun:5,moon:5,mars:3,mercury:5,jupiter:3,venus:3,saturn:3},
+  mars:{sun:5,moon:3,mars:5,mercury:1,jupiter:5,venus:3,saturn:3},
+  mercury:{sun:3,moon:5,mars:1,mercury:5,jupiter:3,venus:5,saturn:3},
+  jupiter:{sun:5,moon:3,mars:5,mercury:1,jupiter:5,venus:1,saturn:3},
+  venus:{sun:1,moon:3,mars:3,mercury:5,jupiter:1,venus:5,saturn:5},
+  saturn:{sun:1,moon:3,mars:3,mercury:3,jupiter:3,venus:5,saturn:5},
+};
+
 export const calculateGunMilan = (rashi1: RashiData, rashi2: RashiData): GunMilanResult => {
-  // Simplified Gun Milan calculation (full implementation would need Nakshatra)
-  const varna = Math.min(1, Math.random() > 0.5 ? 1 : 0);
-  const vashya = Math.floor(Math.random() * 3);
-  const tara = Math.floor(Math.random() * 4);
-  const yoni = Math.floor(Math.random() * 5);
-  const maitri = Math.floor(Math.random() * 6);
-  const gana = Math.floor(Math.random() * 7);
-  const bhakoot = Math.floor(Math.random() * 8);
-  const nadi = Math.floor(Math.random() * 9);
-  
+  const g = SIGNS.indexOf(rashi1.englishName); // groom
+  const b = SIGNS.indexOf(rashi2.englishName); // bride
+  const safeG = g < 0 ? 0 : g;
+  const safeB = b < 0 ? 0 : b;
+
+  // 1. Varna (max 1) — groom varna ≤ bride's level number = pass
+  const varna = VARNA[safeG] <= VARNA[safeB] ? 1 : 0;
+
+  // 2. Vashya (max 2)
+  const vashya = VASHYA_GROUP[safeG] === VASHYA_GROUP[safeB] ? 2 : 1;
+
+  // 3. Tara (max 3) — approximation via sign distance modulo 9
+  const taraDiff = (((safeB - safeG) % 9) + 9) % 9;
+  const taraTable = [3, 1.5, 3, 1.5, 0, 3, 1.5, 3, 1.5];
+  const tara = Math.round(taraTable[taraDiff]);
+
+  // 4. Yoni (max 4)
+  const y1 = YONI[safeG], y2 = YONI[safeB];
+  const yoni = y1 === y2 ? 4 : (YONI_FRIENDS[y1] || []).includes(y2) ? 3 : 2;
+
+  // 5. Maitri (max 5)
+  const maitri = MAITRI_TABLE[LORDS[safeG]]?.[LORDS[safeB]] ?? 3;
+
+  // 6. Gana (max 6)
+  const gn1 = GANA[safeG], gn2 = GANA[safeB];
+  const gana = gn1 === gn2 ? 6 : (gn1 === "rakshasa" || gn2 === "rakshasa") ? 0 : 5;
+
+  // 7. Bhakoot (max 7) — differences 2,5,6,8,9,12 → 0 (dosha)
+  const dist = Math.abs(safeG - safeB);
+  const bhakootDoshaDist = [1, 4, 5, 7, 8, 11];
+  const bhakoot = bhakootDoshaDist.includes(dist) ? 0 : 7;
+
+  // 8. Nadi (max 8) — same nadi = 0 (dosha)
+  const nadiDosha = NADI[safeG] === NADI[safeB];
+  const nadi = nadiDosha ? 0 : 8;
+
   const total = varna + vashya + tara + yoni + maitri + gana + bhakoot + nadi;
   const percentage = Math.round((total / 36) * 100);
-  
+
+  const doshas: string[] = [];
+  if (nadiDosha) doshas.push("Nadi Dosha — same Nadi reduces progeny harmony");
+  if (bhakoot === 0) doshas.push("Bhakoot Dosha — moon-sign distance suggests friction");
+  if (gana === 0) doshas.push("Gana Dosha — opposing temperaments");
+
   let verdict = "";
   let recommendation = "";
-  
   if (percentage >= 75) {
-    verdict = "Excellent Match - Highly Recommended";
-    recommendation = "This union is blessed by the stars. Proceed with confidence.";
+    verdict = "Excellent Match — Highly Recommended";
+    recommendation = "This union is blessed. Proceed with confidence and the family blessings ritual.";
   } else if (percentage >= 60) {
-    verdict = "Good Match - Recommended with Some Remedies";
-    recommendation = "A good match. Minor remedies may enhance harmony.";
+    verdict = "Good Match — Recommended with Minor Remedies";
+    recommendation = "A strong compatibility. Ganesh puja and a Navagraha shanti before the wedding are advised.";
   } else if (percentage >= 50) {
-    verdict = "Average Match - Requires Careful Consideration";
-    recommendation = "Consider carefully. Remedies and understanding are essential.";
+    verdict = "Average Match — Careful Consideration";
+    recommendation = "Workable, but consult a pandit for Mangal/Nadi shanti remedies before finalising.";
   } else {
-    verdict = "Challenging Match - Significant Remedies Needed";
-    recommendation = "Challenges exist. Consult a pandit for specific remedies.";
+    verdict = "Challenging Match — Detailed Remedies Needed";
+    recommendation = "Significant compatibility gaps. A full Janma Kundali (with birth time + place) is essential.";
   }
-  
+  if (doshas.length) recommendation += `  Identified: ${doshas.join("; ")}.`;
+
   return {
     varna: { points: varna, max: 1, description: "Spiritual compatibility and ego harmony" },
     vashya: { points: vashya, max: 2, description: "Mutual attraction and control" },
-    tara: { points: tara, max: 3, description: "Birth star compatibility and health" },
-    yoni: { points: yoni, max: 4, description: "Sexual and physical compatibility" },
+    tara: { points: tara, max: 3, description: "Birth-star compatibility and health" },
+    yoni: { points: yoni, max: 4, description: "Physical and emotional compatibility" },
     maitri: { points: maitri, max: 5, description: "Mental compatibility and friendship" },
-    gana: { points: gana, max: 6, description: "Temperament matching (Deva/Manushya/Rakshasa)" },
-    bhakoot: { points: bhakoot, max: 7, description: "Moon sign compatibility and prosperity" },
+    gana: { points: gana, max: 6, description: "Temperament (Deva/Manushya/Rakshasa)" },
+    bhakoot: { points: bhakoot, max: 7, description: "Moon-sign compatibility and prosperity" },
     nadi: { points: nadi, max: 8, description: "Health and genetic compatibility" },
-    total,
-    maxTotal: 36,
-    percentage,
-    verdict,
-    recommendation
+    total, maxTotal: 36, percentage, verdict, recommendation,
   };
 };
