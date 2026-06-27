@@ -11,6 +11,7 @@ import AdminSyncCenter from "@/components/admin/AdminSyncCenter";
 import RegressionMatrix from "@/components/admin/RegressionMatrix";
 import AdminJobLogs from "@/components/admin/AdminJobLogs";
 import PalmTelemetryPanel from "@/components/admin/PalmTelemetryPanel";
+import AudioHealthTrendPanel from "@/components/admin/AudioHealthTrendPanel";
 
 
 type Run = {
