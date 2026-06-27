@@ -1,6 +1,7 @@
 // Admin-only end-to-end QA runner. Probes routes, edge functions, and DB invariants.
 // Writes results into qa_runs / qa_results.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { notifyJobFailure } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,6 +109,17 @@ Deno.serve(async (req) => {
     total: results.length, passed, failed, skipped,
     duration_ms: Date.now() - started, finished_at: new Date().toISOString(),
   }).eq("id", runId);
+
+  if (failed > 0) {
+    const top = results.filter(r => r.status === "failed").slice(0, 5)
+      .map(r => `${r.suite}/${r.test_name}: ${r.error ?? "?"}`).join(" | ");
+    await notifyJobFailure({
+      job: "qa-runner", status: "failed", run_id: runId,
+      reason: `${failed}/${results.length} tests failed — ${top}`,
+      retry_url: `${PREVIEW_BASE}/admin/qa`,
+      details: { passed, failed, skipped, trigger },
+    });
+  }
 
   return new Response(JSON.stringify({ run_id: runId, total: results.length, passed, failed, skipped }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,5 +1,6 @@
 // Admin/cron: probe every audio track, follow redirects, attempt rehost from Archive.org.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { notifyJobFailure } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -114,6 +115,14 @@ Deno.serve(async (req) => {
       }).eq("id", runId);
     }
 
+    if (broken > 0 && totalChecked > 0 && broken / totalChecked > 0.05) {
+      await notifyJobFailure({
+        job: "audio-self-heal", status: "degraded", run_id: runId ?? null,
+        reason: `${broken}/${totalChecked} tracks broken (${Math.round(broken / totalChecked * 100)}%)`,
+        details: { ok, healed, broken, failed },
+      });
+    }
+
     return new Response(JSON.stringify({ checked: totalChecked, ok, healed, broken, runId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -124,6 +133,10 @@ Deno.serve(async (req) => {
         duration_ms: Date.now() - startedAt, finished_at: new Date().toISOString(),
       }).eq("id", runId);
     }
+    await notifyJobFailure({
+      job: "audio-self-heal", status: "failed", run_id: runId ?? null,
+      reason: String(e),
+    });
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

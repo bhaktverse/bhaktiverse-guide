@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COVERAGE_MATRIX } from "@/lib/regressionMatrix";
-import { CheckCircle2, XCircle, MinusCircle, ExternalLink, Search } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, ExternalLink, Search, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type ResultRow = { test_name: string; status: string; suite: string; error: string | null };
@@ -45,16 +45,55 @@ export default function RegressionMatrix({ runId }: { runId?: string }) {
     return acc;
   }, { passed: 0, failed: 0, skipped: 0, unknown: 0 });
 
+  const buildRows = () => COVERAGE_MATRIX.flatMap(e =>
+    e.cases.map(c => {
+      const r = byTest.get(c.id);
+      return {
+        area: e.area, page: e.page, route: e.route,
+        case_id: c.id, suite: c.suite, title: c.title, expected: c.expected,
+        actual_status: r?.status ?? "unknown",
+        actual_error: r?.error ?? "",
+        test_link: typeof window !== "undefined" ? `${window.location.origin}${e.route}` : e.route,
+      };
+    })
+  );
+
+  const downloadFile = (name: string, content: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const exportJSON = () => {
+    const payload = { generated_at: new Date().toISOString(), run_id: runId ?? null, rows: buildRows() };
+    downloadFile(`regression-matrix-${Date.now()}.json`, JSON.stringify(payload, null, 2), "application/json");
+  };
+
+  const exportCSV = () => {
+    const rows = buildRows();
+    const headers = Object.keys(rows[0] ?? { area: "", page: "", route: "", case_id: "", suite: "", title: "", expected: "", actual_status: "", actual_error: "", test_link: "" });
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [headers.join(","), ...rows.map(r => headers.map(h => esc((r as any)[h])).join(","))].join("\n");
+    downloadFile(`regression-matrix-${Date.now()}.csv`, csv, "text/csv");
+  };
+
   return (
     <Card>
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="text-sm">Regression Coverage Matrix</CardTitle>
-          <div className="flex gap-3 text-xs">
+          <div className="flex items-center gap-3 text-xs flex-wrap">
             <span className="text-green-500">✓ {totals.passed}</span>
             <span className="text-red-500">✗ {totals.failed}</span>
             <span className="text-muted-foreground">— {totals.skipped}</span>
             <span className="text-muted-foreground">? {totals.unknown}</span>
+            <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={exportCSV}>
+              <Download className="h-3 w-3 mr-1" /> CSV
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={exportJSON}>
+              <Download className="h-3 w-3 mr-1" /> JSON
+            </Button>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">

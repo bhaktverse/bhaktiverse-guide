@@ -11,6 +11,7 @@ import AdminSyncCenter from "@/components/admin/AdminSyncCenter";
 import RegressionMatrix from "@/components/admin/RegressionMatrix";
 import AdminJobLogs from "@/components/admin/AdminJobLogs";
 import PalmTelemetryPanel from "@/components/admin/PalmTelemetryPanel";
+import AudioHealthTrendPanel from "@/components/admin/AudioHealthTrendPanel";
 
 
 type Run = {
@@ -162,8 +163,9 @@ export default function AdminQA() {
           <AdminJobLogs />
         </TabsContent>
 
-        <TabsContent value="palm" className="mt-4">
+        <TabsContent value="palm" className="mt-4 space-y-4">
           <PalmTelemetryPanel />
+          <AudioHealthTrendPanel />
         </TabsContent>
 
         <TabsContent value="sync" className="mt-4">
