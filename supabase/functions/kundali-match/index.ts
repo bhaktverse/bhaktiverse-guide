@@ -148,57 +148,55 @@ Provide personalized compatibility analysis and blessing.`;
 });
 
 function calculateGunMilan(partner1: PartnerInfo, partner2: PartnerInfo): GunMilanResult {
-  const rashis = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 
-                  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-  
-  const rashi1Index = rashis.indexOf(partner1.rashi);
-  const rashi2Index = rashis.indexOf(partner2.rashi);
-  
-  const varnaGroups = [[0,4,8], [1,5,9], [2,6,10], [3,7,11]];
-  const varna1 = varnaGroups.findIndex(g => g.includes(rashi1Index));
-  const varna2 = varnaGroups.findIndex(g => g.includes(rashi2Index));
-  const varnaPoints = varna1 >= varna2 ? 1 : 0;
-  
-  const vashyaCompatible = Math.abs(rashi1Index - rashi2Index) <= 4;
-  const vashyaPoints = vashyaCompatible ? 2 : Math.random() > 0.5 ? 1 : 0;
-  
-  const taraDiff = Math.abs(rashi1Index - rashi2Index);
-  const taraPoints = taraDiff <= 3 ? 3 : taraDiff <= 6 ? 2 : taraDiff <= 9 ? 1 : 0;
-  
-  const yoniMatch = (rashi1Index + rashi2Index) % 4;
-  const yoniPoints = yoniMatch === 0 ? 4 : yoniMatch === 1 ? 3 : yoniMatch === 2 ? 2 : 1;
-  
-  const friendlyRashis = [[0,4,8], [1,5,9], [2,6,10], [3,7,11]];
-  const inSameGroup = friendlyRashis.some(g => g.includes(rashi1Index) && g.includes(rashi2Index));
-  const maitriPoints = inSameGroup ? 5 : Math.floor(Math.random() * 4) + 1;
-  
-  const ganaGroups = [[0,4,8], [1,2,5,6,9,10], [3,7,11]];
-  const gana1 = ganaGroups.findIndex(g => g.includes(rashi1Index));
-  const gana2 = ganaGroups.findIndex(g => g.includes(rashi2Index));
-  const ganaPoints = gana1 === gana2 ? 6 : Math.abs(gana1 - gana2) === 1 ? 3 : 0;
-  
-  const bhakootBad = [1, 5, 6, 8, 11];
-  const diff = Math.abs(rashi1Index - rashi2Index);
-  const bhakootPoints = bhakootBad.includes(diff) ? Math.floor(Math.random() * 3) : 7;
-  
-  const nadiGroups = [[0,3,6,9], [1,4,7,10], [2,5,8,11]];
-  const nadi1 = nadiGroups.findIndex(g => g.includes(rashi1Index));
-  const nadi2 = nadiGroups.findIndex(g => g.includes(rashi2Index));
-  const nadiPoints = nadi1 !== nadi2 ? 8 : 0;
-  
-  const total = varnaPoints + vashyaPoints + taraPoints + yoniPoints + 
-                maitriPoints + ganaPoints + bhakootPoints + nadiPoints;
+  const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  const g = Math.max(0, SIGNS.indexOf(partner1.rashi));
+  const b = Math.max(0, SIGNS.indexOf(partner2.rashi));
+
+  const VARNA: Record<number, number> = { 3:0,7:0,11:0, 0:1,4:1,8:1, 1:2,5:2,9:2, 2:3,6:3,10:3 };
+  const VASHYA: Record<number, string> = {0:"c",1:"c",2:"m",3:"j",4:"v",5:"m",6:"m",7:"k",8:"m",9:"j",10:"m",11:"j"};
+  const YONI: Record<number, string> = {0:"mesh",1:"sarp",2:"marjar",3:"sarp",4:"mooshak",5:"mahisha",6:"vyaghra",7:"mrig",8:"ashwa",9:"nakul",10:"simha",11:"gau"};
+  const YONI_FRIENDS: Record<string,string[]> = { mesh:["gau"], sarp:["mooshak"], marjar:["mooshak"], mooshak:["marjar","sarp"], mahisha:["ashwa"], vyaghra:["mrig"], mrig:["vyaghra"], ashwa:["mahisha"], nakul:["sarp"], simha:["gau"], gau:["mesh","simha"] };
+  const GANA: Record<number, string> = {0:"m",1:"m",2:"d",3:"d",4:"r",5:"m",6:"r",7:"r",8:"d",9:"m",10:"d",11:"r"};
+  const NADI: Record<number, string> = {0:"a",1:"m",2:"y",3:"a",4:"m",5:"y",6:"a",7:"m",8:"y",9:"a",10:"m",11:"y"};
+  const LORDS: Record<number, string> = {0:"mars",1:"venus",2:"mercury",3:"moon",4:"sun",5:"mercury",6:"venus",7:"mars",8:"jupiter",9:"saturn",10:"saturn",11:"jupiter"};
+  const MAITRI: Record<string, Record<string, number>> = {
+    sun:{sun:5,moon:5,mars:5,mercury:3,jupiter:5,venus:1,saturn:1},
+    moon:{sun:5,moon:5,mars:3,mercury:5,jupiter:3,venus:3,saturn:3},
+    mars:{sun:5,moon:3,mars:5,mercury:1,jupiter:5,venus:3,saturn:3},
+    mercury:{sun:3,moon:5,mars:1,mercury:5,jupiter:3,venus:5,saturn:3},
+    jupiter:{sun:5,moon:3,mars:5,mercury:1,jupiter:5,venus:1,saturn:3},
+    venus:{sun:1,moon:3,mars:3,mercury:5,jupiter:1,venus:5,saturn:5},
+    saturn:{sun:1,moon:3,mars:3,mercury:3,jupiter:3,venus:5,saturn:5},
+  };
+
+  const varnaPoints = VARNA[g] <= VARNA[b] ? 1 : 0;
+  const vashyaPoints = VASHYA[g] === VASHYA[b] ? 2 : 1;
+  const taraDiff = (((b - g) % 9) + 9) % 9;
+  const taraTable = [3,1,3,1,0,3,1,3,1];
+  const taraPoints = taraTable[taraDiff];
+  const y1 = YONI[g], y2 = YONI[b];
+  const yoniPoints = y1 === y2 ? 4 : (YONI_FRIENDS[y1] || []).includes(y2) ? 3 : 2;
+  const maitriPoints = MAITRI[LORDS[g]]?.[LORDS[b]] ?? 3;
+  const ganaPoints = GANA[g] === GANA[b] ? 6 : (GANA[g] === "r" || GANA[b] === "r") ? 0 : 5;
+  const dist = Math.abs(g - b);
+  const bhakootPoints = [1,4,5,7,8,11].includes(dist) ? 0 : 7;
+  const nadiPoints = NADI[g] === NADI[b] ? 0 : 8;
+
+  const total = varnaPoints + vashyaPoints + taraPoints + yoniPoints + maitriPoints + ganaPoints + bhakootPoints + nadiPoints;
   const percentage = Math.round((total / 36) * 100);
-  
-  let verdict = "";
-  let recommendation = "";
-  
+
+  const doshas: string[] = [];
+  if (nadiPoints === 0) doshas.push("Nadi Dosha");
+  if (bhakootPoints === 0) doshas.push("Bhakoot Dosha");
+  if (ganaPoints === 0) doshas.push("Gana Dosha");
+
+  let verdict = "", recommendation = "";
   if (percentage >= 75) {
     verdict = "उत्तम मिलान - Excellent Match";
     recommendation = "यह जोड़ी ब्रह्मांडीय आशीर्वाद से युक्त है। विवाह शुभ रहेगा।";
   } else if (percentage >= 60) {
     verdict = "अच्छा मिलान - Good Match";
-    recommendation = "अच्छा मिलान है। कुछ उपाय करने से सम्बंध और मजबूत होगा।";
+    recommendation = "अच्छा मिलान है। गणेश पूजन व नवग्रह शांति से सम्बंध और मजबूत होगा।";
   } else if (percentage >= 50) {
     verdict = "सामान्य मिलान - Average Match";
     recommendation = "विवाह संभव है लेकिन विशेष उपाय आवश्यक हैं। पंडित से परामर्श लें।";
@@ -206,7 +204,8 @@ function calculateGunMilan(partner1: PartnerInfo, partner2: PartnerInfo): GunMil
     verdict = "चुनौतीपूर्ण मिलान - Challenging Match";
     recommendation = "विवाह से पहले विस्तृत कुंडली विश्लेषण और उपाय जरूरी हैं।";
   }
-  
+  if (doshas.length) recommendation += ` दोष: ${doshas.join(", ")}.`;
+
   return {
     varna: { points: varnaPoints, max: 1, description: "आध्यात्मिक अनुकूलता और अहंकार सामंजस्य" },
     vashya: { points: vashyaPoints, max: 2, description: "पारस्परिक आकर्षण और नियंत्रण" },
@@ -216,7 +215,7 @@ function calculateGunMilan(partner1: PartnerInfo, partner2: PartnerInfo): GunMil
     gana: { points: ganaPoints, max: 6, description: "स्वभाव मिलान (देव/मनुष्य/राक्षस)" },
     bhakoot: { points: bhakootPoints, max: 7, description: "चंद्र राशि अनुकूलता और समृद्धि" },
     nadi: { points: nadiPoints, max: 8, description: "स्वास्थ्य और आनुवंशिक अनुकूलता" },
-    total, maxTotal: 36, percentage, verdict, recommendation
+    total, maxTotal: 36, percentage, verdict, recommendation,
   };
 }
 
