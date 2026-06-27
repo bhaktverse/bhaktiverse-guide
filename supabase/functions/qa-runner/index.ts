@@ -1,6 +1,7 @@
 // Admin-only end-to-end QA runner. Probes routes, edge functions, and DB invariants.
 // Writes results into qa_runs / qa_results.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { notifyJobFailure } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
