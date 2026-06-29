@@ -44,35 +44,45 @@ export default function AudioHealthTrendPanel() {
   const healthRate = total > 0 ? Math.round(((latest!.healthy_count ?? 0) / total) * 100) : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm flex items-center justify-between">
-          Audio Library Health (last 30d)
-          <Badge variant={healthRate >= 90 ? "default" : healthRate >= 70 ? "secondary" : "destructive"}>
+    <Card className="border-border/40 bg-card/60 backdrop-blur-xl overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center justify-between gap-2 flex-wrap">
+          <span>Audio Library Health <span className="text-muted-foreground font-normal">(30d)</span></span>
+          <Badge variant={healthRate >= 90 ? "default" : healthRate >= 70 ? "secondary" : "destructive"} className="text-[10px]">
             {healthRate}% healthy
           </Badge>
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Cached / healed / broken track counts per self-heal run.
+        <p className="text-[11px] text-muted-foreground">
+          Cached / healed / broken tracks per self-heal run.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-2">
         {loading ? (
           <p className="text-xs text-muted-foreground p-3">Loading audio health…</p>
         ) : runs.length === 0 ? (
-          <p className="text-xs text-muted-foreground p-3">No self-heal runs yet. Trigger one from Sync Center.</p>
+          <p className="text-xs text-muted-foreground p-6 text-center">No self-heal runs yet. Trigger one from Sync Center.</p>
         ) : (
-          <div className="h-56 w-full">
+          <div className="h-48 sm:h-64 w-full -ml-2">
             <ResponsiveContainer>
               <AreaChart data={trend} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip contentStyle={{ fontSize: 11 }} />
+                <defs>
+                  <linearGradient id="hHealthy" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="hBroken" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ fontSize: 11, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="healthy" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.3)" />
-                <Area type="monotone" dataKey="healed" stackId="1" stroke="hsl(var(--accent-foreground))" fill="hsl(var(--accent-foreground) / 0.3)" />
-                <Area type="monotone" dataKey="broken" stackId="1" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive) / 0.3)" />
+                <Area type="monotone" dataKey="healthy" stackId="1" stroke="hsl(var(--primary))" fill="url(#hHealthy)" />
+                <Area type="monotone" dataKey="healed" stackId="1" stroke="hsl(var(--accent-foreground))" fill="hsl(var(--accent-foreground) / 0.2)" />
+                <Area type="monotone" dataKey="broken" stackId="1" stroke="hsl(var(--destructive))" fill="url(#hBroken)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -76,20 +76,26 @@ export default function PalmTelemetryPanel() {
     }));
   }, [rows]);
 
+  const presetAccent: Record<string, string> = {
+    fast: "from-primary/20 to-transparent",
+    balanced: "from-accent/30 to-transparent",
+    high: "from-destructive/20 to-transparent",
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Palm Landmark Accuracy (last 30d)</CardTitle>
-        <p className="text-xs text-muted-foreground">Compare MediaPipe Fast / Balanced / High presets.</p>
+    <Card className="border-border/40 bg-card/60 backdrop-blur-xl overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Palm Landmark Accuracy <span className="text-muted-foreground font-normal">(30d)</span></CardTitle>
+        <p className="text-[11px] text-muted-foreground">Compare MediaPipe Fast / Balanced / High presets.</p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-2">
         {loading ? (
           <p className="text-xs text-muted-foreground p-3">Loading telemetry…</p>
         ) : (
           <>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {agg.map(a => (
-                <div key={a.preset} className="border border-border/40 rounded-lg p-3 space-y-2">
+                <div key={a.preset} className={`relative overflow-hidden border border-border/40 rounded-xl p-3 space-y-2 bg-gradient-to-br ${presetAccent[a.preset]}`}>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold capitalize">{a.preset}</span>
                     <Badge variant="outline" className="text-[10px]">{a.samples} samples</Badge>
@@ -102,18 +108,18 @@ export default function PalmTelemetryPanel() {
               ))}
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-2">Daily detection rate (%) by preset</p>
-              <div className="h-56 w-full">
+              <p className="text-[11px] text-muted-foreground mb-2">Daily detection rate (%) by preset</p>
+              <div className="h-48 sm:h-64 w-full -ml-2">
                 <ResponsiveContainer>
                   <LineChart data={trend} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ fontSize: 11 }} />
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                    <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ fontSize: 11, background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Line type="monotone" dataKey="fast" stroke="hsl(var(--primary))" dot={false} connectNulls />
-                    <Line type="monotone" dataKey="balanced" stroke="hsl(var(--accent-foreground))" dot={false} connectNulls />
-                    <Line type="monotone" dataKey="high" stroke="hsl(var(--destructive))" dot={false} connectNulls />
+                    <Line type="monotone" dataKey="fast" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} connectNulls />
+                    <Line type="monotone" dataKey="balanced" stroke="hsl(var(--accent-foreground))" strokeWidth={2} dot={false} connectNulls />
+                    <Line type="monotone" dataKey="high" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} connectNulls />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
