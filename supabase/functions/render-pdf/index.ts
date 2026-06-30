@@ -56,10 +56,40 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Require authenticated caller to prevent credit-drain abuse.
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const supa = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data, error: authErr } = await supa.auth.getClaims(jwt);
+    if (authErr || !data?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } catch (_e) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const body = (await req.json()) as Body;
-    if (!body.html && !body.url) {
-      return new Response(JSON.stringify({ error: "html or url required" }), {
+    // SSRF hardening: the `url` field is no longer accepted. Only inline HTML
+    // is rendered, eliminating the risk of Browserless fetching internal hosts
+    // (e.g. 169.254.169.254 metadata) on an attacker's behalf.
+    if (!body.html) {
+      return new Response(JSON.stringify({ error: "html required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -75,7 +105,7 @@ Deno.serve(async (req) => {
     const margin = `${opts.marginMm ?? 12}mm`;
 
     const browserlessPayload = {
-      ...(body.url ? { url: body.url } : { html: wrapHtml(body.html!) }),
+      html: wrapHtml(body.html),
       options: {
         format: opts.format ?? "A4",
         landscape: !!opts.landscape,
@@ -84,9 +114,9 @@ Deno.serve(async (req) => {
         margin: { top: margin, bottom: margin, left: margin, right: margin },
       },
       gotoOptions: { waitUntil: "networkidle0", timeout: 30000 },
-      // Wait extra for web fonts (Noto Sans Devanagari) to load.
       waitFor: 1500,
     };
+
 
     const r = await fetch(`https://production-sfo.browserless.io/pdf?token=${token}`, {
       method: "POST",
