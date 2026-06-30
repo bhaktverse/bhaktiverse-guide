@@ -364,6 +364,12 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  /* Devanagari / Sanskrit glyph safety on print */
+  #palm-report-print [lang="hi"],
+  #palm-report-print [lang="sa"],
+  #palm-report-print .devanagari {
+    font-family: 'Noto Sans Devanagari', 'Mangal', serif !important;
+  }
   /* Each Card/section should not split across pages */
   #palm-report-print [class*="rounded"][class*="border"],
   #palm-report-print section,
@@ -371,9 +377,23 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  /* Headings stay with their content */
+  #palm-report-print h1, #palm-report-print h2, #palm-report-print h3 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  /* Images never split */
+  #palm-report-print img {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    max-width: 100% !important;
+    height: auto !important;
+  }
   nav, header, footer, .no-print, [data-no-print] { display: none !important; }
   .animate-spin, .animate-sacred-float, .animate-om-pulse,
   [class*="animate-"] { animation: none !important; }
   @page { size: A4; margin: 12mm; }
+  @page :first { margin-top: 8mm; }
 }
+
 
