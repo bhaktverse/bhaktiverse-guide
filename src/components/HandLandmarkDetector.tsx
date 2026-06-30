@@ -174,7 +174,9 @@ const HandLandmarkDetector = ({
           maxNumHands: 1,
           modelComplexity: preset.modelComplexity,
           minDetectionConfidence: preset.minDetectionConfidence,
-          minTrackingConfidence: 0.5,
+          // Track at least as strictly as we detect, so High preset doesn't
+          // bleed into low-confidence frames that pass the cheaper tracker.
+          minTrackingConfidence: Math.max(0.5, preset.minDetectionConfidence - 0.05),
         });
 
         hands.onResults((results: any) => {
