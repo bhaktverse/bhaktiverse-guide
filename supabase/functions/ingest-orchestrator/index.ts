@@ -16,7 +16,9 @@ const SOURCES = [
   "sync-scriptures",
   "sync-archive-audio",
   "sync-genius-lyrics",
+  "sync-astro-datasets",
   "check-audio-health",
+
 ];
 
 async function callFn(name: string, auth: string) {
