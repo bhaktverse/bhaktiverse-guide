@@ -34,6 +34,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AudioSyncIndicator from '@/components/AudioSyncIndicator';
+import { resolvePlayableSource, cacheAudioTrack, getCachedObjectUrl } from '@/lib/audioCache';
+
 
 
 interface AudioTrack {
@@ -83,6 +85,46 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   const sleepTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+  const objectUrlRef = useRef<string | null>(null);
+  const resumeStateRef = useRef<{ time: number; wasPlaying: boolean }>({ time: 0, wasPlaying: false });
+
+  // Resolve the best playable source (network → mirror → offline cache)
+  useEffect(() => {
+    let cancelled = false;
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    if (!track?.audio_url) {
+      setResolvedSrc(null);
+      return;
+    }
+    setIsBuffering(true);
+    const mirrors = Array.isArray((track as any).mirror_urls) ? ((track as any).mirror_urls as string[]) : [];
+    resolvePlayableSource(track.audio_url, mirrors).then(({ src, offline }) => {
+      if (cancelled) return;
+      if (src?.startsWith('blob:')) objectUrlRef.current = src;
+      setResolvedSrc(src);
+      setOfflineMode(offline);
+      if (offline) toast.info('Playing offline copy of this track');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [track]);
+
+  // Keep a background copy for offline playback once a track streams fine
+  useEffect(() => {
+    if (!track?.audio_url || offlineMode || !isPlaying) return;
+    const t = window.setTimeout(() => {
+      cacheAudioTrack(track.audio_url).catch(() => {});
+    }, 3000);
+    return () => window.clearTimeout(t);
+  }, [track, isPlaying, offlineMode]);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !track) return;
@@ -101,33 +143,73 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         handleNext();
       }
     };
-    
+
     let retryCount = 0;
-    const handleError = () => {
+    const mirrors = Array.isArray((track as any).mirror_urls) ? ((track as any).mirror_urls as string[]) : [];
+
+    const handleError = async () => {
       setIsPlaying(false);
-      // Retry-with-backoff up to 2x before skipping
-      if (retryCount < 2 && track?.audio_url) {
-        const delay = 500 * Math.pow(2, retryCount);
+      resumeStateRef.current = { time: audio.currentTime || 0, wasPlaying: true };
+
+      // 1) Offline cache first — instant recovery
+      const cached = await getCachedObjectUrl(track.audio_url);
+      if (cached && audio.src !== cached) {
+        objectUrlRef.current = cached;
+        setOfflineMode(true);
+        audio.src = cached;
+        audio.load();
+        return;
+      }
+
+      // 2) Mirrors, then exponential backoff retries on the origin URL
+      if (retryCount < 3) {
+        const mirror = mirrors[retryCount];
+        const delay = 600 * Math.pow(2, retryCount);
         retryCount++;
-        setTimeout(() => {
+        setIsBuffering(true);
+        window.setTimeout(() => {
           try {
-            audio.src = track.audio_url + (track.audio_url.includes("?") ? "&" : "?") + "_r=" + Date.now();
+            const base = mirror || track.audio_url;
+            audio.src = base + (base.includes('?') ? '&' : '?') + '_r=' + Date.now();
             audio.load();
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }, delay);
         return;
       }
-      setTimeout(() => {
-        const currentIndex = playlist.findIndex(t => t.id === track?.id);
+
+      setIsBuffering(false);
+      window.setTimeout(() => {
+        const currentIndex = playlist.findIndex((t) => t.id === track?.id);
         if (currentIndex < playlist.length - 1) {
           toast.info(`Skipping unavailable track: "${track.title}"`);
           onTrackChange(playlist[currentIndex + 1]);
+        } else {
+          toast.error('This track is unavailable right now.');
         }
-      }, 500);
+      }, 400);
     };
 
     const handleCanPlay = () => {
       setDuration(audio.duration || 0);
+      setIsBuffering(false);
+      retryCount = 0;
+      const { time, wasPlaying } = resumeStateRef.current;
+      if (time > 0) {
+        try { audio.currentTime = time; } catch { /* seek unsupported */ }
+      }
+      if (wasPlaying) {
+        resumeStateRef.current = { time: 0, wasPlaying: false };
+        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
+    };
+
+    const handleWaiting = () => setIsBuffering(true);
+    const handlePlaying = () => setIsBuffering(false);
+    const handleStalled = () => {
+      setIsBuffering(true);
+      try { audio.load(); } catch { /* ignore */ }
     };
 
     audio.addEventListener('timeupdate', updateTime);
@@ -135,6 +217,9 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('playing', handlePlaying);
+    audio.addEventListener('stalled', handleStalled);
 
     audio.load();
 
@@ -144,8 +229,39 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('stalled', handleStalled);
     };
-  }, [repeatMode, track, playlist, onTrackChange]);
+  }, [repeatMode, track, playlist, onTrackChange, resolvedSrc]);
+
+  // Network recovery: when connectivity returns, switch back to the live stream
+  useEffect(() => {
+    const onOnline = async () => {
+      const audio = audioRef.current;
+      if (!audio || !track?.audio_url) return;
+      resumeStateRef.current = { time: audio.currentTime || 0, wasPlaying: !audio.paused };
+      const { src, offline } = await resolvePlayableSource(track.audio_url);
+      if (src && !offline) {
+        setOfflineMode(false);
+        setResolvedSrc(src);
+        toast.success('Back online — resuming high quality stream');
+      }
+    };
+    const onOffline = () => toast.info('Offline — cached tracks will keep playing');
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, [track]);
+
+  // Release blob URLs on unmount
+  useEffect(() => () => {
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+  }, []);
+
 
   useEffect(() => {
     if (audioRef.current) {
@@ -385,6 +501,13 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
                    track.language === 'hindi' ? 'Hindi' : track.language}
                 </Badge>
                 <AudioSyncIndicator url={track.audio_url} />
+                {isBuffering && (
+                  <Badge variant="secondary" className="text-[10px]">Buffering…</Badge>
+                )}
+                {offlineMode && (
+                  <Badge variant="outline" className="text-[10px]">Offline copy</Badge>
+                )}
+
               </>
             )}
 
@@ -547,7 +670,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   if (isMobile) {
     return (
       <>
-        <audio ref={audioRef} src={track?.audio_url} preload="metadata" crossOrigin="anonymous" />
+        <audio ref={audioRef} src={resolvedSrc ?? undefined} preload="metadata" crossOrigin="anonymous" />
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           {/* Mini Player Bar - fixed at bottom above MobileBottomNav */}
           <DrawerTrigger asChild>
@@ -586,7 +709,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   // ----- Desktop: Sticky card -----
   return (
     <>
-      <audio ref={audioRef} src={track?.audio_url} preload="metadata" crossOrigin="anonymous" />
+      <audio ref={audioRef} src={resolvedSrc ?? undefined} preload="metadata" crossOrigin="anonymous" />
       <Card className="card-sacred sticky top-24 shadow-divine">
         <CardContent className="p-0">
           {fullPlayerContent}
