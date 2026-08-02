@@ -170,6 +170,13 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     const handleError = async () => {
       setIsPlaying(false);
       resumeStateRef.current = { time: audio.currentTime || 0, wasPlaying: true };
+      trackAudioEvent({
+        event_type: 'playback_error',
+        track_title: track.title,
+        track_url: track.audio_url,
+        attempt: retryCount,
+        outcome: 'failure',
+      });
 
       // 1) Offline cache first — instant recovery
       const cached = await getCachedObjectUrl(track.audio_url);
@@ -178,8 +185,22 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         setOfflineMode(true);
         audio.src = cached;
         audio.load();
+        trackAudioEvent({
+          event_type: 'cache_hit',
+          track_title: track.title,
+          track_url: track.audio_url,
+          attempt: retryCount,
+          outcome: 'success',
+          detail: { reason: 'error_recovery' },
+        });
         return;
       }
+      trackAudioEvent({
+        event_type: 'cache_miss',
+        track_title: track.title,
+        track_url: track.audio_url,
+        attempt: retryCount,
+      });
 
       // 2) Mirrors, then exponential backoff retries on the origin URL
       if (retryCount < 3) {
@@ -187,6 +208,14 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         const delay = 600 * Math.pow(2, retryCount);
         retryCount++;
         setIsBuffering(true);
+        trackAudioEvent({
+          event_type: mirror ? 'fallback_mirror' : 'retry',
+          track_title: track.title,
+          track_url: track.audio_url,
+          attempt: retryCount,
+          outcome: 'pending',
+          detail: { delay },
+        });
         window.setTimeout(() => {
           try {
             const base = mirror || track.audio_url;
@@ -210,6 +239,7 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
         }
       }, 400);
     };
+
 
     const handleCanPlay = () => {
       setDuration(audio.duration || 0);
