@@ -109,6 +109,13 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
       if (src?.startsWith('blob:')) objectUrlRef.current = src;
       setResolvedSrc(src);
       setOfflineMode(offline);
+      trackAudioEvent({
+        event_type: offline ? 'cache_hit' : src && src !== track.audio_url ? 'fallback_mirror' : 'network_play',
+        track_title: track.title,
+        track_url: track.audio_url,
+        outcome: src ? 'success' : 'failure',
+        detail: { resolved: offline ? 'cache' : 'network' },
+      });
       if (offline) toast.info('Playing offline copy of this track');
     });
     return () => {
@@ -120,10 +127,21 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   useEffect(() => {
     if (!track?.audio_url || offlineMode || !isPlaying) return;
     const t = window.setTimeout(() => {
-      cacheAudioTrack(track.audio_url).catch(() => {});
+      cacheAudioTrack(track.audio_url)
+        .then((ok) =>
+          trackAudioEvent({
+            event_type: 'cache_store',
+            track_title: track.title,
+            track_url: track.audio_url,
+            outcome: ok ? 'success' : 'failure',
+            detail: { source: 'auto_background' },
+          }),
+        )
+        .catch(() => {});
     }, 3000);
     return () => window.clearTimeout(t);
   }, [track, isPlaying, offlineMode]);
+
 
   useEffect(() => {
     const audio = audioRef.current;
