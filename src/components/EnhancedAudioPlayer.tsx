@@ -244,7 +244,17 @@ const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
     const handleCanPlay = () => {
       setDuration(audio.duration || 0);
       setIsBuffering(false);
+      if (retryCount > 0) {
+        trackAudioEvent({
+          event_type: 'recovered',
+          track_title: track.title,
+          track_url: track.audio_url,
+          attempt: retryCount,
+          outcome: 'success',
+        });
+      }
       retryCount = 0;
+
       const { time, wasPlaying } = resumeStateRef.current;
       if (time > 0) {
         try { audio.currentTime = time; } catch { /* seek unsupported */ }
