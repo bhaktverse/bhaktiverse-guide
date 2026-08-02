@@ -15,6 +15,8 @@ import ScrollToTop from '@/components/ScrollToTop';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import PlaylistManager from '@/components/PlaylistManager';
+import OfflineDownloadManager from '@/components/OfflineDownloadManager';
+
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
