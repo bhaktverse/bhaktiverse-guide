@@ -2,7 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Bot, Hand, Video, MessageSquare,
   Film, IndianRupee, CreditCard, BarChart3, Bell, CalendarDays,
-  Database, HardDrive, Shield, Settings, LifeBuoy, UserCog, Activity,
+  Database, HardDrive, Shield, Settings, LifeBuoy, UserCog, Activity, FileText,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
