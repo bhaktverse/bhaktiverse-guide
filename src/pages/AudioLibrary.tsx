@@ -528,6 +528,27 @@ const AudioLibrary = () => {
             />
           </div>
         )}
+
+        {activeTab === 'library' && (
+          <div className="mt-6">
+            <OfflineDownloadManager
+              tracks={tracks
+                .filter((t: any) => !!t.audio_url)
+                .map((t: any) => ({
+                  id: t.id,
+                  title: t.title,
+                  artist: t.artist,
+                  category: t.category,
+                  audio_url: t.audio_url,
+                }))}
+              playlists={categories.map((cat) => ({
+                name: cat,
+                trackIds: tracks.filter((t: any) => t.category === cat).map((t: any) => t.id),
+              }))}
+            />
+          </div>
+        )}
+
       </div>
       
       {/* Mobile mini-player (rendered outside grid) */}
