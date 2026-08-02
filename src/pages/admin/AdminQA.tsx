@@ -180,7 +180,9 @@ export default function AdminQA() {
         <TabsContent value="palm" className="mt-4 space-y-4">
           <PalmTelemetryPanel />
           <AudioHealthTrendPanel />
+          <AudioReliabilityPanel />
         </TabsContent>
+
 
         <TabsContent value="sync" className="mt-4">
           <AdminSyncCenter />
