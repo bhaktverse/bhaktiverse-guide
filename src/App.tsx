@@ -146,6 +146,8 @@ const App = () => (
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="support" element={<AdminSupport />} />
                   <Route path="qa" element={<AdminQA />} />
+                  <Route path="reports" element={<AdminReports />} />
+
                 </Route>
 
                 {/* CATCH-ALL */}
