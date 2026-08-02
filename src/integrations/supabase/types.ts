@@ -362,6 +362,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_reliability_events: {
+        Row: {
+          attempt: number
+          created_at: string
+          detail: Json
+          event_type: string
+          id: string
+          outcome: string | null
+          track_title: string | null
+          track_url: string | null
+          user_id: string | null
+          was_online: boolean | null
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          detail?: Json
+          event_type: string
+          id?: string
+          outcome?: string | null
+          track_title?: string | null
+          track_url?: string | null
+          user_id?: string | null
+          was_online?: boolean | null
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          detail?: Json
+          event_type?: string
+          id?: string
+          outcome?: string | null
+          track_title?: string | null
+          track_url?: string | null
+          user_id?: string | null
+          was_online?: boolean | null
+        }
+        Relationships: []
+      }
       bhakti_shorts: {
         Row: {
           approved: boolean | null

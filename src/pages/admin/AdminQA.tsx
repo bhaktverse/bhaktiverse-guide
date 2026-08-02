@@ -12,6 +12,8 @@ import RegressionMatrix from "@/components/admin/RegressionMatrix";
 import AdminJobLogs from "@/components/admin/AdminJobLogs";
 import PalmTelemetryPanel from "@/components/admin/PalmTelemetryPanel";
 import AudioHealthTrendPanel from "@/components/admin/AudioHealthTrendPanel";
+import AudioReliabilityPanel from "@/components/admin/AudioReliabilityPanel";
+
 
 type Run = {
   id: string; status: string; total: number; passed: number; failed: number; skipped: number;
@@ -180,7 +182,9 @@ export default function AdminQA() {
         <TabsContent value="palm" className="mt-4 space-y-4">
           <PalmTelemetryPanel />
           <AudioHealthTrendPanel />
+          <AudioReliabilityPanel />
         </TabsContent>
+
 
         <TabsContent value="sync" className="mt-4">
           <AdminSyncCenter />

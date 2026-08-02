@@ -15,6 +15,8 @@ import ScrollToTop from '@/components/ScrollToTop';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import EnhancedAudioPlayer from '@/components/EnhancedAudioPlayer';
 import PlaylistManager from '@/components/PlaylistManager';
+import OfflineDownloadManager from '@/components/OfflineDownloadManager';
+
 import { useDownload } from '@/hooks/useDownload';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -528,6 +530,27 @@ const AudioLibrary = () => {
             />
           </div>
         )}
+
+        {activeTab === 'library' && (
+          <div className="mt-6">
+            <OfflineDownloadManager
+              tracks={tracks
+                .filter((t: any) => !!t.audio_url)
+                .map((t: any) => ({
+                  id: t.id,
+                  title: t.title,
+                  artist: t.artist,
+                  category: t.category,
+                  audio_url: t.audio_url,
+                }))}
+              playlists={categories.map((cat) => ({
+                name: cat,
+                trackIds: tracks.filter((t: any) => t.category === cat).map((t: any) => t.id),
+              }))}
+            />
+          </div>
+        )}
+
       </div>
       
       {/* Mobile mini-player (rendered outside grid) */}
