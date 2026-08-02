@@ -81,9 +81,13 @@ Deno.test("Rahu is retrograde (mean node moves backwards)", () => {
 });
 
 Deno.test("Retrograde detection matches known 2000-01-01 states", () => {
-  // On 2000-01-01 all five classical planets were in direct motion.
-  for (const p of ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"]) {
-    assert(isRetrograde(p, J2000) === false, `${p} should be direct at J2000`);
+  // Known states on 2000-01-01: Saturn was still retrograde (stationed direct
+  // mid-Jan 2000); the other four were in direct motion.
+  const expected: Record<string, boolean> = {
+    Mercury: false, Venus: false, Mars: false, Jupiter: false, Saturn: true,
+  };
+  for (const [p, retro] of Object.entries(expected)) {
+    assert(isRetrograde(p, J2000) === retro, `${p} retrograde state mismatch at J2000`);
   }
   // Mercury retrogrades ~3x/year — assert at least one retro window in 2000.
   let retroDays = 0;
