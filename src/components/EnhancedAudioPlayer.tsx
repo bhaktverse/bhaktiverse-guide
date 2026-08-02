@@ -35,6 +35,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AudioSyncIndicator from '@/components/AudioSyncIndicator';
 import { resolvePlayableSource, cacheAudioTrack, getCachedObjectUrl } from '@/lib/audioCache';
+import { trackAudioEvent } from '@/lib/audioTelemetry';
+
 
 
 
