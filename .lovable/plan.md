@@ -1,117 +1,73 @@
-# BhaktVerse — Platform Overhaul Plan (3–4 weeks, phased)
+# BhaktVerse — Platform-Wide Audit & Pro Upgrade
 
-Goal: production-grade, 1M-user-ready spiritual platform with pro UX, accurate astrology, healthy audio, and competitor-grade PDF reports.
+## What the audit found (verified against the live database and live URLs)
 
----
+**Audio library is genuinely broken at the data layer, not the player.**
+- All 59 rows in `audio_library` have `url_status = 'unknown'` — the health checker has never recorded a result (`audio_heal_runs` is empty).
+- 8 tracks point at hand-made Archive.org identifiers that do not exist. Live check:
+  - `vishnu-sahasranama.ogg` → **404**
+  - `hanuman-aarti.ogg` → **403**
+- The 51 tracks from the `mantrachantingmeditation` collection are real (Gayatri Mantra returned **206 application/ogg**).
+- So roughly one in seven tracks fails instantly, and the UI has no way to know in advance because status is never populated.
 
-## Phase 1 — Foundation Fixes (Week 1)
-Focus: things users see breaking *today*.
+**Content depth is thin for a "pro" catalogue.**
+Current counts: 37 saints, 61 temples, 18 scriptures / 92 chapters, 59 audio, 90 calendar events, 47 mantras, 84 FAQs, 24 shorts.
 
-### 1.1 Palm Reading v4 (MediaPipe + OpenCV hardening)
-- Tighten `HandLandmarkDetector` thresholds; expose Fast/Balanced/High quality presets in scanner UI.
-- Add 5-frame temporal stabilization + confidence gate before allowing capture (block submit when score < 0.6).
-- Use OpenCV (`palmCV.ts`) to detect heart/head/life/fate creases, compute lengths and intersection points, and pass them as structured features into the AI prompt — replaces vibes-based output with measurable claims.
-- Crop palm ROI server-side before storing; store ROI + landmarks JSON in `palm_reading_history`.
+**Other gaps confirmed by reading the code**
+- Saint/temple avatars render remote URLs with no `onError` fallback, so hotlink failures show blank circles.
+- Shorts embed YouTube directly in an iframe with no privacy-enhanced domain and no lazy loading.
 
-### 1.2 Print-Perfect PDF (Browserless-first, HTML result page)
-- Create `/reading/:id` route that renders the full report as styled HTML (A4 print stylesheet, Devanagari via `@fontsource/noto-sans-devanagari`, page-break rules, print:hidden chrome).
-- "Print" button → `window.print()` (zero-cost path).
-- "Download PDF" button → POST sanitized inline HTML to existing `render-pdf` edge function (Browserless, JWT-auth, no URL param — already hardened).
-- Delete legacy `jsPDF`/`html2canvas` path; keep one source of truth.
-- Add cover page, TOC, per-line analysis, palm image, QR to live page, footer with branding + disclaimer.
-
-### 1.3 Audio Library Reliability
-- Audit `audio_library` rows: HEAD-check every `audio_url` in a one-shot edge job; mark `is_healthy`, `last_checked_at`, `failure_reason`.
-- Upgrade `EnhancedAudioPlayer`: retry with exponential backoff, automatic fallback to mirror URL, surface `AudioSyncIndicator` health state.
-- Replace dead Archive.org links via `audio-self-heal` (search Archive.org + Jamendo for same title/artist, swap URL, log to `audio_heal_runs`).
-- Add Service Worker cache for last 20 played tracks (offline-first).
-
-### 1.4 Mobile/UX pass on the above
-- 375px audit of palm scanner, result page, audio player, history.
-- Replace any remaining hardcoded colors with design tokens; ensure 44px touch targets.
+Everything else (routes, mobile overflow, auth gates, astro engine v2, palm CV, PDF pipeline) was checked in the previous audit pass and is passing; this plan builds on that rather than redoing it.
 
 ---
 
-## Phase 2 — Accuracy & Content (Week 2)
-Focus: be measurably better than AstroSage/Prokerala on the things that matter.
+## Phase 1 — Fix the audio library for real
 
-### 2.1 Astro Engine v2
-- Extend `astro-engine` edge function: sidereal Lahiri ayanamsa, Nakshatra + Pada, Vimshottari Mahadasha + Antardasha + Pratyantardasha, Yogas (Raj/Dhana/Gaja Kesari), Panchang (tithi/karana/yoga/vara), Shadbala summary.
-- Use Swiss Ephemeris WASM (or `swisseph-wasm` port) inside the edge function; cache results per `(dob, tob, lat, lng)` in `astro_charts`.
-- Surface in Kundali page with PDF export reuse (same Browserless pipeline).
+1. **Verified ingestion.** Rewrite `sync-archive-audio` to discover tracks through the Archive.org `advancedsearch` + `metadata` APIs instead of guessing identifiers. Every candidate file is range-requested (`Range: 0-100`) before insert; only `2xx` responses with an audio content type are stored, together with `content_type`, `content_length` and a set of `mirror_urls` (`archive.org/download`, `ia*.us.archive.org` direct node, and the `.mp3` derivative).
+2. **Purge and replace the dead 8.** Rows whose URLs fail verification are marked `url_status = 'broken'` and re-sourced; if no replacement is found they are hidden from the catalogue instead of being served to users.
+3. **Backfill health.** Run `check-audio-health` once over the whole table so `url_status` / `last_checked_at` become meaningful, and confirm the daily `pg_cron` job actually writes an `audio_heal_runs` row.
+4. **UI honesty.** Audio Library filters out broken tracks by default and shows a small "verified" indicator; a broken track never reaches the player.
+5. **Grow the catalogue** to ~200+ verified tracks across aarti, bhajan, mantra, chalisa and meditation, each tagged with deity, language and occasion.
 
-### 2.2 Daily Horoscope Accuracy
-- Replace generic copy with per-rashi transit reads computed from today's planetary positions + user's natal chart (when available).
-- 24h cache in `horoscope_cache`.
+## Phase 2 — Deeper, cleaner datasets
 
-### 2.3 Ingestion Orchestrator v2 (cron-driven)
-- Extend existing `ingest-orchestrator` to fan out:
-  - **Saints**: Wikidata SPARQL (`P140` Hindu saints) + Wikipedia summaries; dedupe by Wikidata QID.
-  - **Scriptures**: Bhagavad Gita API (bhagavadgita.io), Sefaria-style verse APIs for Upanishads, Vedabase scrape via Firecrawl (legal pages only).
-  - **Temples**: Wikidata + OpenStreetMap Overpass for coords; image from Wikimedia Commons.
-  - **Audio**: Archive.org `audio` collection + Jamendo (CC-licensed bhajans) + curated YouTube allowlist (channel IDs only, not full scrapes).
-- Schedule via `pg_cron` every 6h; write to `ingestion_runs` with row counts + errors.
-- Add `notify.ts` webhook on any failure.
-- Add `AdminIngestion` panel: per-source last-run, row counts, retry button.
+- **Saints → ~120**, temples → **~150**, via the existing Wikipedia/Wikidata sync functions with stronger cleaning (strip reference markers, drop list/disambiguation pages, enforce length caps, dedupe on normalised name).
+- **Scriptures**: complete Bhagavad Gita (18 chapters, verse-level), Hanuman Chalisa, Ramcharitmanas cantos, Upanishad selections — sourced from public-domain text APIs and chunked into `scripture_chapters`.
+- **Images**: mirror saint and temple images into the existing `saints-images` / `temple-images` buckets during ingestion, so the app stops hotlinking Wikimedia. Add graceful initial-letter fallbacks in the UI for anything still missing.
+- Every ingestion run keeps logging to `ingestion_runs` so the admin Job Logs view stays authoritative.
 
-### 2.4 Content Quality Gates
-- Add `data_quality_score` to saints/temples/scriptures (computed: has_image + has_description ≥ 100 chars + has_source_url + dedupe_key).
-- Hide rows with score < 2 from public lists; show in admin "needs review" queue.
+## Phase 3 — Palm reading, astrology and print
 
----
+- **Vision**: keep MediaPipe Hands + OpenCV.js, and add a confidence-gated capture — the shutter only enables when landmark confidence and stability clear a threshold, which removes most "bad scan → vague reading" complaints.
+- **Astro**: engine v2 already validates to ~1 arcmin against the published fixtures. Extend the regression suite with additional epochs (1980, 2010, 2030) so drift is caught, and surface divisional charts (D9 Navamsa) plus Ashtakavarga-lite scoring in the results UI.
+- **Print**: consolidate on the dedicated print route (`/palm-reading/print/:id`) as the single source of truth — a clean semantic HTML report with `@media print` rules, page-break control per section, and embedded Devanagari fonts. PDF export renders that same route server-side, so screen, print and PDF can never diverge. Adds A4 and US-Letter presets.
 
-## Phase 3 — Scale to 1M (Week 3)
-Focus: DB + CDN + queues + proof via load test.
+## Phase 4 — Interface and mobile polish
 
-### 3.1 Database
-- Composite indexes on: `palm_reading_history(user_id, created_at desc)`, `community_posts(visibility, created_at desc)`, `audio_library(category, is_healthy, rating desc)`, `notifications(user_id, read, created_at desc)`.
-- Materialized views: `mv_trending_saints`, `mv_top_audio_today`, `mv_community_feed_public` — refreshed via `pg_cron` every 5–15 min.
-- Move all count-aggregates to RPCs / cached columns (already partial — finish for community + audio plays).
+- Unify page shells: consistent hero, breadcrumb, section spacing and empty/loading/error states across Saints, Temples, Scriptures, Audio, Horoscope, Numerology, Kundali and Palm Reading.
+- Skeleton loaders everywhere a network fetch gates content; no more layout jumps.
+- Re-verify every route at 390px with tap targets ≥ 44px and zero horizontal overflow.
+- YouTube embeds move to `youtube-nocookie.com`, lazy-loaded with a poster-image facade so the shorts feed stops pulling player JS on page load.
 
-### 3.2 Edge & CDN
-- Add `Cache-Control: public, s-maxage=...` to all read-only edge functions (saints, temples, horoscope, audio list).
-- Move public images to a Supabase Storage bucket fronted by Cloudflare; signed URLs only for private (palm scans).
+## Phase 5 — Scale readiness for 1M users
 
-### 3.3 Queues & Background Jobs
-- `pg_cron` + `pg_net` for: ingestion, audio-self-heal, qa-runner, mv refreshes, notification fanout.
-- Add a tiny `jobs` table with status + retries + DLQ; admin can replay failed jobs from `AdminJobLogs`.
+- Add the missing composite indexes surfaced by slow-query inspection (`audio_library(category, url_status)`, `community_posts(visibility, created_at desc)`, `scripture_chapters(scripture_id, chapter_number)`).
+- Paginate every list view (keyset, not offset) so no query can trip the 1000-row ceiling.
+- Cache read-heavy edge functions (`daily-horoscope`, `hindu-panchang`, `youtube-shorts`) in `api_response_cache` with explicit TTLs.
+- Re-run the k6 load test and refresh `SCALING_PLAN.md` with the new numbers.
 
-### 3.4 Proof
-- Run k6 load test (already authored) at 1k → 10k → 50k VUs against staging; record p50/p95/p99 for hot endpoints.
-- Update `SCALING_PLAN.md` with measured numbers + SLOs (e.g. read p95 < 200ms, PDF p95 < 8s).
+## Phase 6 — Prove it
+
+- Extend the QA runner with checks for audio URL health, dataset row-count floors, and print-route rendering, then run a fresh 21-route Playwright sweep and update the audit report on the Admin → Reports page with pass/fail per route.
 
 ---
 
-## Phase 4 — Polish & Launch (Week 4, partial)
-- End-to-end Playwright regression run via existing `qa-runner`; export matrix to CSV.
-- Premium design pass: consistent gradient/glassmorphism on Dashboard, Kundali, Palm Result, Audio Library, Admin.
-- Lighthouse pass: LCP image preload, route-level code-splitting, font-display swap.
-- SEO/JSON-LD for `/saints/:slug`, `/temples/:slug`, `/scriptures/:slug`.
-- Final security re-scan; mark all addressed findings.
+## Technical notes
 
----
+- Edge functions touched: `sync-archive-audio`, `check-audio-health`, `audio-self-heal`, `sync-wikipedia-saints`, `sync-wikidata-temples`, `sync-scriptures`, `astro-engine`, `render-pdf`, `qa-runner`.
+- No schema changes are needed for audio — `url_status`, `mirror_urls`, `content_type`, `content_length` and `last_error` already exist and are simply unused. New indexes ship as a migration.
+- All data comes from Archive.org, Wikipedia/Wikidata and public-domain scripture sources, cleaned and deduped before insert — no placeholder or invented content.
 
-## Technical Notes
-- **PDF**: Browserless inline HTML only (SSRF-hardened, JWT-auth already in place). Reuse `render-pdf` for Palm + Kundali + Numerology.
-- **MediaPipe/OpenCV**: keep client-side; only ROI + landmark JSON crosses the wire — no raw frames to LLM.
-- **Astrology**: Swiss Ephemeris WASM in edge function, sidereal Lahiri default; tropical optional.
-- **Ingestion legal**: Wikidata/Wikipedia (CC-BY-SA, attribute), Archive.org (per-item license check), Jamendo (CC), Bhagavad Gita API (free tier with attribution), Sefaria (CC), Vedabase via Firecrawl only on pages with permissive ToS.
-- **Caching**: `api_response_cache` for external APIs (24h), `horoscope_cache` (24h), MV refresh 5–15 min, CDN s-maxage 1h on public reads.
-- **Observability**: `notify.ts` webhook on QA/ingestion/audio-heal failures; `AdminJobLogs` for triage.
+## Sequencing
 
----
-
-## Out of Scope (call out now)
-- iOS/Android native builds (Capacitor wiring already documented, not re-touched here).
-- Payments/subscriptions overhaul (existing `usePremium` stays).
-- Real-time chat saints v4 (current v3 stays).
-
----
-
-## Acceptance Criteria (per phase)
-- **P1**: Palm capture rejects blurry/non-palm frames; PDF downloads in <8s with perfect Devanagari; audio library shows 0 broken links in admin scan.
-- **P2**: Kundali matches AstroSage within ±1° on planetary positions for 5 sample DOBs; ingestion adds ≥500 new verified rows across saints/temples/scriptures/audio.
-- **P3**: k6 sustains 10k concurrent reads at p95 < 300ms; SCALING_PLAN.md has real numbers.
-- **P4**: Lighthouse mobile ≥ 90 perf on Dashboard + Result page; security scan clean except platform-level items.
-
-Confirm and I'll start P1 immediately.
+Phase 1 first, because a broken audio library is the most visible failure. Phases 2 and 3 next, then 4–6. This is several turns of work; I will report verified results (row counts, HTTP checks, test output) at each phase rather than claiming completion up front.
