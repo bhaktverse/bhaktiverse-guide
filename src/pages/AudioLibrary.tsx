@@ -116,11 +116,15 @@ const AudioLibrary = () => {
         return data.publicUrl;
       };
 
+      // Only surface tracks whose source URL has passed (or not yet failed) a
+      // health probe — broken CDN entries are excluded from the library.
       const { data: audioTracks, error } = await supabase
         .from('audio_library')
         .select('*')
+        .neq('url_status', 'broken')
         .order('created_at', { ascending: false });
       if (error) throw error;
+
 
       const mapped: AudioTrack[] = audioTracks?.map(track => ({
         id: track.id,

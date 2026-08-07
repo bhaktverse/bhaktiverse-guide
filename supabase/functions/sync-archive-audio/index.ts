@@ -10,12 +10,8 @@
 // Auth: admin JWT, or `x-cron-secret` matching CRON_SECRET.
 // Body (all optional): { offset?: number, limit?: number, perQuery?: number, maxFiles?: number }
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { authorizeJob, corsHeaders } from '../_shared/jobAuth.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
-};
 
 type Category = 'mantra' | 'bhajan' | 'aarti' | 'meditation' | 'story' | 'discourse';
 
@@ -219,21 +215,10 @@ Deno.serve(async (req) => {
 
   const startedAt = new Date();
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const cronSecret = Deno.env.get('CRON_SECRET');
-
-    const isCron = !!cronSecret && req.headers.get('x-cron-secret') === cronSecret;
-    if (!isCron) {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) return json({ error: 'Unauthorized' }, 401);
-      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-      const { data: userData, error: userErr } = await userClient.auth.getUser();
-      if (userErr || !userData?.user) return json({ error: 'Unauthorized' }, 401);
-      const { data: isAdmin } = await userClient.rpc('has_role', { _user_id: userData.user.id, _role: 'admin' });
-      if (!isAdmin) return json({ error: 'Forbidden' }, 403);
-    }
+    const auth = await authorizeJob(req, 'sync-archive-audio');
+    if (!auth.ok) return json({ error: auth.error }, auth.status);
+    const admin = auth.admin;
+    const isCron = auth.kind === 'job';
 
     let body: Record<string, unknown> = {};
     try { body = await req.json(); } catch { /* empty body is fine */ }
@@ -242,7 +227,6 @@ Deno.serve(async (req) => {
     const perQuery = Math.min(10, Math.max(1, Number(body.perQuery ?? 5) | 0));
     const maxFiles = Math.min(10, Math.max(1, Number(body.maxFiles ?? 5) | 0));
 
-    const admin = createClient(supabaseUrl, serviceKey);
 
     const { data: existingRows } = await admin.from('audio_library').select('title').limit(2000);
     const seen = new Set((existingRows ?? []).map((r: { title: string }) => normalise(r.title)));

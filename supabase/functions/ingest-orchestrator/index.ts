@@ -1,9 +1,10 @@
 // Admin/cron: fan out to all sync functions, dedupe, log to ingestion_runs.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { verifyJobToken } from '../_shared/jobAuth.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-job-token",
 };
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
@@ -66,7 +67,8 @@ Deno.serve(async (req) => {
   const auth = req.headers.get("Authorization");
   const cronKey = req.headers.get("x-cron-key");
   let trigger = "manual";
-  if (cronKey && cronKey === Deno.env.get("CRON_SECRET")) trigger = "cron";
+  const jobTokenOk = await verifyJobToken(supabase, req.headers.get("x-job-token"), "ingest-orchestrator");
+  if (jobTokenOk || (cronKey && cronKey === Deno.env.get("CRON_SECRET"))) trigger = "cron";
   else if (auth) {
     const userClient = createClient(SB_URL, ANON, { global: { headers: { Authorization: auth } } });
     const { data: u } = await userClient.auth.getUser();

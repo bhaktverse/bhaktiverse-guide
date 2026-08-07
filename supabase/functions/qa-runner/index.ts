@@ -2,10 +2,11 @@
 // Writes results into qa_runs / qa_results.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { notifyJobFailure } from "../_shared/notify.ts";
+import { verifyJobToken } from '../_shared/jobAuth.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-job-token",
 };
 
 const PREVIEW_BASE = Deno.env.get("PUBLIC_APP_URL") ?? "https://bhaktverse.lovable.app";
@@ -75,7 +76,8 @@ Deno.serve(async (req) => {
   const cronKey = req.headers.get("x-cron-key");
   let triggeredBy: string | null = null;
   let trigger = "manual";
-  if (cronKey && cronKey === Deno.env.get("CRON_SECRET")) {
+  const jobTokenOk = await verifyJobToken(supabase, req.headers.get("x-job-token"), "qa-runner");
+  if (jobTokenOk || (cronKey && cronKey === Deno.env.get("CRON_SECRET"))) {
     trigger = "cron";
   } else if (auth) {
     const userClient = createClient(SB_URL, ANON, { global: { headers: { Authorization: auth } } });
