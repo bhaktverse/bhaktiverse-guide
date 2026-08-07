@@ -1,10 +1,11 @@
 // Admin/cron: probe every audio track, follow redirects, attempt rehost from Archive.org.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { notifyJobFailure } from "../_shared/notify.ts";
+import { verifyJobToken } from '../_shared/jobAuth.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-job-token",
 };
 
 async function probe(url: string) {
@@ -50,7 +51,8 @@ Deno.serve(async (req) => {
   const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
   const supabase = createClient(SB_URL, SRV);
 
-  const isCron = cronKey && cronKey === Deno.env.get("CRON_SECRET");
+  const jobTokenOk = await verifyJobToken(supabase, req.headers.get("x-job-token"), "audio-self-heal");
+  const isCron = jobTokenOk || (cronKey && cronKey === Deno.env.get("CRON_SECRET"));
   if (!isCron) {
     if (!auth) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     const u = createClient(SB_URL, ANON, { global: { headers: { Authorization: auth } } });

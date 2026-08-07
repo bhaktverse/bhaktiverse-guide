@@ -743,6 +743,27 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_job_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          purpose: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          purpose: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          purpose?: string
+          token?: string
+        }
+        Relationships: []
+      }
       kundali_match_history: {
         Row: {
           ai_analysis: string | null

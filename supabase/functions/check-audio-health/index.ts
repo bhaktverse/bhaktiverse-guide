@@ -5,10 +5,11 @@
 // HEAD-pings each audio_url, updates url_status + last_checked_at,
 // and queues self-heal for any newly broken rows.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { verifyJobToken } from '../_shared/jobAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret, x-job-token',
 };
 
 const json = (body: unknown, status = 200) =>
@@ -52,10 +53,11 @@ Deno.serve(async (req) => {
   );
 
   // Auth: either admin JWT or matching cron secret.
+  const jobTokenOk = await verifyJobToken(supabase, req.headers.get('x-job-token'), 'check-audio-health');
   const cronSecret = req.headers.get('x-cron-secret');
   const auth = req.headers.get('Authorization');
   let isAuthorized = false;
-  if (cronSecret && cronSecret === Deno.env.get('CRON_SECRET')) {
+  if (jobTokenOk || (cronSecret && cronSecret === Deno.env.get('CRON_SECRET'))) {
     isAuthorized = true;
   } else if (auth) {
     const userClient = createClient(
