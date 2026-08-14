@@ -456,13 +456,12 @@ const Dashboard = () => {
                         if (!user) return;
                         setSadhanaLoading(action.type);
                         try {
-                          await supabase.from('user_activities').insert({
-                            user_id: user.id,
-                            activity_type: action.type,
-                            activity_data: action.data,
-                            points_earned: action.points,
-                            streak_contribution: true,
+                          // Server validates and awards points (anti-spoofing)
+                          await supabase.rpc('award_activity', {
+                            _activity_type: action.type,
+                            _activity_data: action.data,
                           });
+
                           // Update local stats
                           setStats(prev => ({
                             ...prev,
