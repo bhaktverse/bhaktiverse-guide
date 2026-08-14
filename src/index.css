@@ -344,56 +344,79 @@
     animation-delay: 0.4s;
   }
 }
-/* === Print stylesheet for palm reading report (native Ctrl+P + /palm-reading/print/:id) === */
+/* === Universal print stylesheet ===
+   Works for any report marked with [data-print-root] (palm, kundali,
+   numerology, horoscope) plus the legacy #palm-report-print id. */
 @media print {
   body * { visibility: hidden !important; }
-  #palm-report-print, #palm-report-print * { visibility: visible !important; }
-  #palm-report-print {
+  #palm-report-print, #palm-report-print *,
+  [data-print-root], [data-print-root] * { visibility: visible !important; }
+  #palm-report-print,
+  [data-print-root] {
     position: absolute !important; left: 0; top: 0; width: 100%;
+    margin: 0 !important; padding: 0 !important;
     background: white !important; color: black !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   /* Force readable text + preserve gradients on print */
-  #palm-report-print * {
+  #palm-report-print *,
+  [data-print-root] * {
     color: black !important;
     text-shadow: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
-  #palm-report-print .bg-gradient-to-r,
-  #palm-report-print [class*="bg-gradient"] {
+  #palm-report-print [class*="bg-gradient"],
+  [data-print-root] [class*="bg-gradient"] {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   /* Devanagari / Sanskrit glyph safety on print */
-  #palm-report-print [lang="hi"],
-  #palm-report-print [lang="sa"],
-  #palm-report-print .devanagari {
+  #palm-report-print [lang="hi"], #palm-report-print [lang="sa"], #palm-report-print .devanagari,
+  [data-print-root] [lang="hi"], [data-print-root] [lang="sa"], [data-print-root] .devanagari {
     font-family: 'Noto Sans Devanagari', 'Mangal', serif !important;
+    word-break: keep-all !important;
+    hyphens: none !important;
   }
   /* Each Card/section should not split across pages */
   #palm-report-print [class*="rounded"][class*="border"],
-  #palm-report-print section,
-  #palm-report-print article {
+  #palm-report-print section, #palm-report-print article,
+  [data-print-root] [class*="rounded"][class*="border"],
+  [data-print-root] section, [data-print-root] article,
+  [data-print-block] {
     break-inside: avoid;
     page-break-inside: avoid;
   }
   /* Headings stay with their content */
-  #palm-report-print h1, #palm-report-print h2, #palm-report-print h3 {
+  #palm-report-print h1, #palm-report-print h2, #palm-report-print h3,
+  [data-print-root] h1, [data-print-root] h2, [data-print-root] h3 {
     break-after: avoid-page;
     page-break-after: avoid;
   }
   /* Images never split */
-  #palm-report-print img {
+  #palm-report-print img,
+  [data-print-root] img {
     break-inside: avoid;
     page-break-inside: avoid;
     max-width: 100% !important;
     height: auto !important;
   }
+  /* Grids collapse to a predictable two-column print layout */
+  [data-print-root] [class*="grid-cols-"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  [data-print-page-break] { break-before: page; page-break-before: always; }
   nav, header, footer, .no-print, [data-no-print] { display: none !important; }
   .animate-spin, .animate-sacred-float, .animate-om-pulse,
   [class*="animate-"] { animation: none !important; }
   @page { size: A4; margin: 12mm; }
   @page :first { margin-top: 8mm; }
 }
+
 
 

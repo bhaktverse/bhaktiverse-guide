@@ -2071,12 +2071,27 @@ export type Database = {
       }
     }
     Functions: {
+      activity_points: {
+        Args: { _activity_type: Database["public"]["Enums"]["activity_type"] }
+        Returns: number
+      }
+      award_activity: {
+        Args: {
+          _activity_data?: Json
+          _activity_type: Database["public"]["Enums"]["activity_type"]
+        }
+        Returns: Json
+      }
       check_and_increment_api_usage: {
         Args: {
           _daily_limit?: number
           _function_name: string
           _user_id: string
         }
+        Returns: Json
+      }
+      complete_daily_challenge: {
+        Args: { _challenge_id: string }
         Returns: Json
       }
       get_community_stats: { Args: never; Returns: Json }

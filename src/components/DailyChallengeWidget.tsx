@@ -54,29 +54,30 @@ const DailyChallengeWidget = () => {
       return;
     }
 
-    const { error } = await supabase.from("user_challenge_completions").insert({
-      user_id: user.id,
-      challenge_id: challengeId,
+    // Points are computed and validated server-side (anti-spoofing).
+    const { data, error } = await supabase.rpc("complete_daily_challenge", {
+      _challenge_id: challengeId,
     });
 
     if (error) {
-      if (error.code === "23505") {
-        toast.info("You've already completed this challenge!");
-      } else {
-        toast.error("Failed to mark challenge complete");
-      }
+      toast.error("Failed to mark challenge complete");
       return;
     }
 
-    // Award XP
-    await supabase
-      .from("spiritual_journey")
-      .update({ experience_points: (await supabase.from("spiritual_journey").select("experience_points").eq("user_id", user.id).single()).data?.experience_points || 0 + points })
-      .eq("user_id", user.id);
+    const result = data as { allowed?: boolean; reason?: string; points_awarded?: number } | null;
+    if (!result?.allowed) {
+      toast.info(
+        result?.reason === "already_completed"
+          ? "You've already completed this challenge!"
+          : "This challenge isn't available right now."
+      );
+      return;
+    }
 
     setCompletedIds((prev) => new Set([...prev, challengeId]));
-    toast.success(`+${points} XP earned! 🙏`);
+    toast.success(`+${result.points_awarded ?? points} XP earned! 🙏`);
   };
+
 
   const completedCount = challenges.filter((c) => completedIds.has(c.id)).length;
   const progress = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
