@@ -520,7 +520,7 @@ const KundaliMatch = () => {
                   नया मिलान करें / New Match
                 </Button>
               </div>
-            </div>
+            </PrintableReport>
           )}
 
           {/* Past Matches History */}
