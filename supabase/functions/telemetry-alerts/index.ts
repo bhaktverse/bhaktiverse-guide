@@ -5,8 +5,7 @@
 // Invoked by pg_cron with an internal job token, or manually by an admin JWT.
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { verifyJobToken } from "../_shared/jobAuth.ts";
+import { authorizeJob } from "../_shared/jobAuth.ts";
 import { notifyJobFailure } from "../_shared/notify.ts";
 
 const WINDOW_HOURS = 6;
@@ -28,35 +27,10 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const auth = await authorizeJob(req, "telemetry-alerts");
+  if (!auth.ok) return json({ error: auth.error }, auth.status);
+  const supabase = auth.admin;
 
-  // Auth: internal job token OR an admin user JWT.
-  let authorized = false;
-  try {
-    const body = req.method === "POST" ? await req.clone().json().catch(() => ({})) : {};
-    if (body?.job_token) {
-      authorized = await verifyJobToken(supabase, body.job_token, "telemetry-alerts");
-    }
-    if (!authorized) {
-      const header = req.headers.get("Authorization");
-      if (header?.startsWith("Bearer ")) {
-        const jwt = header.replace("Bearer ", "");
-        const { data } = await supabase.auth.getClaims(jwt);
-        const uid = data?.claims?.sub as string | undefined;
-        if (uid) {
-          const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
-          authorized = !!isAdmin;
-        }
-      }
-    }
-  } catch {
-    authorized = false;
-  }
-
-  if (!authorized) return json({ error: "Unauthorized" }, 401);
 
   const since = new Date(Date.now() - WINDOW_HOURS * 3600_000).toISOString();
   const { data: events, error } = await supabase
