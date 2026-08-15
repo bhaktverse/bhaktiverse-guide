@@ -124,6 +124,7 @@ const App = () => (
                 <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                 <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
                 <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                <Route path="/settings/offline" element={<ProtectedRoute><OfflineSettings /></ProtectedRoute>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
