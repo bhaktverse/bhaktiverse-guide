@@ -187,6 +187,10 @@ export default function AdminQA() {
         </TabsContent>
 
 
+        <TabsContent value="responsive" className="mt-4">
+          <MobileResponsiveQA />
+        </TabsContent>
+
         <TabsContent value="sync" className="mt-4">
           <AdminSyncCenter />
         </TabsContent>
