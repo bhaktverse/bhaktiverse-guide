@@ -119,6 +119,7 @@ export default function AdminQA() {
             <TabsTrigger value="matrix">Coverage</TabsTrigger>
             <TabsTrigger value="jobs">Job Logs</TabsTrigger>
             <TabsTrigger value="palm">Telemetry</TabsTrigger>
+            <TabsTrigger value="responsive">Responsive</TabsTrigger>
             <TabsTrigger value="sync">Sync</TabsTrigger>
           </TabsList>
         </div>
