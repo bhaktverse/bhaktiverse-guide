@@ -13,6 +13,7 @@ import AdminJobLogs from "@/components/admin/AdminJobLogs";
 import PalmTelemetryPanel from "@/components/admin/PalmTelemetryPanel";
 import AudioHealthTrendPanel from "@/components/admin/AudioHealthTrendPanel";
 import AudioReliabilityPanel from "@/components/admin/AudioReliabilityPanel";
+import MobileResponsiveQA from "@/components/admin/MobileResponsiveQA";
 
 
 type Run = {
@@ -119,6 +120,7 @@ export default function AdminQA() {
             <TabsTrigger value="matrix">Coverage</TabsTrigger>
             <TabsTrigger value="jobs">Job Logs</TabsTrigger>
             <TabsTrigger value="palm">Telemetry</TabsTrigger>
+            <TabsTrigger value="responsive">Responsive</TabsTrigger>
             <TabsTrigger value="sync">Sync</TabsTrigger>
           </TabsList>
         </div>
@@ -185,6 +187,10 @@ export default function AdminQA() {
           <AudioReliabilityPanel />
         </TabsContent>
 
+
+        <TabsContent value="responsive" className="mt-4">
+          <MobileResponsiveQA />
+        </TabsContent>
 
         <TabsContent value="sync" className="mt-4">
           <AdminSyncCenter />

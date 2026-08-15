@@ -50,6 +50,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const DeityPage = lazy(() => import("./pages/DeityPage"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const OfflineSettings = lazy(() => import("./pages/OfflineSettings"));
 
 // Admin pages
 const AdminRoute = lazy(() => import("./components/admin/AdminRoute"));
@@ -123,6 +124,7 @@ const App = () => (
                 <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                 <Route path="/premium" element={<ProtectedRoute><Premium /></ProtectedRoute>} />
                 <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                <Route path="/settings/offline" element={<ProtectedRoute><OfflineSettings /></ProtectedRoute>} />
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>

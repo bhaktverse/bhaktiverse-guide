@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { RASHIS, calculateGunMilan, type RashiData, type GunMilanResult } from "@/data/rashiData";
+import PrintableReport from "@/components/PrintableReport";
 import { 
   Heart, Users, Star, Loader2, CheckCircle2, AlertCircle,
   Sparkles, ChevronRight, ChevronDown, Crown, Shield, RefreshCw, History, Calendar
@@ -396,7 +397,11 @@ const KundaliMatch = () => {
 
           {/* Results Display */}
           {result && (
-            <div className="space-y-6">
+            <PrintableReport
+              title="Kundali Match Report"
+              subtitle={`${partner1.name} & ${partner2.name} — ${result.total}/36 Gun Milan`}
+              className="space-y-6"
+            >
               {/* Score Overview */}
               <Card className="card-sacred overflow-hidden">
                 <div className="bg-gradient-to-r from-pink-500/10 via-red-500/10 to-pink-500/10 p-6">
@@ -516,7 +521,7 @@ const KundaliMatch = () => {
                   नया मिलान करें / New Match
                 </Button>
               </div>
-            </div>
+            </PrintableReport>
           )}
 
           {/* Past Matches History */}
