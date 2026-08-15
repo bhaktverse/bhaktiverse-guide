@@ -505,7 +505,7 @@ const Horoscope = () => {
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
+          </PrintableReport>
         )}
       </main>
       
