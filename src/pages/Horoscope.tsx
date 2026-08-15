@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { RASHIS, getRashiByDate, type RashiData } from "@/data/rashiData";
+import PrintableReport from "@/components/PrintableReport";
 import { 
   Sun, Moon, Star, Calendar, Clock, Sparkles, TrendingUp, 
   Heart, Briefcase, Activity, Shield, ChevronRight, Loader2,
@@ -298,7 +299,11 @@ const Horoscope = () => {
 
         {/* Prediction Display */}
         {selectedRashi && prediction && !loading && (
-          <div className="max-w-4xl mx-auto space-y-6">
+          <PrintableReport
+            title={`Daily Horoscope — ${selectedRashi.name}`}
+            subtitle={new Date().toLocaleDateString()}
+            className="max-w-4xl mx-auto space-y-6"
+          >
             {/* Selected Rashi Header */}
             <Card className="card-sacred overflow-hidden">
               <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 p-6">
