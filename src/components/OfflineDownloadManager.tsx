@@ -129,11 +129,7 @@ export default function OfflineDownloadManager({ tracks, playlists = [] }: Props
     );
   };
 
-    await refresh();
-    setBusy(false);
-    setSelected(new Set());
-    toast.success(`${ok}/${list.length} tracks saved for offline listening`);
-  };
+
 
   const removeOne = async (t: DownloadableTrack) => {
     await removeCachedTrack(t.audio_url);
