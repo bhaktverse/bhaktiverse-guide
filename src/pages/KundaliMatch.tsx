@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { RASHIS, calculateGunMilan, type RashiData, type GunMilanResult } from "@/data/rashiData";
+import PrintableReport from "@/components/PrintableReport";
 import { 
   Heart, Users, Star, Loader2, CheckCircle2, AlertCircle,
   Sparkles, ChevronRight, ChevronDown, Crown, Shield, RefreshCw, History, Calendar
