@@ -1,0 +1,56 @@
+name: Astro Accuracy Regression
+
+# Fails the build when the astro engine drifts from the values published in
+# ASTRO_ACCURACY_REPORT.md, so accuracy can never silently regress.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/astro-engine/**"
+      - "ASTRO_ACCURACY_REPORT.md"
+      - ".github/workflows/astro-regression.yml"
+  pull_request:
+    paths:
+      - "supabase/functions/astro-engine/**"
+      - "ASTRO_ACCURACY_REPORT.md"
+  workflow_dispatch:
+
+jobs:
+  astro-accuracy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Show published accuracy baseline
+        run: |
+          echo "### Baseline — ASTRO_ACCURACY_REPORT.md" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          sed -n '1,60p' ASTRO_ACCURACY_REPORT.md >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Run astro engine regression suite
+        run: |
+          set -o pipefail
+          deno test --allow-net --allow-env --allow-read \
+            supabase/functions/astro-engine/accuracy_test.ts 2>&1 | tee /tmp/astro-test.log
+
+      - name: Publish comparison to job summary
+        if: always()
+        run: |
+          echo "### Engine vs. report comparison" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/astro-test.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  frontend-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx vitest run
