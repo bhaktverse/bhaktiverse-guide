@@ -13,6 +13,7 @@ import AdminJobLogs from "@/components/admin/AdminJobLogs";
 import PalmTelemetryPanel from "@/components/admin/PalmTelemetryPanel";
 import AudioHealthTrendPanel from "@/components/admin/AudioHealthTrendPanel";
 import AudioReliabilityPanel from "@/components/admin/AudioReliabilityPanel";
+import MobileResponsiveQA from "@/components/admin/MobileResponsiveQA";
 
 
 type Run = {
