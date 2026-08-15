@@ -396,7 +396,11 @@ const KundaliMatch = () => {
 
           {/* Results Display */}
           {result && (
-            <div className="space-y-6">
+            <PrintableReport
+              title="Kundali Match Report"
+              subtitle={`${partner1.name} & ${partner2.name} — ${result.total}/36 Gun Milan`}
+              className="space-y-6"
+            >
               {/* Score Overview */}
               <Card className="card-sacred overflow-hidden">
                 <div className="bg-gradient-to-r from-pink-500/10 via-red-500/10 to-pink-500/10 p-6">
