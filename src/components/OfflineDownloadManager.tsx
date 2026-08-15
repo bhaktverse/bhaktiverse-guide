@@ -91,16 +91,21 @@ export default function OfflineDownloadManager({ tracks, playlists = [] }: Props
       return;
     }
     if (!online) {
-      toast.error("You're offline. Connect to download tracks.");
+      // Queue now, resume automatically when connectivity returns.
+      enqueueDownloads(list.map((t) => ({ url: t.audio_url, title: t.title })));
+      toast.info(`${list.length} tracks queued — they'll download when you're back online.`);
+      setSelected(new Set());
       return;
     }
     setBusy(true);
     setProgress(0);
     let ok = 0;
+    const failed: typeof list = [];
     for (let i = 0; i < list.length; i++) {
       const t = list[i];
       const success = await cacheAudioTrack(t.audio_url);
       if (success) ok++;
+      else failed.push(t);
       trackAudioEvent({
         event_type: success ? "cache_store" : "playback_error",
         track_title: t.title,
@@ -110,6 +115,20 @@ export default function OfflineDownloadManager({ tracks, playlists = [] }: Props
       });
       setProgress(Math.round(((i + 1) / list.length) * 100));
     }
+    // Anything that failed is retried in the background (survives restarts).
+    if (failed.length) {
+      enqueueDownloads(failed.map((t) => ({ url: t.audio_url, title: t.title })));
+    }
+    await refresh();
+    setBusy(false);
+    setSelected(new Set());
+    toast.success(
+      failed.length
+        ? `${ok}/${list.length} saved · ${failed.length} queued for background retry`
+        : `${ok}/${list.length} tracks saved for offline listening`,
+    );
+  };
+
     await refresh();
     setBusy(false);
     setSelected(new Set());
