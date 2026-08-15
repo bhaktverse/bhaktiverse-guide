@@ -10,6 +10,7 @@ import {
   cacheAudioTrack, removeCachedTrack, listCachedUrls, clearAudioCache,
 } from "@/lib/audioCache";
 import { trackAudioEvent } from "@/lib/audioTelemetry";
+import { enqueueDownloads } from "@/lib/audioDownloadQueue";
 import { CloudDownload, HardDrive, Trash2, CheckCircle2, Loader2, WifiOff } from "lucide-react";
 
 export interface DownloadableTrack {
