@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.audio-self-heal]
 verify_jwt = false
+
+[functions.telemetry-alerts]
+verify_jwt = false
