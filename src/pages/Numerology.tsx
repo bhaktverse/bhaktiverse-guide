@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import PrintableReport from "@/components/PrintableReport";
 import { 
   Sparkles, Calendar, User, Loader2, Star, Heart, Zap, Crown, 
   Brain, Target, Compass, Gem, Palette, Sun, TrendingUp, 
@@ -472,7 +473,12 @@ const Numerology = () => {
 
           {/* Results Display - 3 columns */}
           {report ? (
-            <Card ref={resultsRef} className="lg:col-span-3 card-sacred backdrop-blur-2xl bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine-lg overflow-hidden">
+            <PrintableReport
+              title="Numerology Report"
+              subtitle={`${report.name} — ${new Date(report.dob).toLocaleDateString()}`}
+              className="lg:col-span-3"
+            >
+            <Card ref={resultsRef} className="card-sacred backdrop-blur-2xl bg-gradient-to-br from-background/95 via-accent/5 to-primary/5 border-accent/30 shadow-divine-lg overflow-hidden">
               <CardHeader className="border-b border-border/50 bg-gradient-to-r from-accent/10 via-primary/10 to-accent/10 pb-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
