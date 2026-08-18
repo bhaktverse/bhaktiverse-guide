@@ -2094,6 +2094,7 @@ export type Database = {
         Args: { _challenge_id: string }
         Returns: Json
       }
+      ensure_spiritual_journey: { Args: never; Returns: undefined }
       get_community_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
