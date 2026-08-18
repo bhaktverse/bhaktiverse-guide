@@ -910,6 +910,7 @@ const Numerology = () => {
                 </Tabs>
               </CardContent>
             </Card>
+            </PrintableReport>
           ) : (
             <Card className="lg:col-span-3 card-sacred backdrop-blur-2xl bg-gradient-to-br from-accent/5 via-background to-primary/5 border-dashed border-2 border-primary/30 hover:border-primary/50 transition-all">
               <CardContent className="flex flex-col items-center justify-center h-full py-20">
