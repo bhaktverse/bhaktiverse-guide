@@ -76,6 +76,7 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const AdminAlerts = lazy(() => import("./pages/admin/AdminAlerts"));
 
 
 const queryClient = new QueryClient();
@@ -148,6 +149,7 @@ const App = () => (
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="support" element={<AdminSupport />} />
                   <Route path="qa" element={<AdminQA />} />
+                   <Route path="alerts" element={<AdminAlerts />} />
                   <Route path="reports" element={<AdminReports />} />
 
                 </Route>
