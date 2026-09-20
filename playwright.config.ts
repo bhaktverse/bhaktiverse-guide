@@ -11,6 +11,7 @@ export default defineConfig({
     viewport: { width: 1280, height: 1800 },
     colorScheme: "dark",
     trace: "retain-on-failure",
+    launchOptions: { executablePath: "/bin/chromium" },
   },
   webServer: {
     command: "bun run preview -- --host 127.0.0.1 --port 4173",
