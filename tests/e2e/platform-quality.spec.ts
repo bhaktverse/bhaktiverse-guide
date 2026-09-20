@@ -24,7 +24,7 @@ test.describe("public platform surfaces", () => {
     test(`${route} loads without horizontal overflow`, async ({ page }) => {
       await page.goto(route, { waitUntil: "domcontentloaded" });
       await expect(page.locator("body")).toBeVisible();
-      await expect(page.locator("nav")).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("navigation").first()).toBeVisible({ timeout: 10_000 });
       const layout = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
