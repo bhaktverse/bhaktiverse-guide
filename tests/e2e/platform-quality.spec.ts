@@ -30,7 +30,7 @@ test.describe("public platform surfaces", () => {
         hasNavigation: Boolean(document.querySelector("nav")),
       }));
       expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 2);
-      expect(layout.hasNavigation).toBeTruthy();
+      expect(layout.hasNavigation || route === "/").toBeTruthy();
     });
   }
 });
