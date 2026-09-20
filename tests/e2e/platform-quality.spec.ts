@@ -24,13 +24,14 @@ test.describe("public platform surfaces", () => {
     test(`${route} loads without horizontal overflow`, async ({ page }) => {
       await page.goto(route, { waitUntil: "domcontentloaded" });
       await expect(page.locator("body")).toBeVisible();
+      await expect(page.locator("nav")).toBeVisible({ timeout: 10_000 });
       const layout = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
         hasNavigation: Boolean(document.querySelector("nav")),
       }));
       expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 2);
-      expect(layout.hasNavigation || route === "/").toBeTruthy();
+      expect(layout.hasNavigation).toBeTruthy();
     });
   }
 });

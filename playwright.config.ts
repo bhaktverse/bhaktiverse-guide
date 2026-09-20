@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const localBrowser = process.env.PLAYWRIGHT_EXECUTABLE_PATH || (!process.env.CI ? "/bin/chromium" : undefined);
+const runningAsRoot = typeof process.getuid === "function" && process.getuid() === 0;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -11,7 +14,10 @@ export default defineConfig({
     viewport: { width: 1280, height: 1800 },
     colorScheme: "dark",
     trace: "retain-on-failure",
-    launchOptions: { executablePath: "/bin/chromium", args: ["--no-sandbox"] },
+    launchOptions: {
+      ...(localBrowser ? { executablePath: localBrowser } : {}),
+      ...(runningAsRoot ? { args: ["--no-sandbox"] } : {}),
+    },
   },
   webServer: {
     command: "bun run preview -- --host 127.0.0.1 --port 4173",
@@ -21,6 +27,14 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["iPhone 13"] } },
+    {
+      name: "mobile",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
   ],
 });
