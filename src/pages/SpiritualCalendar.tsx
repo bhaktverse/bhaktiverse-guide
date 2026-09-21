@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,8 +44,7 @@ interface TithiInfo {
 }
 
 const SpiritualCalendar = () => {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { loading: authLoading } = useAuth();
   usePageTitle('Spiritual Calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -56,17 +54,11 @@ const SpiritualCalendar = () => {
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user) {
+    if (!authLoading) {
       loadEvents();
       loadPanchangData();
     }
-  }, [user, currentDate]);
+  }, [authLoading, currentDate]);
 
   const loadPanchangData = async () => {
     try {
