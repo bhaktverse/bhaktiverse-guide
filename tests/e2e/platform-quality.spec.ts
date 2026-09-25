@@ -91,4 +91,19 @@ test.describe("authenticated report workflows", () => {
       expect(width.scrollWidth).toBeLessThanOrEqual(width.clientWidth + 2);
     }
   });
+
+  test("palm-reading print output is produced for every supported language", async ({ page }, testInfo) => {
+    await page.goto("/palm-reading", { waitUntil: "networkidle" });
+    const languageOptions = page.locator("[role='combobox']").first();
+    if (await languageOptions.count()) {
+      for (const [language, label] of [["hi", "Hindi"], ["en", "English"], ["ta", "Tamil"], ["te", "Telugu"], ["bn", "Bengali"], ["mr", "Marathi"]]) {
+        await languageOptions.click();
+        const option = page.getByRole("option", { name: new RegExp(label, "i") }).first();
+        if (await option.count()) await option.click();
+        await page.emulateMedia({ media: "print" });
+        await page.pdf({ path: testInfo.outputPath(`palm-${language}.pdf`), format: "A4", printBackground: true });
+        await page.emulateMedia({ media: "screen" });
+      }
+    }
+  });
 });

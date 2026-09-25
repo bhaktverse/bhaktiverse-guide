@@ -1,0 +1,42 @@
+name: Authenticated Print Stability
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/pages/**"
+      - "src/utils/pdfGenerator.ts"
+      - "tests/e2e/platform-quality.spec.ts"
+      - ".github/workflows/print-stability.yml"
+
+jobs:
+  authenticated-print-stability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - name: Require authorized QA session
+        env:
+          QA_STORAGE_STATE_JSON: ${{ secrets.QA_STORAGE_STATE }}
+        run: |
+          if [ -z "$QA_STORAGE_STATE_JSON" ]; then
+            echo "Missing repository secret QA_STORAGE_STATE. Store a Playwright storage-state JSON for a dedicated, non-privileged test account." >&2
+            exit 1
+          fi
+          printf '%s' "$QA_STORAGE_STATE_JSON" > "$RUNNER_TEMP/qa-storage-state.json"
+          echo "QA_STORAGE_STATE=$RUNNER_TEMP/qa-storage-state.json" >> "$GITHUB_ENV"
+      - name: Run authenticated report route checks
+        run: bunx playwright test tests/e2e/platform-quality.spec.ts --grep "authenticated report workflows"
+        env:
+          CI: true
+      - name: Upload print and browser artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: authenticated-print-stability
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
