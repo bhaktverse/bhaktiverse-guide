@@ -8,12 +8,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-job-token",
 };
 
-async function probe(url: string) {
+async function probe(url: string, timeoutMs = 7000) {
   try {
-    let r = await fetch(url, { method: "HEAD", redirect: "follow" });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let r = await fetch(url, { method: "HEAD", redirect: "follow", signal: controller.signal });
+    clearTimeout(timer);
     if (!r.ok && r.status !== 405) {
       // Try GET range
-      r = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1024" } });
+      const rangeController = new AbortController();
+      const rangeTimer = setTimeout(() => rangeController.abort(), timeoutMs);
+      r = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1024" }, signal: rangeController.signal });
+      clearTimeout(rangeTimer);
     }
     return {
       ok: r.ok,
@@ -32,7 +38,10 @@ async function rehostFromArchive(url: string): Promise<string | null> {
   if (!m) return null;
   const item = m[1];
   try {
-    const r = await fetch(`https://archive.org/metadata/${item}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 7000);
+    const r = await fetch(`https://archive.org/metadata/${item}`, { signal: controller.signal });
+    clearTimeout(timer);
     if (!r.ok) return null;
     const j = await r.json();
     const file = (j.files ?? []).find((f: any) => /\.(mp3|ogg|m4a)$/i.test(f.name));
@@ -72,8 +81,12 @@ Deno.serve(async (req) => {
   let ok = 0, healed = 0, broken = 0, failed = 0;
   const details: Array<Record<string, unknown>> = [];
   try {
-    const { data: tracks } = await supabase.from("audio_library").select("id, title, audio_url").limit(500);
-    for (const t of tracks ?? []) {
+    const { data: tracks } = await supabase.from("audio_library").select("id, title, audio_url").eq("url_status", "broken").order("last_checked_at", { ascending: true, nullsFirst: true }).limit(100);
+    const queue = [...(tracks ?? [])];
+    const workers = Array.from({ length: 5 }, async () => {
+      while (queue.length) {
+      const t = queue.shift();
+      if (!t) return;
       const p = await probe(t.audio_url);
       if (p.ok) {
         ok++;
@@ -104,6 +117,9 @@ Deno.serve(async (req) => {
       await supabase.from("audio_library").update({
         url_status: "broken", last_error: `HTTP ${p.status}`, last_checked_at: new Date().toISOString(),
       }).eq("id", t.id);
+      }
+    });
+    await Promise.all(workers);
     }
 
     const totalChecked = (tracks?.length ?? 0);
