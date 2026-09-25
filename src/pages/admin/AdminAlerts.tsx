@@ -10,6 +10,7 @@ import { Area, AreaChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import { AlertTriangle, RefreshCw, WifiOff, RotateCcw, Users } from "lucide-react";
 import { toast } from "sonner";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type Event = {
   id: string;
@@ -45,6 +46,7 @@ export default function AdminAlerts() {
   const [names, setNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -215,7 +217,9 @@ export default function AdminAlerts() {
                       <td className="p-3 text-right">{u.retries}</td>
                       <td className="p-3 text-right">{u.misses}</td>
                       <td className="p-3 text-right text-xs text-muted-foreground">
-                        {new Date(u.last).toLocaleString()}
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedUser(u.user_id)} aria-label={`View reliability details for ${names[u.user_id] || "devotee"}`}>
+                          {new Date(u.last).toLocaleString()}
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -263,6 +267,31 @@ export default function AdminAlerts() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Sheet open={selectedUser !== null} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+          <SheetHeader>
+            <SheetTitle>{selectedUser ? names[selectedUser] || "Devotee" : "Reliability details"}</SheetTitle>
+            <SheetDescription>Audio reliability events recorded in the last {WINDOW_DAYS} days.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-3">
+            {events.filter((event) => event.user_id === selectedUser && (isFallback(event) || isRetryFailure(event) || isCacheMiss(event))).map((event) => (
+              <div key={event.id} className="border-b border-border/50 pb-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Badge variant={isRetryFailure(event) ? "destructive" : "secondary"}>{event.event_type}</Badge>
+                  <span className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleString()}</span>
+                </div>
+                <p className="mt-2 font-medium">{event.track_title || "Unknown track"}</p>
+                <p className="text-xs text-muted-foreground">{event.outcome || "No outcome recorded"} · attempt {event.attempt} · {event.was_online === false ? "offline" : "online"}</p>
+                {event.track_url && <p className="mt-1 break-all text-xs text-muted-foreground">{event.track_url}</p>}
+              </div>
+            ))}
+            {selectedUser && !events.some((event) => event.user_id === selectedUser && (isFallback(event) || isRetryFailure(event) || isCacheMiss(event))) && (
+              <p className="text-sm text-muted-foreground">No matching audio reliability events.</p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
