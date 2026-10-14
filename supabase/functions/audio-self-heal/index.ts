@@ -118,9 +118,9 @@ Deno.serve(async (req) => {
         url_status: "broken", last_error: `HTTP ${p.status}`, last_checked_at: new Date().toISOString(),
       }).eq("id", t.id);
       }
+    }
     });
     await Promise.all(workers);
-    }
 
     const totalChecked = (tracks?.length ?? 0);
     if (runId) {
