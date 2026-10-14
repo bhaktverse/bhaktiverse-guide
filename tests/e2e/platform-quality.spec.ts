@@ -95,15 +95,18 @@ test.describe("authenticated report workflows", () => {
   test("palm-reading print output is produced for every supported language", async ({ page }, testInfo) => {
     await page.goto("/palm-reading", { waitUntil: "networkidle" });
     const languageOptions = page.locator("[role='combobox']").first();
-    if (await languageOptions.count()) {
-      for (const [language, label] of [["hi", "Hindi"], ["en", "English"], ["ta", "Tamil"], ["te", "Telugu"], ["bn", "Bengali"], ["mr", "Marathi"]]) {
-        await languageOptions.click();
-        const option = page.getByRole("option", { name: new RegExp(label, "i") }).first();
-        if (await option.count()) await option.click();
-        await page.emulateMedia({ media: "print" });
-        await page.pdf({ path: testInfo.outputPath(`palm-${language}.pdf`), format: "A4", printBackground: true });
-        await page.emulateMedia({ media: "screen" });
-      }
+    await expect(languageOptions).toBeVisible();
+    for (const [language, label] of [["hi", "Hindi"], ["en", "English"], ["ta", "Tamil"], ["te", "Telugu"], ["bn", "Bengali"], ["mr", "Marathi"]] as const) {
+      await languageOptions.click();
+      await page.getByRole("option", { name: new RegExp(label, "i") }).click();
+      const chosen = await languageOptions.getAttribute("data-state");
+      expect(chosen).toBeTruthy();
+      await page.emulateMedia({ media: "print" });
+      const pdfPath = testInfo.outputPath(`palm-${language}.pdf`);
+      await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
+      const { stat } = await import("node:fs/promises");
+      expect((await stat(pdfPath)).size).toBeGreaterThan(1000);
+      await page.emulateMedia({ media: "screen" });
     }
   });
 });
