@@ -99,8 +99,7 @@ test.describe("authenticated report workflows", () => {
     for (const [language, label] of [["hi", "Hindi"], ["en", "English"], ["ta", "Tamil"], ["te", "Telugu"], ["bn", "Bengali"], ["mr", "Marathi"]] as const) {
       await languageOptions.click();
       await page.getByRole("option", { name: new RegExp(label, "i") }).click();
-      const chosen = await languageOptions.getAttribute("data-state");
-      expect(chosen).toBeTruthy();
+      await expect(languageOptions).toContainText(new RegExp(label, "i"));
       await page.emulateMedia({ media: "print" });
       const pdfPath = testInfo.outputPath(`palm-${language}.pdf`);
       await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
