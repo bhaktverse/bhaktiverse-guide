@@ -120,7 +120,6 @@ Deno.serve(async (req) => {
       }
     });
     await Promise.all(workers);
-    }
 
     const totalChecked = (tracks?.length ?? 0);
     if (runId) {
