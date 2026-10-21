@@ -4,6 +4,22 @@ import { notifyJobFailure } from "../_shared/notify.ts";
 import { verifyJobToken } from '../_shared/jobAuth.ts';
 import { probeAudioUrl } from '../_shared/audioHealth.ts';
 
+// Archive.org candidates reviewed against each recording; never select an
+// arbitrary file from an Archive.org item as an automatic replacement.
+const VERIFIED_REPLACEMENTS: Record<string, string> = {
+  '517fa897-3f5a-49de-b3f3-f6a9fea99bf1': 'https://archive.org/download/Ramayana_721/4KISHKANYAA_KANDA.mp3',
+  'fdb7f6d2-bdf1-47f9-989f-6de1c2a97d0f': 'https://archive.org/download/BestKrishnaBhajan1-151/Aas%20Rakho%20Satguru%20Ki.mp3',
+  'fe0173e9-6ee4-48c2-a60f-bd970428672e': 'https://archive.org/download/AchyutamKeshavam/Achyutam%20Keshavam.mp3',
+  '81847946-824b-4703-802c-2164b1b902a9': 'https://archive.org/download/BhagawanSatyaSaiBabaSingsBhajans/Baba%20Sings%20Volume_1%2FTrack%2013Shivaya%20parameshwaraya.mp3',
+  '1fcf00ca-aad9-4c48-b0d5-93124b16e00e': 'https://archive.org/download/01-bajrang-baan/01%20-%20Bajrang%20Baan.mp3',
+  '52347bcc-2fcc-444d-b92f-f59ec478f0e0': 'https://archive.org/download/HindiBhajanmp3-HanumanChalisaAartiyaan/6-aartiKeejeHanumanLalaKiaarti-Vol-3.mp3',
+  '72d4a0ed-960a-4940-a25e-91237b38c70e': 'https://archive.org/download/radio-ceylon-08-08-2021-sunday-morning-/Radio%20Ceylon%2008-08-2021~Sunday%20Morning~01%20Bhakti%20Sangeet%20-.mp3',
+  '20c27b95-ea66-4804-a1dc-cc3ba9f27082': 'https://archive.org/download/VishnuSahasranamamSooryagayathri/Vishnu%20Sahasranamam-Sooryagayathri.mp3',
+  '0eb88009-8c68-4661-b4ae-aa005b17b701': 'https://archive.org/download/sunderkand4/Sunderkand%20-%201.mp3',
+  '4eed1a33-235c-4ee1-9e1e-73f01de5a880': 'https://archive.org/download/fptu_aarti-keejei-hanuman-lala-ki/AartiKeejeiHanumanLalaKi.mp3',
+  'a72b9712-4621-4567-8600-d03ed72701d0': 'https://archive.org/download/05-shri-hanuman-chalisa/05%20SHRI%20HANUMAN%20CHALISA.mp3',
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-job-token",
@@ -73,6 +89,8 @@ Deno.serve(async (req) => {
           if (source) break;
         }
       }
+      const verifiedReplacement = VERIFIED_REPLACEMENTS[t.id];
+      if (!source && verifiedReplacement) source = await probeAudioUrl(verifiedReplacement);
       if (source) {
         ok++;
         if (source.url !== t.audio_url) healed++;
