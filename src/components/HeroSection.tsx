@@ -24,7 +24,7 @@ const HeroSection = () => {
         supabase.from('saints').select('id', { count: 'exact', head: true }),
         supabase.from('temples').select('id', { count: 'exact', head: true }),
         supabase.from('scriptures').select('id', { count: 'exact', head: true }),
-        supabase.from('audio_library').select('id', { count: 'exact', head: true }),
+        supabase.from('audio_library').select('id', { count: 'exact', head: true }).eq('url_status', 'ok'),
         supabase.from('profiles_public').select('id', { count: 'exact', head: true }),
       ]);
       setDbStats({

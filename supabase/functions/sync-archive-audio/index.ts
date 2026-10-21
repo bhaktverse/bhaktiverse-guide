@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
             associated_deity: tagDeity(title, q.deity),
             content_type: ct,
             content_length: c.size || null,
-            url_status: 'healthy',
+            url_status: 'ok',
             last_checked_at: new Date().toISOString(),
           });
         }
