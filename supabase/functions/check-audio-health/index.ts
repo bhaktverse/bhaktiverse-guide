@@ -6,6 +6,7 @@
 // and queues self-heal for any newly broken rows.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { verifyJobToken } from '../_shared/jobAuth.ts';
+import { probeAudioUrl } from '../_shared/audioHealth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,39 +19,13 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
-async function headCheck(url: string, timeoutMs = 8000): Promise<boolean> {
-  try {
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), timeoutMs);
-    const r = await fetch(url, { method: 'HEAD', redirect: 'follow', signal: ctrl.signal });
-    clearTimeout(to);
-    if (r.ok) return true;
-    // Some CDNs reject HEAD — fall back to a 1-byte ranged GET.
-    if (r.status === 405 || r.status === 403) {
-      const ctrl2 = new AbortController();
-      const to2 = setTimeout(() => ctrl2.abort(), timeoutMs);
-      const r2 = await fetch(url, {
-        method: 'GET',
-        headers: { Range: 'bytes=0-0' },
-        redirect: 'follow',
-        signal: ctrl2.signal,
-      });
-      clearTimeout(to2);
-      return r2.ok || r2.status === 206;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) return json({ error: 'Audio health service is not configured' }, 500);
+  const supabase = createClient(supabaseUrl, serviceKey);
 
   // Auth: either admin JWT or matching cron secret.
   const jobTokenOk = await verifyJobToken(supabase, req.headers.get('x-job-token'), 'check-audio-health');
@@ -80,51 +55,60 @@ Deno.serve(async (req) => {
     // Prefer rechecking stale rows first so we don't re-scan healthy URLs every run.
     const { data: tracks, error } = await supabase
       .from('audio_library')
-      .select('id, title, artist, audio_url, url_status, last_checked_at')
-      .order('last_checked_at', { ascending: true, nullsFirst: true })
-      .limit(300);
+      .select('id, title, artist, audio_url, mirror_urls, url_status, last_checked_at')
+      .order('id', { ascending: true })
+      .range(0, 999);
     if (error) throw error;
 
     let ok = 0;
     let broken = 0;
-    const newlyBroken: { id: string; title: string; artist: string | null }[] = [];
+    let healed = 0;
 
-    // Bounded concurrency = 8 to stay polite to upstream CDNs.
+    // One bounded full-catalogue sweep; byte-range requests avoid downloading tracks.
     const queue = [...(tracks ?? [])];
-    const workers = Array.from({ length: 8 }, async () => {
+    const workers = Array.from({ length: 20 }, async () => {
       while (queue.length) {
         const t = queue.shift();
         if (!t) break;
-        const wasHealthy = t.url_status !== 'broken';
-        const healthy = await headCheck(t.audio_url);
-        if (healthy) ok++;
-        else {
-          broken++;
-          if (wasHealthy) newlyBroken.push({ id: t.id, title: t.title, artist: t.artist });
+        const mirrors = Array.isArray(t.mirror_urls)
+          ? t.mirror_urls.filter((url: unknown): url is string => typeof url === 'string')
+          : [];
+        let source = await probeAudioUrl(t.audio_url);
+        if (!source) {
+          for (const mirror of mirrors) {
+            source = await probeAudioUrl(mirror);
+            if (source) break;
+          }
         }
-        await supabase
-          .from('audio_library')
-          .update({
-            url_status: healthy ? 'ok' : 'broken',
+
+        if (source) {
+          ok += 1;
+          if (source.url !== t.audio_url) healed += 1;
+          await supabase.from('audio_library').update({
+            audio_url: source.url,
+            url_status: 'ok',
+            content_type: source.contentType,
+            content_length: source.contentLength,
+            last_error: null,
             last_checked_at: new Date().toISOString(),
-          })
-          .eq('id', t.id);
+          }).eq('id', t.id);
+        } else {
+          broken += 1;
+          await supabase.from('audio_library').update({
+            url_status: 'broken',
+            last_error: 'No verified audio source responded to a ranged media check',
+            last_checked_at: new Date().toISOString(),
+          }).eq('id', t.id);
+        }
       }
     });
     await Promise.all(workers);
-
-    // Fire-and-forget self-heal for newly broken rows.
-    if (newlyBroken.length) {
-      supabase.functions
-        .invoke('audio-self-heal', { body: { ids: newlyBroken.map((b) => b.id) } })
-        .catch(() => {/* logged downstream */});
-    }
 
     return json({
       checked: tracks?.length ?? 0,
       ok,
       broken,
-      heal_queued: newlyBroken.length,
+      healed,
     });
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 500);

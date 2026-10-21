@@ -42,6 +42,7 @@ interface AudioTrack {
   category: string;
   duration: number;
   audio_url: string;
+  mirror_urls?: string[];
   lyrics?: string;
   meaning?: string;
   language: string;
@@ -116,12 +117,11 @@ const AudioLibrary = () => {
         return data.publicUrl;
       };
 
-      // Only surface tracks whose source URL has passed (or not yet failed) a
-      // health probe — broken CDN entries are excluded from the library.
+      // Only sources confirmed to contain playable audio are visible here.
       const { data: audioTracks, error } = await supabase
         .from('audio_library')
         .select('*')
-        .neq('url_status', 'broken')
+        .eq('url_status', 'ok')
         .order('created_at', { ascending: false });
       if (error) throw error;
 
@@ -133,6 +133,7 @@ const AudioLibrary = () => {
         category: track.category,
         duration: track.duration,
         audio_url: normalizeUrl(track.audio_url),
+        mirror_urls: Array.isArray(track.mirror_urls) ? track.mirror_urls : [],
         lyrics: track.lyrics,
         meaning: track.meaning,
         language: track.language,

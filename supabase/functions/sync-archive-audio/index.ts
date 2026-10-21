@@ -11,6 +11,7 @@
 // Body (all optional): { offset?: number, limit?: number, perQuery?: number, maxFiles?: number }
 
 import { authorizeJob, corsHeaders } from '../_shared/jobAuth.ts';
+import { probeAudioUrl } from '../_shared/audioHealth.ts';
 
 
 type Category = 'mantra' | 'bhajan' | 'aarti' | 'meditation' | 'story' | 'discourse';
@@ -183,16 +184,8 @@ async function candidatesFor(identifier: string, artistFallback: string, maxFile
 }
 
 async function verify(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, { headers: { 'User-Agent': UA, Range: 'bytes=0-200' } });
-    const ct = res.headers.get('content-type') ?? '';
-    if ((res.status === 200 || res.status === 206) && /audio|ogg|mpeg/i.test(ct)) {
-      await res.body?.cancel();
-      return ct.split(';')[0];
-    }
-    await res.body?.cancel();
-  } catch { /* unreachable host counts as failure */ }
-  return null;
+  const source = await probeAudioUrl(url);
+  return source?.contentType ?? null;
 }
 
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -263,7 +256,7 @@ Deno.serve(async (req) => {
             associated_deity: tagDeity(title, q.deity),
             content_type: ct,
             content_length: c.size || null,
-            url_status: 'healthy',
+            url_status: 'ok',
             last_checked_at: new Date().toISOString(),
           });
         }

@@ -52,7 +52,7 @@ const MobileSearchOverlay = ({ open, onClose }: MobileSearchOverlayProps) => {
           supabase.from('saints').select('id, name, tradition').ilike('name', searchTerm).limit(3),
           supabase.from('scriptures').select('id, title, author').ilike('title', searchTerm).limit(3),
           supabase.from('temples').select('id, name, primary_deity').ilike('name', searchTerm).limit(3),
-          supabase.from('audio_library').select('id, title, artist').ilike('title', searchTerm).limit(3),
+          supabase.from('audio_library').select('id, title, artist').eq('url_status', 'ok').ilike('title', searchTerm).limit(3),
         ]);
 
         const mapped: SearchResult[] = [

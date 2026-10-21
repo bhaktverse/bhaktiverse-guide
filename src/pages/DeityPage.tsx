@@ -81,7 +81,7 @@ const DeityPage = () => {
     Promise.all([
       supabase.from("saints").select("id, name, tradition, image_url, biography").limit(6),
       supabase.from("temples").select("id, name, primary_deity, location, image_urls, rating").ilike("primary_deity", `%${deity.deityFilter}%`).limit(6),
-      supabase.from("audio_library").select("id, title, artist, category, duration, associated_deity").ilike("associated_deity", `%${deity.deityFilter}%`).limit(6),
+      supabase.from("audio_library").select("id, title, artist, category, duration, associated_deity").eq("url_status", "ok").ilike("associated_deity", `%${deity.deityFilter}%`).limit(6),
     ]).then(([sRes, tRes, aRes]) => {
       // Filter saints by related traditions
       const allSaints = sRes.data || [];

@@ -74,7 +74,7 @@ const Favorites = () => {
     }
     if (grouped['audio']?.length) {
       promises.push(
-        supabase.from('audio_library').select('id, title, artist').in('id', grouped['audio']).then(({ data }) => {
+        supabase.from('audio_library').select('id, title, artist').eq('url_status', 'ok').in('id', grouped['audio']).then(({ data }) => {
           data?.forEach(a => { detailsMap[a.id] = { title: a.title, subtitle: a.artist || undefined }; });
         }) as Promise<void>
       );
