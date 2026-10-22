@@ -34,17 +34,22 @@ Deno.serve(async (req) => {
   if (!SB_URL || !SRV || !ANON) return new Response(JSON.stringify({ error: "Audio repair is not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   let requestedIds: string[] | null = null;
-  try {
-    const body: unknown = await req.json();
-    if (body && typeof body === "object" && "ids" in body) {
-      const ids = (body as { ids?: unknown }).ids;
-      if (!Array.isArray(ids) || ids.length > 100 || ids.some((id) => typeof id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
-        return new Response(JSON.stringify({ error: "ids must contain at most 100 UUIDs" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      requestedIds = ids;
+  const bodyText = await req.text();
+  if (bodyText.trim()) {
+    let body: unknown;
+    try {
+      body = JSON.parse(bodyText);
+    } catch {
+      return new Response(JSON.stringify({ error: "Request body must be valid JSON" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-  } catch {
-    // An empty body means repair all currently broken tracks.
+    if (!body || typeof body !== "object" || !("ids" in body)) {
+      return new Response(JSON.stringify({ error: "Request body must include an ids array" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const ids = (body as { ids?: unknown }).ids;
+    if (!Array.isArray(ids) || ids.length > 100 || ids.some((id) => typeof id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
+      return new Response(JSON.stringify({ error: "ids must contain at most 100 UUIDs" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    requestedIds = ids;
   }
 
   const auth = req.headers.get("Authorization");
