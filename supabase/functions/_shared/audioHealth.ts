@@ -89,7 +89,8 @@ export async function probeAudioUrl(value: string, timeoutMs = 6000): Promise<Ve
       }
 
       const contentType = response.headers.get('content-type') ?? '';
-      const contentLength = Number(response.headers.get('content-length') ?? 0) || null;
+      const rangeTotal = response.headers.get('content-range')?.match(/\/(\d+)$/)?.[1];
+      const contentLength = Number(rangeTotal ?? (response.status === 200 ? response.headers.get('content-length') : 0)) || null;
       const sample = await readSample(response);
       if (!isAudioPayload(contentType, sample)) return null;
 
