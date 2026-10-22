@@ -133,7 +133,9 @@ const AudioLibrary = () => {
         category: track.category,
         duration: track.duration,
         audio_url: normalizeUrl(track.audio_url),
-        mirror_urls: Array.isArray(track.mirror_urls) ? track.mirror_urls : [],
+        mirror_urls: Array.isArray(track.mirror_urls)
+          ? track.mirror_urls.filter((url): url is string => typeof url === 'string')
+          : [],
         lyrics: track.lyrics,
         meaning: track.meaning,
         language: track.language,
