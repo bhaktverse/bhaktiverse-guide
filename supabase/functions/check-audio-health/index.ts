@@ -53,16 +53,34 @@ Deno.serve(async (req) => {
 
   try {
     // Prefer rechecking stale rows first so we don't re-scan healthy URLs every run.
-    const { data: tracks, error } = await supabase
-      .from('audio_library')
-      .select('id, title, artist, audio_url, mirror_urls, url_status, last_checked_at')
-      .order('id', { ascending: true })
-      .range(0, 999);
-    if (error) throw error;
+    const tracks: Array<{
+      id: string;
+      title: string;
+      artist: string | null;
+      audio_url: string;
+      mirror_urls: unknown;
+      url_status: string | null;
+    }> = [];
+    let cursor: string | null = null;
+    while (true) {
+      let pageQuery = supabase
+        .from('audio_library')
+        .select('id, title, artist, audio_url, mirror_urls, url_status')
+        .order('id', { ascending: true })
+        .limit(500);
+      if (cursor) pageQuery = pageQuery.gt('id', cursor);
+      const { data: page, error } = await pageQuery;
+      if (error) throw error;
+      if (!page?.length) break;
+      tracks.push(...page);
+      cursor = page[page.length - 1].id;
+      if (page.length < 500) break;
+    }
 
     let ok = 0;
     let broken = 0;
     let healed = 0;
+    let updateErrors = 0;
 
     // One bounded full-catalogue sweep; byte-range requests avoid downloading tracks.
     const queue = [...(tracks ?? [])];
@@ -84,7 +102,7 @@ Deno.serve(async (req) => {
         if (source) {
           ok += 1;
           if (source.url !== t.audio_url) healed += 1;
-          await supabase.from('audio_library').update({
+          const { error: updateError } = await supabase.from('audio_library').update({
             audio_url: source.url,
             url_status: 'ok',
             content_type: source.contentType,
@@ -92,13 +110,15 @@ Deno.serve(async (req) => {
             last_error: null,
             last_checked_at: new Date().toISOString(),
           }).eq('id', t.id);
+          if (updateError) updateErrors += 1;
         } else {
           broken += 1;
-          await supabase.from('audio_library').update({
+          const { error: updateError } = await supabase.from('audio_library').update({
             url_status: 'broken',
             last_error: 'No verified audio source responded to a ranged media check',
             last_checked_at: new Date().toISOString(),
           }).eq('id', t.id);
+          if (updateError) updateErrors += 1;
         }
       }
     });
@@ -109,6 +129,7 @@ Deno.serve(async (req) => {
       ok,
       broken,
       healed,
+      update_errors: updateErrors,
     });
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 500);
