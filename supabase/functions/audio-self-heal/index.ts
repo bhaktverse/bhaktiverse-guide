@@ -7,7 +7,7 @@ import { probeAudioUrl } from '../_shared/audioHealth.ts';
 // Archive.org candidates reviewed against each recording; never select an
 // arbitrary file from an Archive.org item as an automatic replacement.
 const VERIFIED_REPLACEMENTS: Record<string, string> = {
-  'bcd6bb43-22b1-4aad-985e-86d433b7ab0a': 'https://archive.org/download/ghar-mein-padharo-gajanan-ji_202409/Ghar-Mein-Padharo-Gajanan-Ji.mp3',
+  '408951f4-e377-4d81-933e-3f00856c80e2': 'https://archive.org/download/ghar-mein-padharo-gajanan-ji_202409/Ghar-Mein-Padharo-Gajanan-Ji.mp3',
   '517fa897-3f5a-49de-b3f3-f6a9fea99bf1': 'https://archive.org/download/Ramayana_721/4KISHKANYAA_KANDA.mp3',
   'fdb7f6d2-bdf1-47f9-989f-6de1c2a97d0f': 'https://archive.org/download/BestKrishnaBhajan1-151/Aas%20Rakho%20Satguru%20Ki.mp3',
   'fe0173e9-6ee4-48c2-a60f-bd970428672e': 'https://archive.org/download/AchyutamKeshavam/Achyutam%20Keshavam.mp3',
