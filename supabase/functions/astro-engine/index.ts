@@ -176,7 +176,8 @@ async function computeChart(input: ChartInput){
   };
 
   // Lagna
-  const gmstDeg = norm360(sidereal.apparent(jd)*180/Math.PI);
+  // sidereal.apparent returns seconds of time -> degrees
+  const gmstDeg = norm360(sidereal.apparent(jd)*360/86400);
   const lstDeg = norm360(gmstDeg + longitude);
   const T = (jd - 2451545.0)/36525.0;
   const eps = (23.439291 - 0.0130042*T) * Math.PI/180;
@@ -238,6 +239,17 @@ Deno.serve(async (req)=>{
 
   try {
     const input = (await req.json()) as ChartInput;
+    const bad = (m: string) => new Response(JSON.stringify({ error: m }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (input?.dob && !/^\d{4}-\d{2}-\d{2}$/.test(input.dob)) return bad("dob must be YYYY-MM-DD");
+    if (input?.dob) {
+      const d = new Date(input.dob + "T00:00:00Z");
+      if (isNaN(d.getTime()) || d.toISOString().slice(0,10) !== input.dob) return bad("invalid calendar date");
+      const y = d.getUTCFullYear(); if (y < 1800 || d.getTime() > Date.now() + 86400000) return bad("dob out of supported range");
+    }
+    if (input?.tob && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(input.tob)) return bad("tob must be HH:MM");
+    if (input?.latitude != null && !(Number.isFinite(input.latitude) && Math.abs(input.latitude) <= 90)) return bad("latitude out of range");
+    if (input?.longitude != null && !(Number.isFinite(input.longitude) && Math.abs(input.longitude) <= 180)) return bad("longitude out of range");
+    if (input?.tzOffsetHours != null && !(Number.isFinite(input.tzOffsetHours) && Math.abs(input.tzOffsetHours) <= 14)) return bad("tzOffsetHours out of range");
     if (!input?.dob) return new Response(JSON.stringify({ error: "dob required (YYYY-MM-DD)"}), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
@@ -255,10 +267,16 @@ Deno.serve(async (req)=>{
     }
 
     const chart = await computeChart(input);
+    let ownerId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const { data: u } = await supabase.auth.getUser(authHeader.slice(7));
+      ownerId = u?.user?.id ?? null;
+    }
 
     await supabase.from("astro_charts").upsert({
       cache_key: cacheKey,
-      user_id: input.userId ?? null,
+      user_id: ownerId,
       dob: input.dob,
       tob: input.tob ?? null,
       latitude: input.latitude ?? null,

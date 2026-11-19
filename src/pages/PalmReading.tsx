@@ -323,10 +323,11 @@ const PalmReading = () => {
 
   const deleteFromHistory = async (id: string) => {
     try {
-      await supabase.from('palm_reading_history' as never).delete().eq('id', id);
+      const { error } = await supabase.from('palm_reading_history' as never).delete().eq('id', id);
+      if (error) { toast.error("Could not remove this reading. Please try again."); return; }
       setHistory(prev => prev.filter(item => item.id !== id));
       toast.success("Palm reading removed from history");
-    } catch (error) { console.error('Error deleting:', error); }
+    } catch (error) { console.error('Error deleting:', error); toast.error("Could not remove this reading. Please try again."); }
   };
 
   const handleBiometricScanComplete = (images: string[], metadata: { name?: string; dob?: string; timeOfBirth?: string }) => {

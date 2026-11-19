@@ -10,17 +10,22 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
+    setIsAdmin(null); // never carry a previous identity's result
     if (!user) return;
+    let cancelled = false;
     const checkAdmin = async () => {
-      const { data } = await supabase.rpc("has_role", {
+      const { data, error } = await supabase.rpc("has_role", {
         _user_id: user.id,
         _role: "admin",
       });
-      if (!data) toast.error("Access denied. Admin privileges required.");
-      setIsAdmin(!!data);
+      if (cancelled) return;
+      const ok = !error && !!data;
+      if (!ok) toast.error("Access denied. Admin privileges required.");
+      setIsAdmin(ok);
     };
     checkAdmin();
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   if (authLoading || (user && isAdmin === null)) {
     return (

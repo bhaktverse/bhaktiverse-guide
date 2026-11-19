@@ -325,11 +325,14 @@ const Horoscope = () => {
                       <Button variant="outline" size="sm" onClick={async () => {
                         try {
                           const rashiKey = selectedRashi.name.toLowerCase();
-                          const { data: existing } = await supabase.from('astro_profiles').select('id').eq('user_id', user.id).maybeSingle();
+                          const { data: existing, error: findErr } = await supabase.from('astro_profiles').select('id').eq('user_id', user.id).limit(1).maybeSingle();
+                          if (findErr) throw findErr;
                           if (existing) {
-                            await supabase.from('astro_profiles').update({ rashi: rashiKey as any }).eq('user_id', user.id);
+                            const { error } = await supabase.from('astro_profiles').update({ rashi: rashiKey as any }).eq('id', existing.id);
+                            if (error) throw error;
                           } else {
-                            await supabase.from('astro_profiles').insert({ user_id: user.id, name: user.email?.split('@')[0] || 'User', dob: '2000-01-01', rashi: rashiKey as any });
+                            // No birth profile yet: remember on this device instead of inventing a birth date.
+                            localStorage.setItem('bv_saved_rashi', rashiKey);
                           }
                           toast.success('✅ राशि सेव हो गई! अगली बार ऑटो-डिटेक्ट होगी।');
                         } catch { toast.error('राशि सेव नहीं हो सकी'); }

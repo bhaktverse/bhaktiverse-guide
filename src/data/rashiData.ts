@@ -485,8 +485,9 @@ export const calculateGunMilan = (rashi1: RashiData, rashi2: RashiData): GunMila
 
   // 3. Tara (max 3) — approximation via sign distance modulo 9
   const taraDiff = (((safeB - safeG) % 9) + 9) % 9;
-  const taraTable = [3, 1.5, 3, 1.5, 0, 3, 1.5, 3, 1.5];
-  const tara = Math.round(taraTable[taraDiff]);
+  // Must match supabase/functions/kundali-match taraTable exactly (scores are stored as integers).
+  const taraTable = [3, 1, 3, 1, 0, 3, 1, 3, 1];
+  const tara = taraTable[taraDiff];
 
   // 4. Yoni (max 4)
   const y1 = YONI[safeG], y2 = YONI[safeB];

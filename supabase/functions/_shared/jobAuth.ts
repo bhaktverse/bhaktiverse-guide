@@ -30,21 +30,9 @@ export async function authorizeJob(req: Request, purpose: string): Promise<AuthR
   // 1. Single-use job token minted by pg_cron.
   const jobToken = req.headers.get('x-job-token');
   if (jobToken) {
-    const { data, error } = await admin
-      .from('internal_job_tokens')
-      .select('token, purpose, expires_at')
-      .eq('token', jobToken)
-      .maybeSingle();
-    // Burn the token regardless of validity so it can never be replayed.
-    await admin.from('internal_job_tokens').delete().eq('token', jobToken);
-    await admin.from('internal_job_tokens').delete().lt('expires_at', new Date().toISOString());
-    if (
-      !error && data &&
-      data.purpose === purpose &&
-      new Date(data.expires_at).getTime() > Date.now()
-    ) {
-      return { ok: true, kind: 'job', admin };
-    }
+    // Atomic consume: DELETE ... RETURNING inside one statement, so concurrent replays cannot both pass.
+    const { data: ok, error } = await admin.rpc('consume_job_token', { _token: jobToken, _purpose: purpose });
+    if (!error && ok === true) return { ok: true, kind: 'job', admin };
     return { ok: false, status: 401, error: 'Unauthorized' };
   }
 
@@ -78,12 +66,6 @@ export async function verifyJobToken(
   purpose: string,
 ): Promise<boolean> {
   if (!token) return false;
-  const { data } = await admin
-    .from('internal_job_tokens')
-    .select('token, purpose, expires_at')
-    .eq('token', token)
-    .maybeSingle();
-  await admin.from('internal_job_tokens').delete().eq('token', token);
-  await admin.from('internal_job_tokens').delete().lt('expires_at', new Date().toISOString());
-  return !!data && data.purpose === purpose && new Date(data.expires_at).getTime() > Date.now();
+  const { data, error } = await admin.rpc('consume_job_token', { _token: token, _purpose: purpose });
+  return !error && data === true;
 }

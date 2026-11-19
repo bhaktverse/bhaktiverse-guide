@@ -32,13 +32,17 @@ export default function AdminCalendar() {
 
   const save = async () => {
     const payload = { title: form.title, event_type: form.event_type, date: form.date, time: form.time || null, description: form.description, significance: form.significance, is_recurring: form.is_recurring ?? false, reminder_enabled: form.reminder_enabled ?? true };
-    if (form.id) await supabase.from("calendar_events").update(payload).eq("id", form.id);
-    else await supabase.from("calendar_events").insert(payload);
+    if (!form.title?.trim() || !form.date) { toast.error("Title and date are required"); return; }
+    const { error } = form.id
+      ? await supabase.from("calendar_events").update(payload).eq("id", form.id)
+      : await supabase.from("calendar_events").insert(payload);
+    if (error) { toast.error("Save failed: " + error.message); return; }
     toast.success(form.id ? "Updated" : "Created"); setDialog(null); load();
   };
 
   const del = async (id: string) => {
-    await supabase.from("calendar_events").delete().eq("id", id);
+    const { error } = await supabase.from("calendar_events").delete().eq("id", id);
+    if (error) { toast.error("Delete failed"); return; }
     toast.success("Deleted"); load();
   };
 

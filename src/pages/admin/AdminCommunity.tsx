@@ -17,18 +17,30 @@ export default function AdminCommunity() {
 
   useEffect(() => { load(); }, []);
 
+  const audit = async (action: string, targetId: string | null, details: Record<string, unknown> = {}) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("admin_audit_logs").insert({ admin_user_id: user.id, action, target_table: "community_posts", target_id: targetId, details: details as any });
+  };
+
   const toggleFeatured = async (post: any) => {
-    await supabase.from("community_posts").update({ featured: !post.featured }).eq("id", post.id);
+    const { error } = await supabase.from("community_posts").update({ featured: !post.featured }).eq("id", post.id);
+    if (error) { toast.error("Update failed"); return; }
+    await audit(post.featured ? "unfeature_post" : "feature_post", post.id);
     toast.success(post.featured ? "Unfeatured" : "Featured"); load();
   };
 
   const deletePost = async (id: string) => {
-    await supabase.from("community_posts").delete().eq("id", id);
+    const { error } = await supabase.from("community_posts").delete().eq("id", id);
+    if (error) { toast.error("Delete failed"); return; }
+    await audit("delete_post", id);
     toast.success("Post deleted"); load();
   };
 
   const bulkDelete = async (ids: string[]) => {
-    for (const id of ids) { await supabase.from("community_posts").delete().eq("id", id); }
+    const { error } = await supabase.from("community_posts").delete().in("id", ids);
+    if (error) { toast.error("Bulk delete failed"); return; }
+    await audit("bulk_delete_posts", null, { ids });
     toast.success(`Deleted ${ids.length} posts`); load();
   };
 

@@ -43,6 +43,14 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    const VALID_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+    for (const p of [partner1, partner2]) {
+      if (typeof p.rashi !== 'string' || !VALID_SIGNS.includes(p.rashi) || typeof p.name !== 'string' || p.name.trim().length === 0 || p.name.length > 100) {
+        return new Response(JSON.stringify({ error: 'Each partner needs a valid name and rashi' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     // Rate limit check
     const authHeader = req.headers.get('Authorization');
@@ -64,9 +72,9 @@ serve(async (req) => {
           _function_name: 'kundali-match',
           _daily_limit: 20
         });
-        if (usageCheck && !usageCheck.allowed) {
+        if (!usageCheck || !usageCheck.allowed) {
           return new Response(JSON.stringify({ 
-            error: `Daily limit reached (${usageCheck.daily_limit} calls/day). Please try again tomorrow or upgrade to Premium.`,
+            error: `Daily limit reached (${usageCheck?.daily_limit ?? 20} calls/day). Please try again tomorrow or upgrade to Premium.`,
             rate_limited: true
           }), {
             status: 429,

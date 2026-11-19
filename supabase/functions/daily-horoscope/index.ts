@@ -55,9 +55,9 @@ serve(async (req) => {
           _function_name: 'daily-horoscope',
           _daily_limit: 20
         });
-        if (usageCheck && !usageCheck.allowed) {
+        if (!usageCheck || !usageCheck.allowed) {
           return new Response(JSON.stringify({ 
-            error: `Daily limit reached (${usageCheck.daily_limit} calls/day). Please try again tomorrow or upgrade to Premium.`,
+            error: `Daily limit reached (${usageCheck?.daily_limit ?? 20} calls/day). Please try again tomorrow or upgrade to Premium.`,
             rate_limited: true
           }), {
             status: 429,
